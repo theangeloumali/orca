@@ -5,8 +5,8 @@ name: Fork sync and release
 # Jobs that run repository code hold read-only tokens; only push/issue/release jobs can write,
 # and they run no repository code. A conflict or failed job opens an issue and publishes nothing.
 # Runs only from main, so it goes live once the fork branch (with the updater switch) is merged.
-# Needs secret FORK_SYNC_TOKEN: a fine-grained token on this repo with Contents and Workflows
-# write, because GITHUB_TOKEN may not push upstream's .github/workflows changes.
+# Upstream's .github/workflows changes are never taken: their CI is not ours to run, and
+# GITHUB_TOKEN may not push workflow edits, so no long-lived write token is needed.
 
 on:
   schedule:
@@ -56,13 +56,17 @@ jobs:
             echo "changed=false" >>"$GITHUB_OUTPUT"
             exit 0
           fi
-          if ! git -c user.name="$FORK_AUTHOR_NAME" -c user.email="$FORK_AUTHOR_EMAIL" \
-            merge --no-ff --no-edit upstream/main; then
+          git merge --no-ff --no-commit upstream/main || true
+          # Keep the fork's own workflows exactly as they were before the merge.
+          git rm -rqf --ignore-unmatch .github/workflows
+          git checkout HEAD -- .github/workflows
+          if [ -n "$(git diff --name-only --diff-filter=U)" ]; then
             git merge --abort
             echo "conflict=true" >>"$GITHUB_OUTPUT"
             echo "changed=false" >>"$GITHUB_OUTPUT"
             exit 0
           fi
+          git -c user.name="$FORK_AUTHOR_NAME" -c user.email="$FORK_AUTHOR_EMAIL" commit --no-edit
           echo "changed=true" >>"$GITHUB_OUTPUT"
       - name: Carry the latest upstream release version
         if: steps.merge.outputs.changed == 'true'
@@ -128,21 +132,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
-      contents: read
+      contents: write
     outputs:
       sha: ${{ steps.push.outputs.sha }}
     steps:
       # Runs no repository code: fetch the verified bundle and push it.
-      - name: Require the sync token
-        env:
-          FORK_SYNC_TOKEN: ${{ secrets.FORK_SYNC_TOKEN }}
-        run: |
-          [ -n "$FORK_SYNC_TOKEN" ] || { echo "::error::Add secret FORK_SYNC_TOKEN (Contents + Workflows write)"; exit 1; }
       - uses: actions/checkout@v6
         with:
           ref: main
           fetch-depth: 0
-          token: ${{ secrets.FORK_SYNC_TOKEN }}
       - uses: actions/download-artifact@v6
         with:
           name: merged-bundle
