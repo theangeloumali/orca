@@ -46,3 +46,18 @@ export function findProjectGroupNestTarget(args: {
   }
   return null
 }
+
+/** True when some machine owns at least two groups, so one can be dragged into another. */
+export function hasSameHostGroupPair(ownerHostIdById: ReadonlyMap<string, string | null>): boolean {
+  const seen = new Set<string>()
+  for (const hostId of ownerHostIdById.values()) {
+    if (hostId === null) {
+      continue
+    }
+    if (seen.has(hostId)) {
+      return true
+    }
+    seen.add(hostId)
+  }
+  return false
+}

@@ -4,7 +4,10 @@ import {
   type ProjectGroupNestTarget
 } from './project-group-header-nest-drop'
 import type { ProjectGroupHeaderDragItem } from './project-group-header-drop'
-import type { ProjectGroupHeaderDragSession } from './project-group-header-drag-contract'
+import type {
+  ProjectGroupHeaderDragSession,
+  ProjectGroupNestDrop
+} from './project-group-header-drag-contract'
 
 type NestDropArgs = {
   projectGroupById: ReadonlyMap<string, ProjectGroupHeaderDragItem>
@@ -13,24 +16,25 @@ type NestDropArgs = {
   onCommitProjectGroupParent: (groupId: string, parentGroupId: string) => void
 }
 
-export type ProjectGroupNestDrop = ReturnType<typeof useProjectGroupNestDrop>
-
 /** Drag-to-nest for group headers: tracks the group under the pointer's middle band and commits it. */
-export function useProjectGroupNestDrop(args: NestDropArgs) {
-  const argsRef = useRef(args)
+export function useProjectGroupNestDrop(args: NestDropArgs): ProjectGroupNestDrop {
+  const parentById = useMemo(
+    () => new Map([...args.projectGroupById].map(([id, group]) => [id, group.parentGroupId])),
+    [args.projectGroupById]
+  )
+  const argsRef = useRef({ ...args, parentById })
   useLayoutEffect(() => {
-    argsRef.current = args
+    argsRef.current = { ...args, parentById }
   })
   const targetRef = useRef<ProjectGroupNestTarget | null>(null)
 
-  /** True when the pointer is over a header's middle band and the drop would nest. */
   const resolve = useCallback((session: ProjectGroupHeaderDragSession, contentY: number) => {
-    const { projectGroupById, projectGroupOwnerHostIdByGroupId } = argsRef.current
+    const { parentById, projectGroupOwnerHostIdByGroupId } = argsRef.current
     targetRef.current = findProjectGroupNestTarget({
       pointerContentY: contentY,
       rects: session.nestRects ?? [],
       draggedGroupId: session.groupId,
-      parentById: new Map([...projectGroupById].map(([id, group]) => [id, group.parentGroupId])),
+      parentById,
       ownerHostIdById: projectGroupOwnerHostIdByGroupId
     })
     return targetRef.current !== null
@@ -38,7 +42,6 @@ export function useProjectGroupNestDrop(args: NestDropArgs) {
 
   const current = useCallback(() => targetRef.current, [])
 
-  /** Clears the target, then nests the dragged group into it when the drop commits. */
   const finish = useCallback((groupId: string, commit: boolean) => {
     const target = targetRef.current
     targetRef.current = null
