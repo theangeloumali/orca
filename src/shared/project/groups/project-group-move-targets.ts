@@ -1,3 +1,5 @@
+import { LOCAL_EXECUTION_HOST_ID, type ExecutionHostId } from '../../execution-host/execution-host'
+import { getProjectGroupExecutionHostIdForRows } from '../../sidebar-list/hosts/host-filtering'
 import type { ProjectGroup } from './project-group-types'
 import { getProjectGroupSubtreeIds } from './project-groups'
 
@@ -9,6 +11,15 @@ export type ProjectGroupMoveTarget = {
   depth: number
   /** The moving group and its own subgroups: moving into them would make a cycle. */
   disabled: boolean
+}
+
+/** One machine's groups. Server groups are stamped on adoption, so an unstamped group is this computer's. */
+export function filterProjectGroupsForOwnerHost<
+  T extends Pick<ProjectGroup, 'connectionId' | 'executionHostId'>
+>(groups: readonly T[], ownerHostId: ExecutionHostId): T[] {
+  return groups.filter(
+    (group) => getProjectGroupExecutionHostIdForRows(group, LOCAL_EXECUTION_HOST_ID) === ownerHostId
+  )
 }
 
 /** One machine's groups as the "Move group to…" tree, in sidebar order. */

@@ -64,6 +64,47 @@ describe('project group nesting', () => {
     expect(store.getProjectGroups().find((group) => group.id === work.id)?.parentGroupId).toBeNull()
   })
 
+  it('refuses a batch whose moves together form a cycle and leaves every group unchanged', () => {
+    const store = createStore()
+    const a = store.createProjectGroup({ name: 'A', createdFrom: 'manual' })
+    const b = store.createProjectGroup({ name: 'B', createdFrom: 'manual' })
+
+    expect(() =>
+      store.updateProjectGroups([
+        { groupId: a.id, updates: { parentGroupId: b.id } },
+        { groupId: b.id, updates: { parentGroupId: a.id } }
+      ])
+    ).toThrow('invalid_project_group_parent')
+    const parents = store.getProjectGroups().map((group) => group.parentGroupId)
+    expect(parents).toEqual([null, null])
+  })
+
+  it('accepts a batch that is only valid once all of its moves apply', () => {
+    const store = createStore()
+    const a = store.createProjectGroup({ name: 'A', createdFrom: 'manual' })
+    const b = store.createProjectGroup({ name: 'B', parentGroupId: a.id, createdFrom: 'manual' })
+
+    store.updateProjectGroups([
+      { groupId: b.id, updates: { parentGroupId: null } },
+      { groupId: a.id, updates: { parentGroupId: b.id } }
+    ])
+    const byId = new Map(store.getProjectGroups().map((group) => [group.id, group.parentGroupId]))
+    expect(byId.get(a.id)).toBe(b.id)
+    expect(byId.get(b.id)).toBeNull()
+  })
+
+  it('ignores a root order sent in the same update that nests the group', () => {
+    const store = createStore()
+    const work = store.createProjectGroup({ name: 'Work', createdFrom: 'manual' })
+    const client = store.createProjectGroup({ name: 'OnePuhunan', createdFrom: 'manual' })
+
+    const nested = store.updateProjectGroup(client.id, {
+      parentGroupId: work.id,
+      rootProjectOrder: 5
+    })
+    expect(nested?.rootProjectOrder).toBeUndefined()
+  })
+
   it('refuses a parent group that does not exist', () => {
     const store = createStore()
     const work = store.createProjectGroup({ name: 'Work', createdFrom: 'manual' })
