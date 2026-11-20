@@ -17,6 +17,7 @@ import type { SshConnectionStatus } from '../../remote-runtime/ssh/ssh-types'
 import type { Row } from '../row-types'
 import { getFolderWorkspaceHostId } from './folder-workspace-host-id'
 import { countWorkspaceRows } from './host-section-workspace-count'
+import { getGroupHeaderOwnerHostId } from './host-section-group-owner'
 import { localizeProjectHeader, localizeRowsToHost } from './project-header-localization'
 
 export type HostHeaderRow = {
@@ -164,7 +165,15 @@ export function addHostSectionRows(args: {
     }
     const hostScopedRow = unused.some((row) => row.hostWorktreeCounts)
     if (!hostScopedRow) {
-      globalRows.push(...unused)
+      for (const row of unused) {
+        // An empty group still belongs to its machine, not above every section (#27987).
+        const ownerHostId = getGroupHeaderOwnerHostId(row, args.defaultHostId)
+        if (ownerHostId) {
+          rowsByHostId.set(ownerHostId, [...(rowsByHostId.get(ownerHostId) ?? []), row])
+        } else {
+          globalRows.push(row)
+        }
+      }
       return
     }
     for (const row of unused) {
@@ -187,7 +196,12 @@ export function addHostSectionRows(args: {
 
   const pushHostRow = (row: Row, rowHostId: ExecutionHostId): void => {
     const hostRows = rowsByHostId.get(rowHostId) ?? []
-    const localizedPendingRows = localizePendingRowsForHost(pendingRows, rowHostId)
+    // Another machine's group never heads this machine's copy of a shared project (#29535).
+    const hostPendingRows = pendingRows.filter((pending) => {
+      const ownerHostId = getGroupHeaderOwnerHostId(pending, args.defaultHostId)
+      return ownerHostId === null || ownerHostId === rowHostId
+    })
+    const localizedPendingRows = localizePendingRowsForHost(hostPendingRows, rowHostId)
     const path = localizedPendingRows.map(getPendingRowKey)
     const emitted = emittedPathByHostId.get(rowHostId) ?? []
     let shared = 0
@@ -199,7 +213,7 @@ export function addHostSectionRows(args: {
       emittedPathByHostId.set(rowHostId, path)
     }
     if (localizedPendingRows.length > 0) {
-      pendingRows.forEach((pendingRow) => usedPendingRows.add(pendingRow))
+      hostPendingRows.forEach((pendingRow) => usedPendingRows.add(pendingRow))
     }
     hostRows.push(row)
     rowsByHostId.set(rowHostId, hostRows)
