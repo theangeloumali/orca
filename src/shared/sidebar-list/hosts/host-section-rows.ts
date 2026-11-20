@@ -15,7 +15,7 @@ import type { RuntimeHostBlockedReason } from '../../remote-runtime/host-status/
 import type { SshConnectionStatus } from '../../remote-runtime/ssh/ssh-types'
 import type { Row } from '../row-types'
 import { getFolderWorkspaceHostId } from './folder-workspace-host-id'
-import { collectHostWorktreeIds, countWorkspaceRows } from './host-section-workspace-count'
+import { countWorkspaceRows } from './host-section-workspace-count'
 import { getFallbackHost } from './host-section-fallback-host'
 import {
   enclosingPendingHeaders,
@@ -42,8 +42,6 @@ export type HostHeaderRow = {
   connectionStatus?: SshConnectionStatus
   collapsed: boolean
   count: number
-  /** Feeds the header's live agent counts. */
-  worktreeIds: readonly string[]
 }
 
 export type HostSectionRow = Row | HostHeaderRow
@@ -302,8 +300,7 @@ export function addHostSectionRows(args: {
       ...(host.vmState ? { vmState: host.vmState } : {}),
       connectionStatus: host.connectionStatus,
       collapsed,
-      count: countWorkspaceRows(hostRows),
-      worktreeIds: collectHostWorktreeIds(hostRows)
+      count: countWorkspaceRows(hostRows)
     })
     if (!collapsed) {
       result.push(

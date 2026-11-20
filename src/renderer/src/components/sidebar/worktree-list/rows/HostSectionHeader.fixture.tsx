@@ -11,8 +11,7 @@ const base: HostHeaderRow = {
   detail: 'Orca server',
   health: 'available',
   collapsed: false,
-  count: 1,
-  worktreeIds: []
+  count: 1
 }
 
 const rows: HostHeaderRow[] = [

@@ -52,18 +52,3 @@ export function countWorkspaceRows(rows: readonly Row[]): number {
   flushHeader()
   return count
 }
-
-/** Workspace ids a host section holds, including those behind a collapsed header. */
-export function collectHostWorktreeIds(rows: readonly Row[]): string[] {
-  const ids = new Set<string>()
-  for (const row of rows) {
-    if (row.type === 'item') {
-      ids.add(row.worktree.id)
-    } else if (row.type === 'header') {
-      for (const worktreeId of row.worktreeIds ?? []) {
-        ids.add(worktreeId)
-      }
-    }
-  }
-  return [...ids]
-}
