@@ -1,11 +1,31 @@
 import { describe, expect, it } from 'vitest'
-import { getProjectGroupMoveTargets } from './project-group-move-targets'
+import {
+  filterProjectGroupsForOwnerHost,
+  getProjectGroupMoveTargets
+} from './project-group-move-targets'
 
 const group = (id: string, name: string, parentGroupId: string | null, tabOrder: number) => ({
   id,
   name,
   parentGroupId,
   tabOrder
+})
+
+describe('filterProjectGroupsForOwnerHost', () => {
+  it("keeps one machine's groups and counts unstamped ones as this computer's", () => {
+    const groups = [
+      { id: 'unstamped', executionHostId: undefined, connectionId: null },
+      { id: 'on-m1', executionHostId: 'runtime:m1', connectionId: null },
+      { id: 'on-msi', executionHostId: 'runtime:msi', connectionId: null }
+    ]
+
+    expect(filterProjectGroupsForOwnerHost(groups, 'runtime:m1').map((group) => group.id)).toEqual([
+      'on-m1'
+    ])
+    expect(filterProjectGroupsForOwnerHost(groups, 'local').map((group) => group.id)).toEqual([
+      'unstamped'
+    ])
+  })
 })
 
 describe('getProjectGroupMoveTargets', () => {

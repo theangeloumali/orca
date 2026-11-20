@@ -54,7 +54,7 @@ export class ProjectGroupPersistenceOperations {
     parentGroupId?: string | null
     createdFrom: ProjectGroup['createdFrom']
   }): ProjectGroup {
-    this.assertValidParent(null, input.parentGroupId ?? null)
+    this.assertValidParents([{ groupId: null, parentGroupId: input.parentGroupId ?? null }])
     let maxOrder = -1
     // Large persisted lists can exceed spread argument limits.
     for (const existingGroup of this.state.projectGroups ?? []) {
@@ -80,6 +80,9 @@ export class ProjectGroupPersistenceOperations {
     if (!group) {
       return null
     }
+    if (updates.parentGroupId !== undefined) {
+      this.assertValidParents([{ groupId, parentGroupId: updates.parentGroupId }])
+    }
     this.applyGroupUpdate(group, updates)
     this.scheduleSave(['projectGroups'])
     return group
@@ -90,12 +93,14 @@ export class ProjectGroupPersistenceOperations {
     if (mutations.some(({ groupId }) => !byId.has(groupId))) {
       return null
     }
-    // Check every move before applying any, so a refused one cannot leave the batch half done.
-    for (const { groupId, updates } of mutations) {
-      if (updates.parentGroupId !== undefined) {
-        this.assertValidParent(groupId, updates.parentGroupId)
-      }
-    }
+    // Check all moves together, before applying any, so a refused batch changes nothing.
+    this.assertValidParents(
+      mutations.flatMap(({ groupId, updates }) =>
+        updates.parentGroupId !== undefined
+          ? [{ groupId, parentGroupId: updates.parentGroupId }]
+          : []
+      )
+    )
     const updated = mutations.map(({ groupId, updates }) => {
       const group = byId.get(groupId)!
       this.applyGroupUpdate(group, updates)
@@ -107,22 +112,34 @@ export class ProjectGroupPersistenceOperations {
     return updated
   }
 
-  /** A parent must exist and must not be the group itself or one of its own subgroups. */
-  private assertValidParent(groupId: string | null, parentGroupId: string | null): void {
-    if (parentGroupId === null) {
-      return
+  /** With every move applied, each new parent must exist and must not sit inside its own child. */
+  private assertValidParents(
+    moves: readonly { groupId: string | null; parentGroupId: string | null }[]
+  ): void {
+    const parentById = new Map(
+      (this.state.projectGroups ?? []).map((entry) => [entry.id, entry.parentGroupId])
+    )
+    for (const move of moves) {
+      if (move.groupId !== null) {
+        parentById.set(move.groupId, move.parentGroupId)
+      }
     }
-    const groups = this.state.projectGroups ?? []
-    const parentExists = groups.some((entry) => entry.id === parentGroupId)
-    const isOwnSubtree =
-      groupId !== null && getProjectGroupSubtreeIds(groups, groupId).has(parentGroupId)
-    if (!parentExists || isOwnSubtree) {
-      throw new Error('invalid_project_group_parent')
+    for (const { groupId, parentGroupId } of moves) {
+      if (parentGroupId !== null && !parentById.has(parentGroupId)) {
+        throw new Error('invalid_project_group_parent')
+      }
+      // Walk up from the new parent; meeting the moved group means a cycle. Orphan links end the walk.
+      let cursor = parentGroupId
+      for (let steps = 0; cursor !== null && parentById.has(cursor); steps += 1) {
+        if (cursor === groupId || steps > parentById.size) {
+          throw new Error('invalid_project_group_parent')
+        }
+        cursor = parentById.get(cursor) ?? null
+      }
     }
   }
 
   private applyGroupParent(group: ProjectGroup, parentGroupId: string | null): void {
-    this.assertValidParent(group.id, parentGroupId)
     const wasNested = group.parentGroupId !== null
     group.parentGroupId = parentGroupId
     if (parentGroupId !== null) {
@@ -157,7 +174,9 @@ export class ProjectGroupPersistenceOperations {
       delete group.rootProjectOrder
     } else if (
       updates.rootProjectOrder !== undefined &&
-      Number.isFinite(updates.rootProjectOrder)
+      Number.isFinite(updates.rootProjectOrder) &&
+      // A group nested by this same update leaves root order; a stale rank must not follow it.
+      typeof updates.parentGroupId !== 'string'
     ) {
       group.rootProjectOrder = updates.rootProjectOrder
     }
