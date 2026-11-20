@@ -160,3 +160,90 @@ describe('addHostSectionRows group placement across machines', () => {
     expect(m1Keys).toContain('re-client-m1-main')
   })
 })
+
+describe('addHostSectionRows nested and non-local group placement', () => {
+  const groupHeader = (group: ProjectGroup, depth: number): Row => ({
+    type: 'header',
+    key: `project-group:${group.id}`,
+    label: group.name,
+    count: 0,
+    icon: { kind: 'project' },
+    projectGroup: group,
+    projectGroupDepth: depth
+  })
+  const projectHeader = (repo: Repo, depth: number): Row => ({
+    type: 'header',
+    key: `project:${repo.id}`,
+    label: repo.id,
+    count: 1,
+    icon: { kind: 'project' },
+    repo,
+    projectGroupDepth: depth
+  })
+  const sectionFor = (rows: Row[], hostIds: ExecutionHostId[]): HostSectionRow[] =>
+    addHostSectionRows({
+      rows,
+      hostOptions: [
+        ...HOST_OPTIONS,
+        { id: 'ssh:devbox', kind: 'ssh', label: 'devbox', detail: 'Host', health: 'available' }
+      ],
+      workspaceHostScope: LOCAL_EXECUTION_HOST_ID,
+      visibleWorkspaceHostIds: hostIds,
+      defaultHostId: LOCAL_EXECUTION_HOST_ID,
+      localHostLabel: 'M5 Max',
+      preferProjectGrouping: true
+    })
+  const localRepo = repoOn('local-app')
+  const localRows: Row[] = [projectHeader(localRepo, 0), item(localRepo, 'local-app-main')]
+
+  it('keeps an empty subgroup under its parent, in sidebar order', () => {
+    const parent = { ...groupOn('P', 'Jobbify', M1_HOST_ID) }
+    const empty = { ...groupOn('C', 'Archive', M1_HOST_ID), parentGroupId: 'P' }
+    const filled = { ...groupOn('D', 'Clients', M1_HOST_ID), parentGroupId: 'P' }
+    const repo = repoOn('re-portal-m1', M1_HOST_ID)
+    const rows = [
+      ...localRows,
+      groupHeader(parent, 0),
+      groupHeader(empty, 1),
+      groupHeader(filled, 1),
+      projectHeader(repo, 2),
+      item(repo, 're-portal-m1-main')
+    ]
+
+    expect(
+      sectionKeys(sectionFor(rows, [LOCAL_EXECUTION_HOST_ID, M1_HOST_ID]), M1_HOST_ID)
+    ).toEqual([
+      'project-group:P',
+      'project-group:C',
+      'project-group:D',
+      'project:re-portal-m1',
+      're-portal-m1-main'
+    ])
+  })
+
+  it('places an SSH-owned group, including a folder-scan one, in its SSH host section', () => {
+    const sshGroup = {
+      ...groupOn('S', 'Scanned', undefined),
+      connectionId: 'devbox',
+      createdFrom: 'folder-scan' as const
+    }
+    const sshRepo: Repo = { ...repoOn('api-ssh'), connectionId: 'devbox' }
+    const rows = [
+      ...localRows,
+      groupHeader(sshGroup, 0),
+      projectHeader(sshRepo, 1),
+      item(sshRepo, 'api-ssh-main')
+    ]
+
+    const sectioned = sectionFor(rows, [LOCAL_EXECUTION_HOST_ID, 'ssh:devbox'])
+    expect(sectionKeys(sectioned, 'ssh:devbox')).toEqual([
+      'project-group:S',
+      'project:api-ssh',
+      'api-ssh-main'
+    ])
+    expect(sectionKeys(sectioned, LOCAL_EXECUTION_HOST_ID)).toEqual([
+      'project:local-app',
+      'local-app-main'
+    ])
+  })
+})
