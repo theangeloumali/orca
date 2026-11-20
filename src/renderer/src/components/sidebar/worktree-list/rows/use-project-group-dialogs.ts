@@ -8,6 +8,7 @@ import { selectProjectGroupRemovalTargets } from '@/store/project-groups/project
 import type { ProjectGroup } from '../../../../../../shared/project/groups/project-group-types'
 import type { Repo } from '../../../../../../shared/repository/repo-types'
 import {
+  LOCAL_EXECUTION_HOST_ID,
   getRepoExecutionHostId,
   type ExecutionHostId
 } from '../../../../../../shared/execution-host/execution-host'
@@ -19,6 +20,7 @@ import {
 
 export type ProjectGroupNameDialogState =
   | { type: 'create-from-repo'; repo: Repo }
+  | { type: 'create-subgroup'; parentGroupId: string; parentName: string; hostId?: ExecutionHostId }
   // hostId is the group row's owner host, so the mutation is not routed to whichever host has focus.
   | {
       type: 'rename'
@@ -163,6 +165,25 @@ export function useProjectGroupDialogs(args: {
   const handleSubmitProjectGroupName = useCallback(
     async (name: string) => {
       if (!nameDialog) {
+        return
+      }
+      if (nameDialog.type === 'create-subgroup') {
+        // A subgroup lives on its parent's computer, so route to the parent's owner host.
+        const created = await createProjectGroup(
+          name,
+          nameDialog.hostId ?? LOCAL_EXECUTION_HOST_ID,
+          {
+            parentGroupId: nameDialog.parentGroupId
+          }
+        )
+        if (!created) {
+          toast.error(
+            translate(
+              'auto.components.sidebar.WorktreeList.subgroupCreateFailed',
+              'Could not create subgroup'
+            )
+          )
+        }
         return
       }
       if (nameDialog.type === 'create-from-repo') {

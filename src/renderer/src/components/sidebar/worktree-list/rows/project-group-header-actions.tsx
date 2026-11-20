@@ -1,5 +1,5 @@
 import React from 'react'
-import { Ellipsis, Plus, RefreshCw } from 'lucide-react'
+import { Ellipsis, FolderPlus, Plus, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import {
@@ -15,6 +15,9 @@ import type { ProjectGroup } from '../../../../../../shared/project/groups/proje
 import type { FolderWorkspacePathStatus } from '../../../../../../shared/folder-workspaces/folder-workspace-path-status'
 import type { ExecutionHostId } from '../../../../../../shared/execution-host/execution-host'
 import { getFolderProjectGroupRefreshHandler } from './project-group-folder-refresh'
+import { ProjectGroupMoveSubmenu } from './ProjectGroupMoveSubmenu'
+import { useRuntimeEnvironmentCapability } from '@/runtime/rpc/compatibility/use-runtime-environment-capability'
+import { PROJECT_GROUP_PARENT_UPDATE_RUNTIME_CAPABILITY } from '../../../../../../shared/remote-runtime/protocol/worktree-runtime-capabilities'
 import { REPO_HEADER_ACTION_BUTTON_CLASS } from './repo-header-action-button-class'
 import {
   handleRepoHeaderActionPointerDown,
@@ -29,7 +32,10 @@ export function ProjectGroupHeaderMenu({
   projectGroup,
   onRefreshProjectGroup,
   onRename,
-  onDelete
+  onDelete,
+  projectGroups,
+  onCreateSubgroup,
+  onMoveGroup
 }: {
   groupId: string
   /** Owner host of the group row, so rename/delete route to the host that holds it. */
@@ -39,9 +45,21 @@ export function ProjectGroupHeaderMenu({
   onRefreshProjectGroup?: (projectGroup: ProjectGroup) => void
   onRename: (groupId: string, currentName: string, hostId?: ExecutionHostId) => void
   onDelete: (groupId: string, groupName: string, hostId?: ExecutionHostId) => void
+  projectGroups?: readonly ProjectGroup[]
+  onCreateSubgroup?: (groupId: string, groupName: string, hostId?: ExecutionHostId) => void
+  onMoveGroup?: (groupId: string, parentGroupId: string | null, hostId?: ExecutionHostId) => void
 }): React.JSX.Element {
   const t = useTranslate()
   const onRefresh = getFolderProjectGroupRefreshHandler(projectGroup, onRefreshProjectGroup)
+  // An older paired server drops parentGroupId and still reports success, so gate on its capability.
+  const runtimeEnvironmentId = hostId?.startsWith('runtime:')
+    ? hostId.slice('runtime:'.length)
+    : null
+  const remoteSupportsNesting = useRuntimeEnvironmentCapability(
+    runtimeEnvironmentId,
+    PROJECT_GROUP_PARENT_UPDATE_RUNTIME_CAPABILITY
+  )
+  const nestingSupported = runtimeEnvironmentId === null || remoteSupportsNesting
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
@@ -80,6 +98,24 @@ export function ProjectGroupHeaderMenu({
             <RefreshCw className="size-3.5" />
             {t('auto.components.sidebar.WorktreeList.refreshProjectGroup', 'Refresh projects')}
           </DropdownMenuItem>
+        ) : null}
+        {onCreateSubgroup ? (
+          <DropdownMenuItem
+            disabled={!nestingSupported}
+            onSelect={() => onCreateSubgroup(groupId, label, hostId)}
+          >
+            <FolderPlus className="size-3.5" />
+            {t('auto.components.sidebar.WorktreeList.newSubgroup', 'New subgroup…')}
+          </DropdownMenuItem>
+        ) : null}
+        {onMoveGroup && projectGroups ? (
+          <ProjectGroupMoveSubmenu
+            groupId={groupId}
+            hostId={hostId}
+            projectGroups={projectGroups}
+            disabled={!nestingSupported}
+            onMove={onMoveGroup}
+          />
         ) : null}
         <DropdownMenuItem onSelect={() => onRename(groupId, label, hostId)}>
           {t('auto.components.sidebar.WorktreeList.4d7b73658c', 'Rename group')}
