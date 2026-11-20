@@ -65,7 +65,8 @@ describe('root project header drops', () => {
       detail: '',
       health: 'available',
       collapsed: false,
-      count: 1
+      count: 1,
+      worktreeIds: []
     })
     const rows: HostSectionRow[] = [
       host('local'),

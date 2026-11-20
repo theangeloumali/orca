@@ -8509,7 +8509,9 @@
         },
         "HostSectionHeader": {
           "workspaceCount_one": "{{count}} workspace",
-          "workspaceCount_other": "{{count}} workspaces"
+          "workspaceCount_other": "{{count}} workspaces",
+          "agentsNeedYou": "{{count}} need you",
+          "agentsWorking": "{{count}} working"
         },
         "titleDerivedAgentRows": {
           "needsInput": "Needs input",

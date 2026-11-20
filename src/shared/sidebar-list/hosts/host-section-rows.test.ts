@@ -114,6 +114,27 @@ describe('addHostSectionRows machine sections', () => {
     ])
   })
 
+  it('gives each machine header the workspace ids drawn in its section', () => {
+    const rows = addHostSectionRows({
+      rows: ALL_HOST_ROWS,
+      hostOptions: HOST_OPTIONS,
+      workspaceHostScope: ALL_EXECUTION_HOSTS_SCOPE,
+      visibleWorkspaceHostIds: null,
+      defaultHostId: LOCAL_EXECUTION_HOST_ID,
+      localHostLabel: 'M5 Max',
+      preferProjectGrouping: true,
+      showHostSections: true
+    })
+
+    const headerIds = rows.flatMap((row) =>
+      row.type === 'host-header' ? [[row.hostId, row.worktreeIds]] : []
+    )
+    expect(headerIds).toEqual([
+      ['local', ['alpha::/alpha']],
+      ['runtime:m1', ['beta::/beta']]
+    ])
+  })
+
   it('keeps the project-first list flat under All hosts when machine sections are off', () => {
     const rows = addHostSectionRows({
       rows: ALL_HOST_ROWS,
