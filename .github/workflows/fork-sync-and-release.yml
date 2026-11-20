@@ -59,7 +59,10 @@ jobs:
             echo "changed=false" >>"$GITHUB_OUTPUT"
             exit 0
           fi
-          git merge --no-ff --no-commit upstream/main || true
+          # Conflicts are expected here and detected below; any other failure leaves no MERGE_HEAD.
+          git -c user.name="$FORK_AUTHOR_NAME" -c user.email="$FORK_AUTHOR_EMAIL" \
+            merge --no-ff --no-commit upstream/main || true
+          git rev-parse -q --verify MERGE_HEAD >/dev/null || { echo "::error::upstream merge did not start"; exit 1; }
           # Keep the fork's own workflows exactly as they were before the merge.
           git rm -rqf --ignore-unmatch .github/workflows
           git checkout HEAD -- .github/workflows
