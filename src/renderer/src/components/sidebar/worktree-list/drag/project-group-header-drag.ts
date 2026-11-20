@@ -305,7 +305,8 @@ export function useProjectGroupHeaderDrag({
         rootProjectHeaderKeys: rootDragRef.current.rootProjectHeaderKeys,
         projectGroupById: projectGroupByIdRef.current,
         sidebarProjectGroupHeaderIdsByBucket: sidebarProjectGroupHeaderIdsByBucketRef.current,
-        getScrollContainer: getContainerRef.current
+        getScrollContainer: getContainerRef.current,
+        allowLoneGroup: nestDrop !== undefined
       })
       if (!session) {
         return
@@ -313,7 +314,7 @@ export function useProjectGroupHeaderDrag({
       dragSessionRef.current = session
       setSessionArmed(true)
     },
-    []
+    [nestDrop]
   )
 
   return { state, onHandlePointerDown }

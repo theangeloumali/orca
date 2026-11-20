@@ -26,6 +26,8 @@ export function createProjectGroupHeaderDragSession(args: {
   >
   rootProjectHeaderKeys?: readonly string[]
   getScrollContainer: () => HTMLElement | null
+  /** With drag-to-nest a lone group can still move: into another group. */
+  allowLoneGroup?: boolean
 }): ProjectGroupHeaderDragSession | null {
   if (args.event.button !== 0) {
     return null
@@ -51,8 +53,8 @@ export function createProjectGroupHeaderDragSession(args: {
   )
   const sidebarProjectGroupHeaderIds =
     rootProjectHeaderKeys ?? args.sidebarProjectGroupHeaderIdsByBucket.get(bucketKey) ?? []
-  // Why: a lone group in a parent bucket cannot move without reparenting.
-  if (sidebarProjectGroupHeaderIds.length <= 1) {
+  // Why: without drag-to-nest a lone group in a parent bucket has nowhere to move.
+  if (sidebarProjectGroupHeaderIds.length <= 1 && !args.allowLoneGroup) {
     return null
   }
   const container = args.getScrollContainer()
