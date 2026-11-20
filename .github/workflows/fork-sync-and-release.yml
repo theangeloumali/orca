@@ -1,0 +1,192 @@
+name: Fork sync and release
+
+# Fork-only (theangeloumali/orca): merge upstream main into this fork daily, keep the fork's
+# features, verify, then publish unsigned macOS and Windows builds as a GitHub Release.
+# A merge conflict or a failed check opens an issue and publishes nothing.
+
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+    inputs:
+      force_release:
+        description: 'Build and publish even when upstream has no new commits'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: fork-sync-and-release
+  cancel-in-progress: false
+
+env:
+  UPSTREAM_REPO: stablyai/orca
+  FORK_AUTHOR_NAME: Angelo Umali
+  FORK_AUTHOR_EMAIL: angelo@theangeloumali.com
+
+jobs:
+  sync:
+    if: github.repository == 'theangeloumali/orca'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    outputs:
+      changed: ${{ steps.merge.outputs.changed }}
+      version: ${{ steps.version.outputs.version }}
+      sha: ${{ steps.push.outputs.sha }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Merge upstream main
+        id: merge
+        shell: bash
+        run: |
+          set -euo pipefail
+          git remote add upstream "https://github.com/$UPSTREAM_REPO.git"
+          git fetch upstream main --no-tags
+          if git merge-base --is-ancestor upstream/main HEAD; then
+            echo "changed=false" >>"$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if ! git -c user.name="$FORK_AUTHOR_NAME" -c user.email="$FORK_AUTHOR_EMAIL" \
+            merge --no-ff --no-edit upstream/main; then
+            git merge --abort
+            gh issue create --title "Upstream sync conflict $(date -u +%F)" --body \
+              "Merging $UPSTREAM_REPO main ($(git rev-parse --short upstream/main)) into main conflicts. Resolve locally: git fetch upstream && git merge upstream/main, then push. Nothing was published."
+            echo "changed=false" >>"$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "changed=true" >>"$GITHUB_OUTPUT"
+
+      - name: Carry the latest upstream release version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(gh release view --repo "$UPSTREAM_REPO" --json tagName -q .tagName | sed 's/^v//')"
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::unexpected upstream version '$version'"; exit 1; }
+          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));if(p.version!==process.argv[1]){p.version=process.argv[1];fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\\n')}" "$version"
+          if ! git diff --quiet package.json; then
+            git -c user.name="$FORK_AUTHOR_NAME" -c user.email="$FORK_AUTHOR_EMAIL" \
+              commit -m "chore(fork): version the fork build as release $version" package.json
+          fi
+          echo "version=$version" >>"$GITHUB_OUTPUT"
+
+      - uses: pnpm/setup@v2
+        if: steps.merge.outputs.changed == 'true'
+        with:
+          install: false
+      - uses: actions/setup-node@v6
+        if: steps.merge.outputs.changed == 'true'
+        with:
+          node-version-file: package.json
+          cache: pnpm
+
+      - name: Verify the merged build
+        if: steps.merge.outputs.changed == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm install --frozen-lockfile
+          pnpm tc
+          pnpm exec vitest run --config config/vitest.config.ts \
+            src/shared/sidebar-list src/shared/project src/main/persistence/tracking-repos \
+            src/renderer/src/components/sidebar src/main/updater
+
+      - name: Report a failed check
+        if: failure() && steps.merge.outputs.changed == 'true'
+        run: gh issue create --title "Upstream sync check failed $(date -u +%F)" --body "The merged build failed typecheck or tests in run $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID. main was not updated and nothing was published."
+
+      - name: Push main
+        id: push
+        shell: bash
+        env:
+          CHANGED: ${{ steps.merge.outputs.changed }}
+        run: |
+          set -euo pipefail
+          if [ "$CHANGED" = "true" ]; then
+            git push origin HEAD:main
+          fi
+          echo "sha=$(git rev-parse HEAD)" >>"$GITHUB_OUTPUT"
+
+  build:
+    needs: sync
+    if: needs.sync.outputs.changed == 'true' || inputs.force_release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            command: pnpm install:release && pnpm build:mac
+            artifacts: |
+              dist/*.dmg
+              dist/*.zip
+          - os: windows-latest
+            command: pnpm build:win
+            artifacts: |
+              dist/*.exe
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 120
+    env:
+      ORCA_FORK_BUILD: '1'
+      # Fork builds are unsigned; stop electron-builder from probing for a signing identity.
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.sync.outputs.sha }}
+          fetch-depth: 0
+      - uses: pnpm/setup@v2
+        with:
+          install: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: package.json
+          cache: pnpm
+      - name: Install dependencies
+        shell: bash
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm -C mobile install --frozen-lockfile
+      - name: Build installers
+        shell: bash
+        run: ${{ matrix.command }}
+      - uses: actions/upload-artifact@v5
+        with:
+          name: installers-${{ matrix.os }}
+          path: ${{ matrix.artifacts }}
+          if-no-files-found: error
+
+  release:
+    needs: [sync, build]
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/download-artifact@v6
+        with:
+          path: installers
+          merge-multiple: true
+      - name: Publish the release
+        shell: bash
+        env:
+          VERSION: ${{ needs.sync.outputs.version }}
+          TARGET_SHA: ${{ needs.sync.outputs.sha }}
+        run: |
+          set -euo pipefail
+          # The version comes from an upstream tag; accept only a plain semver before using it.
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::unexpected version '$VERSION'"; exit 1; }
+          version="$VERSION"
+          tag="v$version-angelo.$GITHUB_RUN_NUMBER"
+          gh release create "$tag" installers/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$TARGET_SHA" \
+            --title "Orca $version (fork build $GITHUB_RUN_NUMBER)" \
+            --notes "Official Orca $version plus this fork's features: Machines | Projects sidebar layout, live agent counts per machine, New subgroup / Move group to, and per-machine group placement. Unsigned: on macOS right-click → Open the first time; on Windows choose More info → Run anyway."
