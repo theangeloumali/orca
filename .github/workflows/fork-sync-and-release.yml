@@ -2,7 +2,8 @@ name: Fork sync and release
 
 # Fork-only (theangeloumali/orca): merge upstream main into this fork daily, keep the fork's
 # features, verify, then publish unsigned macOS and Windows builds as a GitHub Release.
-# A merge conflict or a failed check opens an issue and publishes nothing.
+# Jobs that run repository code hold read-only tokens; only push/issue/release jobs can write,
+# and they run no repository code. A conflict or failed check opens an issue and publishes nothing.
 
 on:
   schedule:
@@ -14,9 +15,7 @@ on:
         type: boolean
         default: false
 
-permissions:
-  contents: write
-  issues: write
+permissions: {}
 
 concurrency:
   group: fork-sync-and-release
@@ -28,22 +27,22 @@ env:
   FORK_AUTHOR_EMAIL: angelo@theangeloumali.com
 
 jobs:
-  sync:
+  merge:
     if: github.repository == 'theangeloumali/orca'
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 20
+    permissions:
+      contents: read
     outputs:
       changed: ${{ steps.merge.outputs.changed }}
+      conflict: ${{ steps.merge.outputs.conflict }}
       version: ${{ steps.version.outputs.version }}
-      sha: ${{ steps.push.outputs.sha }}
-    env:
-      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v6
         with:
           ref: main
           fetch-depth: 0
-
+          persist-credentials: false
       - name: Merge upstream main
         id: merge
         shell: bash
@@ -58,39 +57,63 @@ jobs:
           if ! git -c user.name="$FORK_AUTHOR_NAME" -c user.email="$FORK_AUTHOR_EMAIL" \
             merge --no-ff --no-edit upstream/main; then
             git merge --abort
-            gh issue create --title "Upstream sync conflict $(date -u +%F)" --body \
-              "Merging $UPSTREAM_REPO main ($(git rev-parse --short upstream/main)) into main conflicts. Resolve locally: git fetch upstream && git merge upstream/main, then push. Nothing was published."
+            echo "conflict=true" >>"$GITHUB_OUTPUT"
             echo "changed=false" >>"$GITHUB_OUTPUT"
             exit 0
           fi
           echo "changed=true" >>"$GITHUB_OUTPUT"
-
       - name: Carry the latest upstream release version
         id: version
+        if: steps.merge.outputs.changed == 'true'
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           version="$(gh release view --repo "$UPSTREAM_REPO" --json tagName -q .tagName | sed 's/^v//')"
           [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::unexpected upstream version '$version'"; exit 1; }
-          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));if(p.version!==process.argv[1]){p.version=process.argv[1];fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\\n')}" "$version"
+          sed -i -E "0,/\"version\": \"[^\"]+\"/s//\"version\": \"$version\"/" package.json
           if ! git diff --quiet package.json; then
             git -c user.name="$FORK_AUTHOR_NAME" -c user.email="$FORK_AUTHOR_EMAIL" \
               commit -m "chore(fork): version the fork build as release $version" package.json
           fi
           echo "version=$version" >>"$GITHUB_OUTPUT"
-
-      - uses: pnpm/setup@v2
+      - name: Bundle the merged commit
         if: steps.merge.outputs.changed == 'true'
+        run: git bundle create merged.bundle origin/main..HEAD
+      - uses: actions/upload-artifact@v5
+        if: steps.merge.outputs.changed == 'true'
+        with:
+          name: merged-bundle
+          path: merged.bundle
+
+  verify:
+    needs: merge
+    if: needs.merge.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/download-artifact@v6
+        with:
+          name: merged-bundle
+      - name: Check out the merged commit
+        run: |
+          git fetch merged.bundle HEAD:refs/heads/merged
+          git checkout merged
+      - uses: pnpm/setup@v2
         with:
           install: false
       - uses: actions/setup-node@v6
-        if: steps.merge.outputs.changed == 'true'
         with:
           node-version-file: package.json
-          cache: pnpm
-
-      - name: Verify the merged build
-        if: steps.merge.outputs.changed == 'true'
+      - name: Typecheck and test the merged build
         shell: bash
         run: |
           set -euo pipefail
@@ -100,25 +123,55 @@ jobs:
             src/shared/sidebar-list src/shared/project src/main/persistence/tracking-repos \
             src/renderer/src/components/sidebar src/main/updater
 
-      - name: Report a failed check
-        if: failure() && steps.merge.outputs.changed == 'true'
-        run: gh issue create --title "Upstream sync check failed $(date -u +%F)" --body "The merged build failed typecheck or tests in run $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID. main was not updated and nothing was published."
-
-      - name: Push main
+  publish-main:
+    needs: [merge, verify]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    outputs:
+      sha: ${{ steps.push.outputs.sha }}
+    steps:
+      # Runs no repository code: fetch the verified bundle and push it.
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/download-artifact@v6
+        with:
+          name: merged-bundle
+      - name: Push the verified merge to main
         id: push
-        shell: bash
-        env:
-          CHANGED: ${{ steps.merge.outputs.changed }}
         run: |
-          set -euo pipefail
-          if [ "$CHANGED" = "true" ]; then
-            git push origin HEAD:main
+          git fetch merged.bundle HEAD:refs/heads/merged
+          git push origin merged:main
+          echo "sha=$(git rev-parse merged)" >>"$GITHUB_OUTPUT"
+
+  report:
+    needs: [merge, verify]
+    if: always() && (needs.merge.outputs.conflict == 'true' || needs.verify.result == 'failure' || needs.merge.result == 'failure')
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      CONFLICT: ${{ needs.merge.outputs.conflict }}
+    steps:
+      - name: Open an issue
+        run: |
+          if [ "$CONFLICT" = "true" ]; then
+            title="Upstream sync conflict $(date -u +%F)"
+            body="Merging $UPSTREAM_REPO main into main conflicts. Resolve locally with git fetch upstream && git merge upstream/main, then push. Nothing was published. Run: $RUN_URL"
+          else
+            title="Upstream sync check failed $(date -u +%F)"
+            body="The merged build failed its typecheck or tests, so main was not updated and nothing was published. Run: $RUN_URL"
           fi
-          echo "sha=$(git rev-parse HEAD)" >>"$GITHUB_OUTPUT"
+          gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body "$body"
 
   build:
-    needs: sync
-    if: needs.sync.outputs.changed == 'true' || inputs.force_release
+    needs: [merge, publish-main]
+    if: always() && (needs.publish-main.result == 'success' || (inputs.force_release && needs.merge.result == 'success'))
     strategy:
       fail-fast: false
       matrix:
@@ -134,6 +187,8 @@ jobs:
               dist/*.exe
     runs-on: ${{ matrix.os }}
     timeout-minutes: 120
+    permissions:
+      contents: read
     env:
       ORCA_FORK_BUILD: '1'
       # Fork builds are unsigned; stop electron-builder from probing for a signing identity.
@@ -141,15 +196,15 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ needs.sync.outputs.sha }}
+          ref: ${{ needs.publish-main.outputs.sha || 'main' }}
           fetch-depth: 0
+          persist-credentials: false
       - uses: pnpm/setup@v2
         with:
           install: false
       - uses: actions/setup-node@v6
         with:
           node-version-file: package.json
-          cache: pnpm
       - name: Install dependencies
         shell: bash
         run: |
@@ -165,28 +220,30 @@ jobs:
           if-no-files-found: error
 
   release:
-    needs: [sync, build]
+    needs: [merge, publish-main, build]
+    if: always() && needs.build.result == 'success'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     env:
       GH_TOKEN: ${{ github.token }}
+      TARGET_SHA: ${{ needs.publish-main.outputs.sha }}
     steps:
+      # Runs no repository code: attach the built installers to a release.
       - uses: actions/download-artifact@v6
         with:
+          pattern: installers-*
           path: installers
           merge-multiple: true
       - name: Publish the release
         shell: bash
-        env:
-          VERSION: ${{ needs.sync.outputs.version }}
-          TARGET_SHA: ${{ needs.sync.outputs.sha }}
         run: |
           set -euo pipefail
-          # The version comes from an upstream tag; accept only a plain semver before using it.
-          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::unexpected version '$VERSION'"; exit 1; }
-          version="$VERSION"
-          tag="v$version-angelo.$GITHUB_RUN_NUMBER"
-          gh release create "$tag" installers/* \
+          version="$(gh release view --repo "$UPSTREAM_REPO" --json tagName -q .tagName | sed 's/^v//')"
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::unexpected version '$version'"; exit 1; }
+          target="${TARGET_SHA:-main}"
+          gh release create "v$version-angelo.$GITHUB_RUN_NUMBER" installers/* \
             --repo "$GITHUB_REPOSITORY" \
-            --target "$TARGET_SHA" \
+            --target "$target" \
             --title "Orca $version (fork build $GITHUB_RUN_NUMBER)" \
-            --notes "Official Orca $version plus this fork's features: Machines | Projects sidebar layout, live agent counts per machine, New subgroup / Move group to, and per-machine group placement. Unsigned: on macOS right-click → Open the first time; on Windows choose More info → Run anyway."
+            --notes "Official Orca $version plus this fork's features: Machines | Projects sidebar layout, live agent counts per machine, New subgroup / Move group to, drag a group onto a group, and per-machine group placement. Unsigned: on macOS right-click → Open the first time; on Windows choose More info → Run anyway."
