@@ -70,7 +70,8 @@ export abstract class UpdaterScheduling extends UpdaterCheckFailure {
     ) {
       return false
     }
-    if (!app.isPackaged) {
+    // Fork builds are unsigned; an official update would replace them with stock Orca.
+    if (!app.isPackaged || OFFICIAL_UPDATES_DISABLED) {
       this.sendStatus({ state: 'not-available' })
       return false
     }
@@ -154,9 +155,6 @@ export abstract class UpdaterScheduling extends UpdaterCheckFailure {
   }
 
   protected checkForUpdatesInBackground(): void {
-    if (OFFICIAL_UPDATES_DISABLED) {
-      return
-    }
     // This span measures launch, not check outcome; dashboards must filter updater.outcome=launched.
     void withUpdaterSpan({ stage: 'check' }, async (span) => {
       span.setAttribute('updater.outcome', 'launched')

@@ -3,7 +3,10 @@ name: Fork sync and release
 # Fork-only (theangeloumali/orca): merge upstream main into this fork daily, keep the fork's
 # features, verify, then publish unsigned macOS and Windows builds as a GitHub Release.
 # Jobs that run repository code hold read-only tokens; only push/issue/release jobs can write,
-# and they run no repository code. A conflict or failed check opens an issue and publishes nothing.
+# and they run no repository code. A conflict or failed job opens an issue and publishes nothing.
+# Runs only from main, so it goes live once the fork branch (with the updater switch) is merged.
+# Needs secret FORK_SYNC_TOKEN: a fine-grained token on this repo with Contents and Workflows
+# write, because GITHUB_TOKEN may not push upstream's .github/workflows changes.
 
 on:
   schedule:
@@ -36,7 +39,6 @@ jobs:
     outputs:
       changed: ${{ steps.merge.outputs.changed }}
       conflict: ${{ steps.merge.outputs.conflict }}
-      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -63,7 +65,6 @@ jobs:
           fi
           echo "changed=true" >>"$GITHUB_OUTPUT"
       - name: Carry the latest upstream release version
-        id: version
         if: steps.merge.outputs.changed == 'true'
         shell: bash
         env:
@@ -77,7 +78,6 @@ jobs:
             git -c user.name="$FORK_AUTHOR_NAME" -c user.email="$FORK_AUTHOR_EMAIL" \
               commit -m "chore(fork): version the fork build as release $version" package.json
           fi
-          echo "version=$version" >>"$GITHUB_OUTPUT"
       - name: Bundle the merged commit
         if: steps.merge.outputs.changed == 'true'
         run: git bundle create merged.bundle origin/main..HEAD
@@ -128,15 +128,21 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
-      contents: write
+      contents: read
     outputs:
       sha: ${{ steps.push.outputs.sha }}
     steps:
       # Runs no repository code: fetch the verified bundle and push it.
+      - name: Require the sync token
+        env:
+          FORK_SYNC_TOKEN: ${{ secrets.FORK_SYNC_TOKEN }}
+        run: |
+          [ -n "$FORK_SYNC_TOKEN" ] || { echo "::error::Add secret FORK_SYNC_TOKEN (Contents + Workflows write)"; exit 1; }
       - uses: actions/checkout@v6
         with:
           ref: main
           fetch-depth: 0
+          token: ${{ secrets.FORK_SYNC_TOKEN }}
       - uses: actions/download-artifact@v6
         with:
           name: merged-bundle
@@ -148,8 +154,8 @@ jobs:
           echo "sha=$(git rev-parse merged)" >>"$GITHUB_OUTPUT"
 
   report:
-    needs: [merge, verify]
-    if: always() && (needs.merge.outputs.conflict == 'true' || needs.verify.result == 'failure' || needs.merge.result == 'failure')
+    needs: [merge, verify, publish-main, build, release]
+    if: ${{ !cancelled() && (needs.merge.outputs.conflict == 'true' || contains(needs.*.result, 'failure')) }}
     runs-on: ubuntu-latest
     permissions:
       issues: write
@@ -164,25 +170,38 @@ jobs:
             title="Upstream sync conflict $(date -u +%F)"
             body="Merging $UPSTREAM_REPO main into main conflicts. Resolve locally with git fetch upstream && git merge upstream/main, then push. Nothing was published. Run: $RUN_URL"
           else
-            title="Upstream sync check failed $(date -u +%F)"
-            body="The merged build failed its typecheck or tests, so main was not updated and nothing was published. Run: $RUN_URL"
+            title="Fork sync or release failed $(date -u +%F)"
+            body="A step of the daily sync failed (merge, verify, push to main, installer build or release); see the run for which. A failed verify or push publishes nothing. Run: $RUN_URL"
           fi
           gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body "$body"
 
   build:
-    needs: [merge, publish-main]
-    if: always() && (needs.publish-main.result == 'success' || (inputs.force_release && needs.merge.result == 'success'))
+    needs: [merge, verify, publish-main]
+    # force_release rebuilds an unchanged main, never one that failed to merge, verify or push.
+    if: >-
+      ${{ !cancelled() && (needs.publish-main.result == 'success' ||
+      (inputs.force_release && needs.merge.result == 'success' &&
+      needs.merge.outputs.conflict != 'true' && needs.verify.result != 'failure' &&
+      needs.publish-main.result != 'failure')) }}
     strategy:
       fail-fast: false
       matrix:
         include:
+          # Mirrors upstream's release-mac-build and dev-channel-win-build, minus signing.
           - os: macos-latest
-            command: pnpm install:release && pnpm build:mac
+            install: pnpm install --frozen-lockfile --cpu=current,x64,arm64
+            package: |
+              node config/scripts/orcad-distribution/prebuilds/pinned-node-downloads.mjs darwin-arm64 darwin-x64
+              node config/scripts/native-build/node-addons/ensure-native-runtime.mjs --runtime=electron
+              pnpm exec electron-builder --config config/electron-builder.config.cjs --mac --publish never
             artifacts: |
               dist/*.dmg
               dist/*.zip
           - os: windows-latest
-            command: pnpm build:win
+            install: pnpm install --frozen-lockfile
+            package: |
+              node config/scripts/native-build/node-addons/ensure-native-runtime.mjs --runtime=electron
+              pnpm exec electron-builder --config config/electron-builder.config.cjs --win --publish never
             artifacts: |
               dist/*.exe
     runs-on: ${{ matrix.os }}
@@ -193,6 +212,7 @@ jobs:
       ORCA_FORK_BUILD: '1'
       # Fork builds are unsigned; stop electron-builder from probing for a signing identity.
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      NODE_OPTIONS: --max-old-space-size=4096
     steps:
       - uses: actions/checkout@v6
         with:
@@ -207,12 +227,18 @@ jobs:
           node-version-file: package.json
       - name: Install dependencies
         shell: bash
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm -C mobile install --frozen-lockfile
-      - name: Build installers
+        run: ${{ matrix.install }}
+      - uses: ./.github/actions/install-mobile-dependencies
+      - name: Build the app
         shell: bash
-        run: ${{ matrix.command }}
+        run: pnpm build:release
+      - name: Package installers
+        shell: bash
+        run: |
+          set -euo pipefail
+          ORCA_BUILD_COMMIT="$(git rev-parse HEAD)"
+          export ORCA_BUILD_COMMIT
+          ${{ matrix.package }}
       - uses: actions/upload-artifact@v5
         with:
           name: installers-${{ matrix.os }}
@@ -220,8 +246,8 @@ jobs:
           if-no-files-found: error
 
   release:
-    needs: [merge, publish-main, build]
-    if: always() && needs.build.result == 'success'
+    needs: [publish-main, build]
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -239,9 +265,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          version="$(gh release view --repo "$UPSTREAM_REPO" --json tagName -q .tagName | sed 's/^v//')"
+          target="${TARGET_SHA:-$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)}"
+          # The version comes from the commit that was built, not a fresh upstream lookup.
+          version="$(gh api "repos/$GITHUB_REPOSITORY/contents/package.json?ref=$target" \
+            -H 'Accept: application/vnd.github.raw' | jq -r .version)"
           [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::unexpected version '$version'"; exit 1; }
-          target="${TARGET_SHA:-main}"
           gh release create "v$version-angelo.$GITHUB_RUN_NUMBER" installers/* \
             --repo "$GITHUB_REPOSITORY" \
             --target "$target" \
