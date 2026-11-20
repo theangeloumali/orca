@@ -17,7 +17,7 @@ import type { SshConnectionStatus } from '../../remote-runtime/ssh/ssh-types'
 import type { Row } from '../row-types'
 import { getFolderWorkspaceHostId } from './folder-workspace-host-id'
 import { countWorkspaceRows } from './host-section-workspace-count'
-import { getGroupHeaderOwnerHostId } from './host-section-group-owner'
+import { getGroupHeaderOwnerHostId, pendingRowsForHost } from './host-section-group-owner'
 import { localizeProjectHeader, localizeRowsToHost } from './project-header-localization'
 
 export type HostHeaderRow = {
@@ -196,11 +196,7 @@ export function addHostSectionRows(args: {
 
   const pushHostRow = (row: Row, rowHostId: ExecutionHostId): void => {
     const hostRows = rowsByHostId.get(rowHostId) ?? []
-    // Another machine's group never heads this machine's copy of a shared project (#29535).
-    const hostPendingRows = pendingRows.filter((pending) => {
-      const ownerHostId = getGroupHeaderOwnerHostId(pending, args.defaultHostId)
-      return ownerHostId === null || ownerHostId === rowHostId
-    })
+    const hostPendingRows = pendingRowsForHost(pendingRows, rowHostId, args.defaultHostId)
     const localizedPendingRows = localizePendingRowsForHost(hostPendingRows, rowHostId)
     const path = localizedPendingRows.map(getPendingRowKey)
     const emitted = emittedPathByHostId.get(rowHostId) ?? []

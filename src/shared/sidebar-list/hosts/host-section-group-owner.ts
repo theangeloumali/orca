@@ -12,3 +12,15 @@ export function getGroupHeaderOwnerHostId(
   }
   return getProjectGroupExecutionHostIdForRows(row.projectGroup, defaultHostId)
 }
+
+/** Pending headers that may head a host's rows: another machine's group never does (#29535). */
+export function pendingRowsForHost<T extends Row>(
+  pendingRows: readonly T[],
+  hostId: ExecutionHostId,
+  defaultHostId: ExecutionHostId
+): T[] {
+  return pendingRows.filter((pending) => {
+    const ownerHostId = getGroupHeaderOwnerHostId(pending, defaultHostId)
+    return ownerHostId === null || ownerHostId === hostId
+  })
+}
