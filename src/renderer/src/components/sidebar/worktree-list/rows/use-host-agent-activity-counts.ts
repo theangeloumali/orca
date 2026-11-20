@@ -5,10 +5,11 @@ import type { AppState } from '@/store/types'
 import { useNow } from '@/lib/window-activity/use-now'
 import { createAgentStatusEpochSelector } from '@/lib/agent-status/evidence/agent-status-epoch-selector'
 import { getLiveAgentStatusByWorktreeId } from '@/lib/workspace/activity/worktree-activity-state'
+import type { ExecutionHostId } from '../../../../../../shared/execution-host/execution-host'
 import {
-  getSettingsFocusedExecutionHostId,
-  type ExecutionHostId
-} from '../../../../../../shared/execution-host/execution-host'
+  selectFolderWorkspaces,
+  selectWorktreesByRepo
+} from '@/store/workspaces/catalog/workspace-record-fields'
 import {
   collectHostWorkspaceIds,
   countHostAgentActivity,
@@ -16,7 +17,10 @@ import {
 } from '../../../../../../shared/sidebar-list/hosts/host-agent-activity'
 
 /** Live working / needs-you counts for one machine; recomputes on agent-status epochs and a 30s clock. */
-export function useHostAgentActivityCounts(hostId: ExecutionHostId): HostAgentActivityCounts {
+export function useHostAgentActivityCounts(
+  hostId: ExecutionHostId,
+  defaultHostId: ExecutionHostId
+): HostAgentActivityCounts {
   // Same freshness clock as the workspace cards, so the header and its rows expire stale agents together.
   const now = useNow(30_000)
   const select = useMemo(
@@ -25,6 +29,7 @@ export function useHostAgentActivityCounts(hostId: ExecutionHostId): HostAgentAc
         (
           state: AppState,
           host: ExecutionHostId,
+          defaultHost: ExecutionHostId,
           worktreesByRepo: AppState['worktreesByRepo'],
           folderWorkspaces: AppState['folderWorkspaces'],
           tabsByWorktree: AppState['tabsByWorktree'],
@@ -39,7 +44,7 @@ export function useHostAgentActivityCounts(hostId: ExecutionHostId): HostAgentAc
                 projectGroups: state.projectGroups
               },
               host,
-              getSettingsFocusedExecutionHostId(state.settings)
+              defaultHost
             ),
             getLiveAgentStatusByWorktreeId(state.agentStatusByPaneKey, tabsByWorktree, clock)
           )
@@ -51,8 +56,9 @@ export function useHostAgentActivityCounts(hostId: ExecutionHostId): HostAgentAc
       select(
         state,
         hostId,
-        state.worktreesByRepo,
-        state.folderWorkspaces,
+        defaultHostId,
+        selectWorktreesByRepo(state),
+        selectFolderWorkspaces(state),
         state.tabsByWorktree,
         now
       )

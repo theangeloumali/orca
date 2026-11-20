@@ -39,9 +39,12 @@ function SectionMetricsBadge({ count }: { count: number }): React.JSX.Element {
 }
 
 /** Agents on this machine that are running or waiting on you; nothing when it is quiet. */
-function HostAgentActivity({ hostId }: Pick<HostHeaderRow, 'hostId'>): React.JSX.Element | null {
+function HostAgentActivity({
+  hostId,
+  defaultHostId
+}: Pick<HostHeaderRow, 'hostId' | 'defaultHostId'>): React.JSX.Element | null {
   const t = useTranslate()
-  const { working, needsYou } = useHostAgentActivityCounts(hostId)
+  const { working, needsYou } = useHostAgentActivityCounts(hostId, defaultHostId)
   if (working === 0 && needsYou === 0) {
     return null
   }
@@ -204,7 +207,7 @@ export function HostSectionHeader({
             </span>
           ) : null}
           <SectionMetricsBadge count={row.count} />
-          <HostAgentActivity hostId={row.hostId} />
+          <HostAgentActivity hostId={row.hostId} defaultHostId={row.defaultHostId} />
         </div>
         <div className="flex size-4 shrink-0 items-center justify-center text-muted-foreground/60 can-hover:opacity-0 transition-opacity group-hover/host-header:opacity-100">
           <ChevronDown

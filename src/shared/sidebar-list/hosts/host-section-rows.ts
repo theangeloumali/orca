@@ -42,6 +42,8 @@ export type HostHeaderRow = {
   connectionStatus?: SshConnectionStatus
   collapsed: boolean
   count: number
+  /** Owner of workspaces with no host stamp; the header's agent counts include them on this host. */
+  defaultHostId: ExecutionHostId
 }
 
 export type HostSectionRow = Row | HostHeaderRow
@@ -290,6 +292,7 @@ export function addHostSectionRows(args: {
       type: 'host-header',
       key: `host:${host.id}`,
       hostId: host.id,
+      defaultHostId: args.defaultHostId,
       kind: host.kind,
       label: host.label,
       isDefaultLocalLabel: host.isDefaultLocalLabel,
