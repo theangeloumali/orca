@@ -8540,6 +8540,11 @@
           "browseFolder": "Browse folder…",
           "cloneFromUrl": "Clone from URL…",
           "createNewProject": "Create new project…"
+        },
+        "SidebarMachineLayoutToggle": {
+          "machines": "Machines",
+          "projects": "Projects",
+          "label": "Sidebar layout"
         }
       },
       "shared": {

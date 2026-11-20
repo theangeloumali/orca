@@ -129,6 +129,8 @@ export type PersistedUIState = {
   /** One-shot migration flag for deriving card properties from the two worktree card modes. */
   _worktreeCardModeDefaulted?: boolean
   showAgentModels?: boolean
+  /** Sidebar "Machines" layout: one section per host even when every host is shown. */
+  showWorkspaceHostSections?: boolean
   agentActivityDisplayMode?: AgentActivityDisplayMode
   workspaceStatuses?: WorkspaceStatusDefinition[]
   workspaceBoardOpacity?: number

@@ -113,7 +113,9 @@ export function computeRenderedSidebarRows(
 
   // Build the host registry only when sections may affect order; zero/one-host cases still safely no-op.
   const needsHostSections =
-    state.workspaceHostScope !== ALL_EXECUTION_HOSTS_SCOPE || state.visibleWorkspaceHostIds != null
+    state.showWorkspaceHostSections ||
+    state.workspaceHostScope !== ALL_EXECUTION_HOSTS_SCOPE ||
+    state.visibleWorkspaceHostIds != null
   return needsHostSections
     ? addHostSectionRows({
         rows,
@@ -135,7 +137,8 @@ export function computeRenderedSidebarRows(
         localHostLabel: getLocalExecutionHostLabel(),
         collapsedHostKeys: state.collapsedGroups,
         forceCollapseHosts: false,
-        preferProjectGrouping: true
+        preferProjectGrouping: true,
+        showHostSections: state.showWorkspaceHostSections
       })
     : rows
 }

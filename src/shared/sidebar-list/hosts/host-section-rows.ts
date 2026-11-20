@@ -131,12 +131,15 @@ export function addHostSectionRows(args: {
   forceCollapseHosts?: boolean
   // Projects remain primary in the default view; explicit host filters retain operational host headers.
   preferProjectGrouping?: boolean
+  /** The "Machines" layout: one section per host even when every host is shown. */
+  showHostSections?: boolean
 }): HostSectionRow[] {
   const visibleHostIds =
     args.visibleWorkspaceHostIds ??
     (args.workspaceHostScope === ALL_EXECUTION_HOSTS_SCOPE ? null : [args.workspaceHostScope])
   if (
     args.preferProjectGrouping &&
+    !args.showHostSections &&
     args.workspaceHostScope === ALL_EXECUTION_HOSTS_SCOPE &&
     !args.visibleWorkspaceHostIds
   ) {

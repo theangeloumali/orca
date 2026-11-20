@@ -90,6 +90,7 @@ export function useMainSidebarListModel(args: SidebarListModelArgs): SidebarList
     useShallow((s) => selectPendingWorktreeCreationKeys(s.pendingWorktreeCreations, 'hidden'))
   )
   const workspaceHostOrder = useAppStore((s) => s.workspaceHostOrder)
+  const showMachineSections = useAppStore((s) => s.showWorkspaceHostSections)
   const setWorkspaceHostOrder = useAppStore((s) => s.setWorkspaceHostOrder)
   const domains = useMemo(
     () =>
@@ -134,6 +135,7 @@ export function useMainSidebarListModel(args: SidebarListModelArgs): SidebarList
       defaultHostId,
       hostLabelOverrides: getHostDisplayLabelOverrides(settings),
       localHostLabel: getLocalExecutionHostLabel(),
+      showHostSections: showMachineSections,
       workspaceHostOrder
     }),
     [
@@ -145,6 +147,7 @@ export function useMainSidebarListModel(args: SidebarListModelArgs): SidebarList
       args.pinnedDisplayPolicy,
       defaultHostId,
       settings,
+      showMachineSections,
       workspaceHostOrder
     ]
   )

@@ -135,9 +135,12 @@ export function useSidebarSectionRows(args: SectionRowsArgs) {
     selectHostOptions(state, repos, args.settings, hostLabelOverrides)
   )
   const hostLabelById = selectHostLabels(hostOptions)
+  const showMachineSections = useAppStore((state) => state.showWorkspaceHostSections)
 
   const hostScopedGroups =
-    args.workspaceHostScope !== 'all' || args.visibleWorkspaceHostIds !== null
+    showMachineSections ||
+    args.workspaceHostScope !== 'all' ||
+    args.visibleWorkspaceHostIds !== null
   // Same-id registrations on two hosts: each row and project header needs its own host's.
   const repoOfWorktree = useMemo(() => createHostScopedRepoOf(repos, repoMap), [repos, repoMap])
   const rowPlan = useMemo(
@@ -254,7 +257,8 @@ export function useSidebarSectionRows(args: SectionRowsArgs) {
       collapsedHostKeys: effectiveCollapsedGroups,
       forceCollapseHosts: hostDragActive,
       // Why: projects/workspaces are the primary sidebar object; host sections are only an explicit host-filter view.
-      preferProjectGrouping: true
+      preferProjectGrouping: true,
+      showHostSections: showMachineSections
     })
     return hostScopedGroups
       ? scopeHostSectionCollapse({
@@ -270,7 +274,8 @@ export function useSidebarSectionRows(args: SectionRowsArgs) {
     hostDragActive,
     hostScopedGroups,
     orderedHostOptions,
-    rows
+    rows,
+    showMachineSections
   ])
   const renderedSidebarRowKeys = useMemo(
     () => collectRenderedSidebarRowKeys(sectionRows),
