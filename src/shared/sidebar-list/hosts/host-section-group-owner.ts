@@ -24,3 +24,12 @@ export function pendingRowsForHost<T extends Row>(
     return ownerHostId === null || ownerHostId === hostId
   })
 }
+
+/** The queued headers that enclose `row`: shallower group headers queued before it. */
+export function enclosingPendingHeaders<T extends Row>(pendingRows: readonly T[], row: T): T[] {
+  const depth = row.type === 'header' ? (row.projectGroupDepth ?? 0) : 0
+  const index = pendingRows.indexOf(row)
+  return (index === -1 ? pendingRows : pendingRows.slice(0, index)).filter(
+    (pending) => pending.type === 'header' && (pending.projectGroupDepth ?? 0) < depth
+  )
+}

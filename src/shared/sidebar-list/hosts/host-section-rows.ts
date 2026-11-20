@@ -1,6 +1,5 @@
 import {
   ALL_EXECUTION_HOSTS_SCOPE,
-  LOCAL_EXECUTION_HOST_ID,
   getRepoExecutionHostIdOrDefault,
   getWorktreeExecutionHostId,
   type ExecutionHostId,
@@ -17,7 +16,12 @@ import type { SshConnectionStatus } from '../../remote-runtime/ssh/ssh-types'
 import type { Row } from '../row-types'
 import { getFolderWorkspaceHostId } from './folder-workspace-host-id'
 import { collectHostWorktreeIds, countWorkspaceRows } from './host-section-workspace-count'
-import { getGroupHeaderOwnerHostId, pendingRowsForHost } from './host-section-group-owner'
+import { getFallbackHost } from './host-section-fallback-host'
+import {
+  enclosingPendingHeaders,
+  getGroupHeaderOwnerHostId,
+  pendingRowsForHost
+} from './host-section-group-owner'
 import { localizeProjectHeader, localizeRowsToHost } from './project-header-localization'
 
 export type HostHeaderRow = {
@@ -72,18 +76,6 @@ function getRowHostId(row: Row, defaultHostId: ExecutionHostId): ExecutionHostId
       return getFolderWorkspaceHostId(row.folderWorkspace, row.projectGroup, defaultHostId)
     case 'header':
       return row.repo ? getRepoExecutionHostIdOrDefault(row.repo, defaultHostId) : null
-  }
-}
-
-function getFallbackHost(hostId: ExecutionHostId, localHostLabel: string): HostSectionOption {
-  const isLocal = hostId === LOCAL_EXECUTION_HOST_ID
-  return {
-    id: hostId,
-    kind: isLocal ? 'local' : hostId.startsWith('ssh:') ? 'ssh' : 'runtime',
-    label: isLocal ? localHostLabel : hostId,
-    isDefaultLocalLabel: isLocal,
-    detail: isLocal ? 'This computer' : 'Host',
-    health: isLocal ? 'local' : 'available'
   }
 }
 
@@ -174,7 +166,11 @@ export function addHostSectionRows(args: {
         // An empty group still belongs to its machine, not above every section (#27987).
         const ownerHostId = getGroupHeaderOwnerHostId(row, args.defaultHostId)
         if (ownerHostId) {
-          rowsByHostId.set(ownerHostId, [...(rowsByHostId.get(ownerHostId) ?? []), row])
+          // Draw it like any row of its machine, so its parent header comes first.
+          const queued = pendingRows
+          pendingRows = enclosingPendingHeaders(queued, row)
+          pushHostRow(row, ownerHostId)
+          pendingRows = queued
         } else {
           globalRows.push(row)
         }
