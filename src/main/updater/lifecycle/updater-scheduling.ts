@@ -7,6 +7,7 @@ import {
   MAX_AUTO_UPDATE_RETRY_INTERVAL_MS
 } from './updater-state'
 import { UpdaterCheckFailure } from './updater-check-failure'
+import { OFFICIAL_UPDATES_DISABLED } from '../fork-build-updates'
 import { getDelayedUpdateWakeDelayMs } from '../releases/updater-release-delay'
 
 export abstract class UpdaterScheduling extends UpdaterCheckFailure {
@@ -153,6 +154,9 @@ export abstract class UpdaterScheduling extends UpdaterCheckFailure {
   }
 
   protected checkForUpdatesInBackground(): void {
+    if (OFFICIAL_UPDATES_DISABLED) {
+      return
+    }
     // This span measures launch, not check outcome; dashboards must filter updater.outcome=launched.
     void withUpdaterSpan({ stage: 'check' }, async (span) => {
       span.setAttribute('updater.outcome', 'launched')

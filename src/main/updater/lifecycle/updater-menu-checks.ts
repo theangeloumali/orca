@@ -3,6 +3,7 @@ import { isMacInstallRequested } from '../mac-install/updater-mac-install'
 import type { UpdateCheckOptions } from '../../../shared/updater/update-status-types'
 import type { ReleaseChannel } from '../../../shared/updater/release-channel'
 import { UpdaterScheduling } from './updater-scheduling'
+import { OFFICIAL_UPDATES_DISABLED } from '../fork-build-updates'
 
 export abstract class UpdaterMenuChecks extends UpdaterScheduling {
   protected checkForUpdatesFromMenu(options?: UpdateCheckOptions): void {
@@ -15,7 +16,7 @@ export abstract class UpdaterMenuChecks extends UpdaterScheduling {
     ) {
       return
     }
-    if (!app.isPackaged) {
+    if (!app.isPackaged || OFFICIAL_UPDATES_DISABLED) {
       this.sendStatus({ state: 'not-available', userInitiated: true })
       return
     }
