@@ -73,6 +73,8 @@ export type SidebarFeedView = {
   hostLabelOverrides: ReadonlyMap<ExecutionHostId, string>
   /** The listed host's name for itself when the user has not renamed it. */
   localHostLabel: string
+  /** Desktop "Machines" layout; the phone leaves it unset and keeps its filter-driven sections. */
+  showHostSections?: boolean
   /** The desktop window's own saved host order, which it writes; a phone reads the host's. */
   workspaceHostOrder?: readonly ExecutionHostId[]
 }
@@ -254,7 +256,9 @@ export function planSidebarFeedRows(
       normalizeExecutionHostOrder(view.workspaceHostOrder ?? domains.desktop?.workspaceHostOrder)
     ),
     hostScoped:
-      view.workspaceHostScope !== ALL_EXECUTION_HOSTS_SCOPE || view.visibleWorkspaceHostIds !== null
+      view.showHostSections === true ||
+      view.workspaceHostScope !== ALL_EXECUTION_HOSTS_SCOPE ||
+      view.visibleWorkspaceHostIds !== null
   }
 }
 
@@ -278,7 +282,8 @@ export function renderSidebarFeedRows(
     localHostLabel: view.localHostLabel,
     collapsedHostKeys: collapsed,
     forceCollapseHosts,
-    preferProjectGrouping: true
+    preferProjectGrouping: true,
+    showHostSections: view.showHostSections
   })
   const sectionRows = planned.hostScoped
     ? scopeHostSectionCollapse({ rows: sectioned, collapsedGroups: collapsed })

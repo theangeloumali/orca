@@ -29,6 +29,9 @@ import {
   getSidebarRootProjectHeaderKeys
 } from './root-project-header-drop'
 import { toast } from 'sonner'
+import { moveProjectGroupToParent } from '@/store/project-groups/move-project-group'
+import { useProjectGroupNestDrop } from './use-project-group-nest-drop'
+import { hasSameHostGroupPair } from './project-group-header-nest-drop'
 import { translate } from '@/i18n/i18n'
 
 const readLiveRepos = (): readonly Repo[] => useAppStore.getState().repos
@@ -194,6 +197,22 @@ export function useWorktreeSidebarHeaderDrag(args: {
     },
     [projectGroupOwnerHostIdByGroupId, onScrollIntent, updateProjectGroup]
   )
+  // Nesting needs another group on the same machine; then even a lone subgroup can be dragged.
+  const canNestProjectGroupHeaders =
+    canReorderProjectGroupHeaders && hasSameHostGroupPair(projectGroupOwnerHostIdByGroupId)
+  const commitProjectGroupParent = useCallback(
+    (groupId: string, parentGroupId: string) => {
+      onScrollIntent()
+      const ownerHostId = projectGroupOwnerHostIdByGroupId.get(groupId)
+      void moveProjectGroupToParent({
+        updateProjectGroup,
+        groupId,
+        parentGroupId,
+        hostId: ownerHostId ?? undefined
+      })
+    },
+    [projectGroupOwnerHostIdByGroupId, onScrollIntent, updateProjectGroup]
+  )
   const commitRootProjectOrder = useCallback(
     (visibleKeys: readonly string[], draggedKey: string, dropIndex: number) => {
       const save = () =>
@@ -232,13 +251,19 @@ export function useWorktreeSidebarHeaderDrag(args: {
     onCommitRootProjectOrder: commitRootProjectOrder,
     getScrollContainer: () => scrollRef.current
   })
+  const projectGroupNestDrop = useProjectGroupNestDrop({
+    projectGroupById: projectGroupByIdForHeaderDrag,
+    projectGroupOwnerHostIdByGroupId,
+    onCommitProjectGroupParent: commitProjectGroupParent
+  })
   const projectGroupDrag = useProjectGroupHeaderDrag({
     sidebarProjectGroupHeaderIdsByBucket,
     projectGroupById: projectGroupByIdForHeaderDrag,
     onCommitProjectGroupTabOrder: commitProjectGroupHeaderOrder,
     rootProjectHeaderKeys,
     onCommitRootProjectOrder: commitRootProjectOrder,
-    getScrollContainer: () => scrollRef.current
+    getScrollContainer: () => scrollRef.current,
+    nestDrop: canNestProjectGroupHeaders ? projectGroupNestDrop : undefined
   })
   const repoHeaderSectionEndByRepoId = useMemo(
     () =>
@@ -270,6 +295,7 @@ export function useWorktreeSidebarHeaderDrag(args: {
     rootProjectHeaderSectionEndByKey,
     canReorderRepoHeaders,
     canReorderProjectGroupHeaders,
+    canNestProjectGroupHeaders,
     rootProjectHeaderKeys,
     orderedHostIds,
     hostDrag,

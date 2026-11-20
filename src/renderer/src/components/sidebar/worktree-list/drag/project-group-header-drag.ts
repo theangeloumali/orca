@@ -12,6 +12,7 @@ import {
 import { commitProjectGroupHeaderDragDrop } from './project-group-header-drag-commit'
 import {
   INITIAL_PROJECT_GROUP_DRAG_STATE,
+  isSameProjectGroupDragState,
   PROJECT_GROUP_HEADER_DRAG_THRESHOLD_PX,
   type ProjectGroupDragState,
   type ProjectGroupHeaderDragController,
@@ -34,7 +35,8 @@ export function useProjectGroupHeaderDrag({
   rootProjectHeaderKeys,
   onCommitRootProjectOrder,
   getScrollContainer,
-  floatingPreview = false
+  floatingPreview = false,
+  nestDrop
 }: UseProjectGroupHeaderDragArgs): ProjectGroupHeaderDragController {
   const [state, setState] = useState<ProjectGroupDragState>(INITIAL_PROJECT_GROUP_DRAG_STATE)
   const [sessionArmed, setSessionArmed] = useState(false)
@@ -75,6 +77,7 @@ export function useProjectGroupHeaderDrag({
         }))
       : measureProjectGroupHeaderDragRects(container, session.bucketKey)
     session.headerRects = rects
+    session.nestRects = measureProjectGroupHeaderDragRects(container)
     return rects
   }, [])
 
@@ -86,6 +89,9 @@ export function useProjectGroupHeaderDrag({
         return null
       }
       const containerRect = container.getBoundingClientRect()
+      if (nestDrop?.resolve(session, pointerY - containerRect.top + container.scrollTop)) {
+        return null
+      }
       return computeProjectGroupHeaderDropPreview({
         pointerY,
         containerTop: containerRect.top,
@@ -95,25 +101,20 @@ export function useProjectGroupHeaderDrag({
         contentBottom: container.scrollHeight
       })
     },
-    []
+    [nestDrop]
   )
 
   const applyDrop = useCallback(
     (groupId: string, drop: { dropIndex: number; dropIndicatorY: number } | null) => {
       latestDropIndexRef.current = drop?.dropIndex ?? null
       const session = dragSessionRef.current
+      const nestTarget = nestDrop?.current() ?? null
       const nextState: ProjectGroupDragState = drop
         ? { draggingGroupId: groupId, ...shiftHeaderDrop(floatingPreview, session, drop) }
-        : { draggingGroupId: groupId, dropIndex: null, dropIndicatorY: null }
-      setState((prev) =>
-        prev.draggingGroupId === nextState.draggingGroupId &&
-        prev.dropIndex === nextState.dropIndex &&
-        prev.dropIndicatorY === nextState.dropIndicatorY
-          ? prev
-          : nextState
-      )
+        : { draggingGroupId: groupId, dropIndex: null, dropIndicatorY: null, nestTarget }
+      setState((prev) => (isSameProjectGroupDragState(prev, nextState) ? prev : nextState))
     },
-    [floatingPreview]
+    [floatingPreview, nestDrop]
   )
 
   const cancelAutoscroll = useCallback(() => {
@@ -148,7 +149,10 @@ export function useProjectGroupHeaderDrag({
       dragSessionRef.current = null
       setState(INITIAL_PROJECT_GROUP_DRAG_STATE)
       setSessionArmed(false)
-      if (sidebarDropIndex === null) {
+      if (
+        nestDrop?.finish(session.groupId, commit && session.promoted) ||
+        sidebarDropIndex === null
+      ) {
         return
       }
 
@@ -160,7 +164,7 @@ export function useProjectGroupHeaderDrag({
         onCommitProjectGroupTabOrder: onCommitProjectGroupTabOrderRef.current
       })
     },
-    [cancelAutoscroll]
+    [cancelAutoscroll, nestDrop]
   )
 
   const runAutoscrollFrame = useCallback(
@@ -301,7 +305,8 @@ export function useProjectGroupHeaderDrag({
         rootProjectHeaderKeys: rootDragRef.current.rootProjectHeaderKeys,
         projectGroupById: projectGroupByIdRef.current,
         sidebarProjectGroupHeaderIdsByBucket: sidebarProjectGroupHeaderIdsByBucketRef.current,
-        getScrollContainer: getContainerRef.current
+        getScrollContainer: getContainerRef.current,
+        allowLoneGroup: nestDrop !== undefined
       })
       if (!session) {
         return
@@ -309,7 +314,7 @@ export function useProjectGroupHeaderDrag({
       dragSessionRef.current = session
       setSessionArmed(true)
     },
-    []
+    [nestDrop]
   )
 
   return { state, onHandlePointerDown }

@@ -28,6 +28,10 @@ import {
   type HostSectionRow
 } from '../../../../../../shared/sidebar-list/hosts/host-section-rows'
 import { orderHostSectionOptions } from '../../../../../../shared/sidebar-list/hosts/host-section-order'
+import {
+  deferHostSectionCollapse,
+  scopeHostSectionCollapse
+} from '../../../../../../shared/sidebar-list/hosts/host-section-collapse'
 import { buildSidebarHostOptions } from '../controls/sidebar-host-options'
 import { getLogicalRepoOrderRankById } from '../../../../../../shared/sidebar-list/sections/project-section-order'
 import { getRenderedWorktreesInSidebarOrder } from '../navigation/worktree-sidebar-row-preference'
@@ -77,6 +81,11 @@ export function computeRenderedSidebarRows(
   )
 
   const repoMap = getIndexedRepoMap(state.repos)
+  // Build the host registry only when sections may affect order; zero/one-host cases still safely no-op.
+  const needsHostSections =
+    state.showWorkspaceHostSections ||
+    state.workspaceHostScope !== ALL_EXECUTION_HOSTS_SCOPE ||
+    state.visibleWorkspaceHostIds != null
   const rows = planSidebarRows({
     groupBy: state.groupBy,
     sortBy: state.sortBy,
@@ -112,33 +121,37 @@ export function computeRenderedSidebarRows(
     pinnedDisplayPolicy,
     filterRepoIds: state.filterRepoIds,
     hiddenProjects: indexHiddenProjects(state.repos, defaultHostId)
-  }).render(state.collapsedGroups)
+    // Lanes collapse per host below, as in the drawn list, so Cmd+1–9 skips one only where it is hidden.
+  }).render(
+    needsHostSections ? deferHostSectionCollapse(state.collapsedGroups) : state.collapsedGroups
+  )
 
-  // Build the host registry only when sections may affect order; zero/one-host cases still safely no-op.
-  const needsHostSections =
-    state.workspaceHostScope !== ALL_EXECUTION_HOSTS_SCOPE || state.visibleWorkspaceHostIds != null
   return needsHostSections
-    ? addHostSectionRows({
-        rows,
-        hostOptions: orderHostSectionOptions(
-          buildSidebarHostOptions({
-            repos: state.repos,
-            sshTargetLabels: state.sshTargetLabels,
-            sshConnectionStates: state.sshConnectionStates,
-            settings: state.settings,
-            runtimeEnvironments: state.runtimeEnvironments,
-            runtimeStatusByEnvironmentId: statuses,
-            hostLabelOverrides: getHostDisplayLabelOverrides(state.settings)
-          }),
-          state.workspaceHostOrder
-        ),
-        workspaceHostScope: state.workspaceHostScope,
-        visibleWorkspaceHostIds: state.visibleWorkspaceHostIds,
-        defaultHostId,
-        localHostLabel: getLocalExecutionHostLabel(),
-        collapsedHostKeys: state.collapsedGroups,
-        forceCollapseHosts: false,
-        preferProjectGrouping: true
+    ? scopeHostSectionCollapse({
+        collapsedGroups: state.collapsedGroups,
+        rows: addHostSectionRows({
+          rows,
+          hostOptions: orderHostSectionOptions(
+            buildSidebarHostOptions({
+              repos: state.repos,
+              sshTargetLabels: state.sshTargetLabels,
+              sshConnectionStates: state.sshConnectionStates,
+              settings: state.settings,
+              runtimeEnvironments: state.runtimeEnvironments,
+              runtimeStatusByEnvironmentId: statuses,
+              hostLabelOverrides: getHostDisplayLabelOverrides(state.settings)
+            }),
+            state.workspaceHostOrder
+          ),
+          workspaceHostScope: state.workspaceHostScope,
+          visibleWorkspaceHostIds: state.visibleWorkspaceHostIds,
+          defaultHostId,
+          localHostLabel: getLocalExecutionHostLabel(),
+          collapsedHostKeys: state.collapsedGroups,
+          forceCollapseHosts: false,
+          preferProjectGrouping: true,
+          showHostSections: state.showWorkspaceHostSections
+        })
       })
     : rows
 }

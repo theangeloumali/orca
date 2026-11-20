@@ -35,6 +35,7 @@ import {
 } from '../../../../../../shared/workspace-view/workspace-view-options'
 import { useTranslate } from '@/i18n/use-translate'
 import { SidebarGroupByToggle } from './SidebarGroupByToggle'
+import { SidebarMachineLayoutToggle } from './SidebarMachineLayoutToggle'
 import { HideBotCreatedFilterRow } from '@/components/bots/HideBotCreatedFilterRow'
 import { withoutHiddenRepos } from '../../../../../../shared/project/catalog/hidden-projects'
 import { selectDrawsNewWorktreeCards } from '@/store/appearance/worktree-card-style'
@@ -127,14 +128,21 @@ function HostsOptionItem({
   const visibleWorkspaceHostIds = useAppStore((s) => s.visibleWorkspaceHostIds)
   const setVisibleWorkspaceHostIds = useAppStore((s) => s.setVisibleWorkspaceHostIds)
   return (
-    <SidebarHostScopeMenuSection
-      hostVisibilityLabel={getSidebarHostVisibilityLabel(visibleWorkspaceHostIds, hostOptions, t)}
-      hostOptions={hostOptions}
-      preserveWorkspaceBoardOpen={preserveWorkspaceBoardOpen}
-      setWorkspaceHostScope={setWorkspaceHostScope}
-      visibleWorkspaceHostIds={visibleWorkspaceHostIds}
-      setVisibleWorkspaceHostIds={setVisibleWorkspaceHostIds}
-    />
+    <>
+      {hostOptions.length > 1 ? (
+        <div className="px-2 pt-0.5 pb-1">
+          <SidebarMachineLayoutToggle />
+        </div>
+      ) : null}
+      <SidebarHostScopeMenuSection
+        hostVisibilityLabel={getSidebarHostVisibilityLabel(visibleWorkspaceHostIds, hostOptions, t)}
+        hostOptions={hostOptions}
+        preserveWorkspaceBoardOpen={preserveWorkspaceBoardOpen}
+        setWorkspaceHostScope={setWorkspaceHostScope}
+        visibleWorkspaceHostIds={visibleWorkspaceHostIds}
+        setVisibleWorkspaceHostIds={setVisibleWorkspaceHostIds}
+      />
+    </>
   )
 }
 

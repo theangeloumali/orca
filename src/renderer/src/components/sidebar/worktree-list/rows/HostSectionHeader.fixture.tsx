@@ -11,7 +11,8 @@ const base: HostHeaderRow = {
   detail: 'Orca server',
   health: 'available',
   collapsed: false,
-  count: 1
+  count: 1,
+  defaultHostId: 'local'
 }
 
 const rows: HostHeaderRow[] = [

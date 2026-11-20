@@ -17,13 +17,22 @@ import {
 } from '../repos/repo-host-identity'
 import { callRuntimeRpc } from '../../runtime/rpc/calls/runtime-rpc-call'
 import { ipcOrRuntimeTargetForHostId } from '../../runtime/rpc/targets/runtime-client-target'
-import { getRepoExecutionHostId } from '../../../../shared/execution-host/execution-host'
+import {
+  getRepoExecutionHostId,
+  parseExecutionHostId
+} from '../../../../shared/execution-host/execution-host'
 import type { ProjectRemovalFailure, RepoSlice } from '../repos/repo-state'
 import { mergeProjectCompatibilityForHostRepoChange } from '../repos/repo-catalog-identity'
 import { applyProjectGroupDeleteCascade } from './project-group-removal-state'
 import { adoptFromEndpoint } from '../host-catalog/endpoint-catalog-adoption'
 import { toast } from 'sonner'
 import { translate } from '@/i18n/i18n'
+
+/** The SSH target id of an `ssh:` host; null for this computer and paired servers. */
+function sshTargetIdForHost(hostId: string | null | undefined): string | null {
+  const parsed = parseExecutionHostId(hostId)
+  return parsed?.kind === 'ssh' ? parsed.targetId : null
+}
 
 function notifyProjectGroupOnOtherHost(): void {
   toast.error(
@@ -49,7 +58,7 @@ export function createProjectGroupMutationActions(
   | 'moveProjectToGroup'
 > {
   return {
-    createProjectGroup: async (name, hostId) => {
+    createProjectGroup: async (name, hostId, options) => {
       try {
         // Why: a new group lands on the host of the project that seeds it, not the focused one.
         const target = ipcOrRuntimeTargetForHostId(hostId)
@@ -60,13 +69,16 @@ export function createProjectGroupMutationActions(
           target.kind === 'local'
             ? await window.api.projectGroups.create({
                 name,
+                parentGroupId: options?.parentGroupId ?? null,
+                // SSH machines share this computer's catalog; the target id marks the owner.
+                connectionId: sshTargetIdForHost(hostId),
                 createdFrom: 'manual'
               })
             : (
                 await callRuntimeRpc<{ group: ProjectGroup }>(
                   target,
                   'projectGroup.create',
-                  { name, createdFrom: 'manual' },
+                  { name, parentGroupId: options?.parentGroupId ?? null, createdFrom: 'manual' },
                   { timeoutMs: 15_000 }
                 )
               ).group

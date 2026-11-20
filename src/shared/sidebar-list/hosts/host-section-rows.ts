@@ -1,6 +1,5 @@
 import {
   ALL_EXECUTION_HOSTS_SCOPE,
-  LOCAL_EXECUTION_HOST_ID,
   getRepoExecutionHostIdOrDefault,
   getWorktreeExecutionHostId,
   type ExecutionHostId,
@@ -17,6 +16,12 @@ import type { SshConnectionStatus } from '../../remote-runtime/ssh/ssh-types'
 import type { Row } from '../row-types'
 import { getFolderWorkspaceHostId } from './folder-workspace-host-id'
 import { countWorkspaceRows } from './host-section-workspace-count'
+import { getFallbackHost } from './host-section-fallback-host'
+import {
+  enclosingPendingHeaders,
+  getGroupHeaderOwnerHostId,
+  pendingRowsForHost
+} from './host-section-group-owner'
 import { localizeProjectHeader, localizeRowsToHost } from './project-header-localization'
 
 export type HostHeaderRow = {
@@ -37,6 +42,8 @@ export type HostHeaderRow = {
   connectionStatus?: SshConnectionStatus
   collapsed: boolean
   count: number
+  /** Owner of workspaces with no host stamp; the header's agent counts include them on this host. */
+  defaultHostId: ExecutionHostId
 }
 
 export type HostSectionRow = Row | HostHeaderRow
@@ -69,18 +76,6 @@ function getRowHostId(row: Row, defaultHostId: ExecutionHostId): ExecutionHostId
       return getFolderWorkspaceHostId(row.folderWorkspace, row.projectGroup, defaultHostId)
     case 'header':
       return row.repo ? getRepoExecutionHostIdOrDefault(row.repo, defaultHostId) : null
-  }
-}
-
-function getFallbackHost(hostId: ExecutionHostId, localHostLabel: string): HostSectionOption {
-  const isLocal = hostId === LOCAL_EXECUTION_HOST_ID
-  return {
-    id: hostId,
-    kind: isLocal ? 'local' : hostId.startsWith('ssh:') ? 'ssh' : 'runtime',
-    label: isLocal ? localHostLabel : hostId,
-    isDefaultLocalLabel: isLocal,
-    detail: isLocal ? 'This computer' : 'Host',
-    health: isLocal ? 'local' : 'available'
   }
 }
 
@@ -131,12 +126,15 @@ export function addHostSectionRows(args: {
   forceCollapseHosts?: boolean
   // Projects remain primary in the default view; explicit host filters retain operational host headers.
   preferProjectGrouping?: boolean
+  /** The "Machines" layout: one section per host even when every host is shown. */
+  showHostSections?: boolean
 }): HostSectionRow[] {
   const visibleHostIds =
     args.visibleWorkspaceHostIds ??
     (args.workspaceHostScope === ALL_EXECUTION_HOSTS_SCOPE ? null : [args.workspaceHostScope])
   if (
     args.preferProjectGrouping &&
+    !args.showHostSections &&
     args.workspaceHostScope === ALL_EXECUTION_HOSTS_SCOPE &&
     !args.visibleWorkspaceHostIds
   ) {
@@ -164,7 +162,19 @@ export function addHostSectionRows(args: {
     }
     const hostScopedRow = unused.some((row) => row.hostWorktreeCounts)
     if (!hostScopedRow) {
-      globalRows.push(...unused)
+      for (const row of unused) {
+        // An empty group still belongs to its machine, not above every section (#27987).
+        const ownerHostId = getGroupHeaderOwnerHostId(row, args.defaultHostId)
+        if (ownerHostId) {
+          // Draw it like any row of its machine, so its parent header comes first.
+          const queued = pendingRows
+          pendingRows = enclosingPendingHeaders(queued, row)
+          pushHostRow(row, ownerHostId)
+          pendingRows = queued
+        } else {
+          globalRows.push(row)
+        }
+      }
       return
     }
     for (const row of unused) {
@@ -187,7 +197,8 @@ export function addHostSectionRows(args: {
 
   const pushHostRow = (row: Row, rowHostId: ExecutionHostId): void => {
     const hostRows = rowsByHostId.get(rowHostId) ?? []
-    const localizedPendingRows = localizePendingRowsForHost(pendingRows, rowHostId)
+    const hostPendingRows = pendingRowsForHost(pendingRows, rowHostId, args.defaultHostId)
+    const localizedPendingRows = localizePendingRowsForHost(hostPendingRows, rowHostId)
     const path = localizedPendingRows.map(getPendingRowKey)
     const emitted = emittedPathByHostId.get(rowHostId) ?? []
     let shared = 0
@@ -199,7 +210,7 @@ export function addHostSectionRows(args: {
       emittedPathByHostId.set(rowHostId, path)
     }
     if (localizedPendingRows.length > 0) {
-      pendingRows.forEach((pendingRow) => usedPendingRows.add(pendingRow))
+      hostPendingRows.forEach((pendingRow) => usedPendingRows.add(pendingRow))
     }
     hostRows.push(row)
     rowsByHostId.set(rowHostId, hostRows)
@@ -281,6 +292,7 @@ export function addHostSectionRows(args: {
       type: 'host-header',
       key: `host:${host.id}`,
       hostId: host.id,
+      defaultHostId: args.defaultHostId,
       kind: host.kind,
       label: host.label,
       isDefaultLocalLabel: host.isDefaultLocalLabel,

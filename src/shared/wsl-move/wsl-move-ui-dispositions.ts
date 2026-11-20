@@ -121,6 +121,7 @@ export const UI_STATE_GLOBAL_FIELDS = [
   'worktreeCardProperties',
   '_worktreeCardModeDefaulted',
   'showAgentModels',
+  'showWorkspaceHostSections',
   'agentActivityDisplayMode',
   'workspaceStatuses',
   'workspaceBoardOpacity',

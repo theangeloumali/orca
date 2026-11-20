@@ -118,10 +118,11 @@ export function renderWorktreeSectionHeaderRow(
     headerDrag.canReorderProjectGroupHeaders &&
     projectGroupDragIdForHeader &&
     projectGroupHeaderBucketKey &&
-    (rootProjectHeaderCount !== undefined
-      ? rootProjectHeaderCount > 1
-      : (headerDrag.sidebarProjectGroupHeaderIdsByBucket.get(projectGroupHeaderBucketKey)?.length ??
-          0) > 1)
+    (headerDrag.canNestProjectGroupHeaders ||
+      (rootProjectHeaderCount !== undefined
+        ? rootProjectHeaderCount > 1
+        : (headerDrag.sidebarProjectGroupHeaderIdsByBucket.get(projectGroupHeaderBucketKey)
+            ?.length ?? 0) > 1))
   )
   const isDraggingThis =
     headerDrag.canReorderRepoHeaders &&
@@ -366,6 +367,9 @@ export function renderWorktreeSectionHeaderRow(
                 onRefreshProjectGroup={ctx.onRefreshProjectGroup}
                 onRename={ctx.onRenameProjectGroup}
                 onDelete={ctx.onDeleteProjectGroup}
+                projectGroups={ctx.projectGroups}
+                onCreateSubgroup={ctx.onCreateProjectSubgroup}
+                onMoveGroup={ctx.onMoveProjectGroup}
               />
             ) : null}
 

@@ -18,6 +18,7 @@ import { normalizeFeatureTipIds } from '../../../../../shared/feature-education/
 import { DEFAULT_HIDE_SLEEPING_WORKSPACES } from '../../../../../shared/workspace-view/sleeping-workspace-visibility'
 import { normalizeAgentActivityDisplayMode } from '../../../../../shared/agent-status/presentation/agent-activity-display-mode'
 import { normalizeWorktreeCardProperties } from '../../../../../shared/worktree/row-display/card-properties'
+import { hydrateAgentsViewToggles } from './ui-slice-hydration-agents-view'
 import {
   normalizeActivityGroupBy,
   normalizeThreadReadFilter
@@ -172,13 +173,7 @@ export function createUiHydrationActions(set: UISliceSet, _get: UISliceGet): Par
               ? persistedAgentsFilterRepoIds
               : persistedAgentsFilterRepoIds.filter((repoId) => validRepoIds.has(repoId))
           ),
-          agentsHideWorkspacesFromOtherDevices: ui.agentsHideWorkspacesFromOtherDevices === true,
-          agentsHideAutomationGeneratedWorkspaces:
-            ui.agentsHideAutomationGeneratedWorkspaces === true,
-          agentsHideCliCreatedWorkspaces: ui.agentsHideCliCreatedWorkspaces === true,
-          agentsShowChildAgents: ui.agentsShowChildAgents === true,
-          agentsCompactMode: ui.agentsCompactMode !== false,
-          agentsShowSearch: ui.agentsShowSearch !== false,
+          ...hydrateAgentsViewToggles(ui),
           agentsReadFilter: normalizeThreadReadFilter(ui.agentsReadFilter),
           agentsGroupBy: normalizeActivityGroupBy(ui.agentsGroupBy),
           collapsedGroups: new Set(ui.collapsedGroups ?? []),
@@ -187,6 +182,7 @@ export function createUiHydrationActions(set: UISliceSet, _get: UISliceGet): Par
           worktreeCardProperties: normalizeWorktreeCardProperties(ui.worktreeCardProperties),
           _worktreeCardModeDefaulted: ui._worktreeCardModeDefaulted === true,
           showAgentModels: ui.showAgentModels !== false,
+          showWorkspaceHostSections: ui.showWorkspaceHostSections !== false,
           agentActivityDisplayMode: normalizeAgentActivityDisplayMode(ui.agentActivityDisplayMode),
           workspaceStatuses: normalizeWorkspaceStatuses(ui.workspaceStatuses),
           workspaceBoardOpacity: clampWorkspaceBoardOpacity(ui.workspaceBoardOpacity),

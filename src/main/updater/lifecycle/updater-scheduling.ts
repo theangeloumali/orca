@@ -7,6 +7,7 @@ import {
   MAX_AUTO_UPDATE_RETRY_INTERVAL_MS
 } from './updater-state'
 import { UpdaterCheckFailure } from './updater-check-failure'
+import { OFFICIAL_UPDATES_DISABLED } from '../fork-build-updates'
 import { getDelayedUpdateWakeDelayMs } from '../releases/updater-release-delay'
 
 export abstract class UpdaterScheduling extends UpdaterCheckFailure {
@@ -69,7 +70,8 @@ export abstract class UpdaterScheduling extends UpdaterCheckFailure {
     ) {
       return false
     }
-    if (!app.isPackaged) {
+    // Fork builds are unsigned; an official update would replace them with stock Orca.
+    if (!app.isPackaged || OFFICIAL_UPDATES_DISABLED) {
       this.sendStatus({ state: 'not-available' })
       return false
     }
