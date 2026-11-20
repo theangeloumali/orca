@@ -7789,7 +7789,15 @@
           "hostVmSetupFailed": "Setup failed",
           "hostVmSuspended": "Suspended",
           "hostVmWaking": "Waking…",
-          "hostVmProvisioning": "Provisioning…"
+          "hostVmProvisioning": "Provisioning…",
+          "newSubgroupTitle": "New Subgroup",
+          "newSubgroupDescription": "Create a group inside {{parent}}.",
+          "moveGroupTo": "Move group to",
+          "moveGroupTopLevel": "Top level",
+          "newSubgroup": "New subgroup…",
+          "subgroupCreateFailed": "Could not create subgroup",
+          "groupMoveFailed": "Could not move group",
+          "groupMoveFailedDesc": "A group can only move into a group on the same computer, and never into itself."
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "Cancel",

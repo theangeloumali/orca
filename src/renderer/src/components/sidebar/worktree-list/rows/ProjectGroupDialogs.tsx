@@ -37,23 +37,31 @@ export function SidebarWorktreeListDialogs({
         title={
           nameDialog?.type === 'rename'
             ? t('auto.components.sidebar.WorktreeList.f9dc6cc5d3', 'Rename Project Group')
-            : t('auto.components.sidebar.WorktreeList.13757c053c', 'New Project Group')
+            : nameDialog?.type === 'create-subgroup'
+              ? t('auto.components.sidebar.WorktreeList.newSubgroupTitle', 'New Subgroup')
+              : t('auto.components.sidebar.WorktreeList.13757c053c', 'New Project Group')
         }
         description={
-          nameDialog?.type === 'rename'
+          nameDialog?.type === 'create-subgroup'
             ? t(
-                'auto.components.sidebar.WorktreeList.bc1460beb3',
-                'Update the group name shown in the sidebar.'
+                'auto.components.sidebar.WorktreeList.newSubgroupDescription',
+                'Create a group inside {{parent}}.',
+                { parent: nameDialog.parentName }
               )
-            : t(
-                'auto.components.sidebar.WorktreeList.d880ea0744',
-                'Create a group and move this project into it.'
-              )
+            : nameDialog?.type === 'rename'
+              ? t(
+                  'auto.components.sidebar.WorktreeList.bc1460beb3',
+                  'Update the group name shown in the sidebar.'
+                )
+              : t(
+                  'auto.components.sidebar.WorktreeList.d880ea0744',
+                  'Create a group and move this project into it.'
+                )
         }
         initialName={
           nameDialog?.type === 'rename'
             ? nameDialog.currentName
-            : nameDialog
+            : nameDialog?.type === 'create-from-repo'
               ? t(
                   'auto.components.sidebar.ProjectGroupNameDialog.defaultGroupName',
                   '{{name}} group',

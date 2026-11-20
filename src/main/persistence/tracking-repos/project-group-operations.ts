@@ -54,6 +54,7 @@ export class ProjectGroupPersistenceOperations {
     parentGroupId?: string | null
     createdFrom: ProjectGroup['createdFrom']
   }): ProjectGroup {
+    this.assertValidParent(null, input.parentGroupId ?? null)
     let maxOrder = -1
     // Large persisted lists can exceed spread argument limits.
     for (const existingGroup of this.state.projectGroups ?? []) {
@@ -89,6 +90,12 @@ export class ProjectGroupPersistenceOperations {
     if (mutations.some(({ groupId }) => !byId.has(groupId))) {
       return null
     }
+    // Check every move before applying any, so a refused one cannot leave the batch half done.
+    for (const { groupId, updates } of mutations) {
+      if (updates.parentGroupId !== undefined) {
+        this.assertValidParent(groupId, updates.parentGroupId)
+      }
+    }
     const updated = mutations.map(({ groupId, updates }) => {
       const group = byId.get(groupId)!
       this.applyGroupUpdate(group, updates)
@@ -100,7 +107,43 @@ export class ProjectGroupPersistenceOperations {
     return updated
   }
 
+  /** A parent must exist and must not be the group itself or one of its own subgroups. */
+  private assertValidParent(groupId: string | null, parentGroupId: string | null): void {
+    if (parentGroupId === null) {
+      return
+    }
+    const groups = this.state.projectGroups ?? []
+    const parentExists = groups.some((entry) => entry.id === parentGroupId)
+    const isOwnSubtree =
+      groupId !== null && getProjectGroupSubtreeIds(groups, groupId).has(parentGroupId)
+    if (!parentExists || isOwnSubtree) {
+      throw new Error('invalid_project_group_parent')
+    }
+  }
+
+  private applyGroupParent(group: ProjectGroup, parentGroupId: string | null): void {
+    this.assertValidParent(group.id, parentGroupId)
+    const wasNested = group.parentGroupId !== null
+    group.parentGroupId = parentGroupId
+    if (parentGroupId !== null) {
+      // Only top-level groups take part in root project order.
+      delete group.rootProjectOrder
+    } else if (wasNested) {
+      // Same rule as createProjectGroup: only rejoin root order once manual root ordering is in use.
+      const nextRootOrder = getNextRootProjectOrder(
+        this.state.repos,
+        this.state.projectGroups ?? []
+      )
+      if (nextRootOrder !== undefined) {
+        group.rootProjectOrder = nextRootOrder
+      }
+    }
+  }
+
   private applyGroupUpdate(group: ProjectGroup, updates: ProjectGroupUpdate): void {
+    if (updates.parentGroupId !== undefined) {
+      this.applyGroupParent(group, updates.parentGroupId)
+    }
     if (updates.name !== undefined) {
       group.name = normalizeProjectGroupName(updates.name, group.name)
     }

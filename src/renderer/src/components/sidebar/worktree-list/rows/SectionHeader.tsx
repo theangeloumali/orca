@@ -366,6 +366,9 @@ export function renderWorktreeSectionHeaderRow(
                 onRefreshProjectGroup={ctx.onRefreshProjectGroup}
                 onRename={ctx.onRenameProjectGroup}
                 onDelete={ctx.onDeleteProjectGroup}
+                projectGroups={ctx.projectGroups}
+                onCreateSubgroup={ctx.onCreateProjectSubgroup}
+                onMoveGroup={ctx.onMoveProjectGroup}
               />
             ) : null}
 

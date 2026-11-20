@@ -30,6 +30,12 @@ export type SectionHeaderRowContext = {
   projectActions: RepoHeaderProjectActions
   onRenameProjectGroup: (groupId: string, currentName: string, hostId?: ExecutionHostId) => void
   onDeleteProjectGroup: (groupId: string, groupName: string, hostId?: ExecutionHostId) => void
+  onCreateProjectSubgroup?: (groupId: string, groupName: string, hostId?: ExecutionHostId) => void
+  onMoveProjectGroup?: (
+    groupId: string,
+    parentGroupId: string | null,
+    hostId?: ExecutionHostId
+  ) => void
   onRefreshProjectGroup?: (projectGroup: ProjectGroup) => void
   onCreateFolderWorkspace: (projectGroup: ProjectGroup) => void
   onWorkspaceStatusDragOver: (event: React.DragEvent, status: WorkspaceStatus) => void
