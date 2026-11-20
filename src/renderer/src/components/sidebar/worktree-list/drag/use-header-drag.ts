@@ -91,6 +91,8 @@ export function useWorktreeSidebarHeaderDrag(args: {
   const hasProjectGroups = projectGroups.length > 0
   const canReorderRepoHeaders = groupBy === 'repo' && projectOrderBy === 'manual'
   const canReorderProjectGroupHeaders = groupBy === 'repo' && hasProjectGroups
+  // With two or more groups a lone subgroup can still be dragged into another group.
+  const canNestProjectGroupHeaders = canReorderProjectGroupHeaders && projectGroups.length > 1
   const rootProjectHeaderKeys = useMemo(
     () =>
       hasProjectGroups
@@ -291,6 +293,7 @@ export function useWorktreeSidebarHeaderDrag(args: {
     rootProjectHeaderSectionEndByKey,
     canReorderRepoHeaders,
     canReorderProjectGroupHeaders,
+    canNestProjectGroupHeaders,
     rootProjectHeaderKeys,
     orderedHostIds,
     hostDrag,
