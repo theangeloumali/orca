@@ -116,4 +116,40 @@ describe('project group nesting', () => {
       store.createProjectGroup({ name: 'Orphan', parentGroupId: 'missing', createdFrom: 'manual' })
     ).toThrow('invalid_project_group_parent')
   })
+  it("keeps a subgroup on its parent group's SSH machine", () => {
+    const store = createStore()
+    const remote = store.createProjectGroup({
+      name: 'Server',
+      connectionId: 'ssh-box',
+      createdFrom: 'manual'
+    })
+    const child = store.createProjectGroup({
+      name: 'Client',
+      parentGroupId: remote.id,
+      createdFrom: 'manual'
+    })
+    expect(child.connectionId).toBe('ssh-box')
+  })
+
+  it('refuses a parent group that lives on another machine', () => {
+    const store = createStore()
+    const remote = store.createProjectGroup({
+      name: 'Server',
+      connectionId: 'ssh-box',
+      createdFrom: 'manual'
+    })
+    const local = store.createProjectGroup({ name: 'Work', createdFrom: 'manual' })
+
+    expect(() => store.updateProjectGroup(local.id, { parentGroupId: remote.id })).toThrow(
+      'invalid_project_group_parent'
+    )
+    expect(() =>
+      store.createProjectGroup({
+        name: 'Mixed',
+        connectionId: 'other-box',
+        parentGroupId: remote.id,
+        createdFrom: 'manual'
+      })
+    ).toThrow('invalid_project_group_parent')
+  })
 })

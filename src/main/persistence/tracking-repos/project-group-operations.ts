@@ -54,7 +54,16 @@ export class ProjectGroupPersistenceOperations {
     parentGroupId?: string | null
     createdFrom: ProjectGroup['createdFrom']
   }): ProjectGroup {
-    this.assertValidParents([{ groupId: null, parentGroupId: input.parentGroupId ?? null }])
+    // A subgroup lives on its parent's machine: inherit the parent's SSH target when none is given.
+    const parent = (this.state.projectGroups ?? []).find((g) => g.id === input.parentGroupId)
+    input = { ...input, connectionId: input.connectionId ?? parent?.connectionId ?? null }
+    this.assertValidParents([
+      {
+        groupId: null,
+        parentGroupId: input.parentGroupId ?? null,
+        connectionId: input.connectionId
+      }
+    ])
     let maxOrder = -1
     // Large persisted lists can exceed spread argument limits.
     for (const existingGroup of this.state.projectGroups ?? []) {
@@ -112,20 +121,28 @@ export class ProjectGroupPersistenceOperations {
     return updated
   }
 
-  /** With every move applied, each new parent must exist and must not sit inside its own child. */
+  /** With every move applied, each new parent must exist, share the group's machine and not sit inside its own child. */
   private assertValidParents(
-    moves: readonly { groupId: string | null; parentGroupId: string | null }[]
+    moves: readonly {
+      groupId: string | null
+      parentGroupId: string | null
+      connectionId?: string | null
+    }[]
   ): void {
-    const parentById = new Map(
-      (this.state.projectGroups ?? []).map((entry) => [entry.id, entry.parentGroupId])
-    )
+    const groups = this.state.projectGroups ?? []
+    const parentById = new Map(groups.map((entry) => [entry.id, entry.parentGroupId]))
+    const connectionById = new Map(groups.map((entry) => [entry.id, entry.connectionId ?? null]))
     for (const move of moves) {
       if (move.groupId !== null) {
         parentById.set(move.groupId, move.parentGroupId)
       }
     }
-    for (const { groupId, parentGroupId } of moves) {
+    for (const { groupId, parentGroupId, connectionId } of moves) {
       if (parentGroupId !== null && !parentById.has(parentGroupId)) {
+        throw new Error('invalid_project_group_parent')
+      }
+      const ownConnection = groupId === null ? (connectionId ?? null) : connectionById.get(groupId)
+      if (parentGroupId !== null && connectionById.get(parentGroupId) !== (ownConnection ?? null)) {
         throw new Error('invalid_project_group_parent')
       }
       // Walk up from the new parent; meeting the moved group means a cycle. Orphan links end the walk.
