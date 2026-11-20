@@ -1,4 +1,7 @@
-import { WorktreeSidebarDropIndicator } from '../drag/WorktreeSidebarDropIndicator'
+import {
+  ProjectGroupNestIndicator,
+  WorktreeSidebarDropIndicator
+} from '../drag/WorktreeSidebarDropIndicator'
 import type { useWorktreeDragRuntime } from '../drag/use-runtime'
 import type { useWorktreeSidebarHeaderDrag } from '../drag/use-header-drag'
 
@@ -18,6 +21,12 @@ export function renderWorktreeSidebarDropIndicators(args: {
       headerDrag.projectGroupDrag.state.draggingGroupId !== null &&
       headerDrag.projectGroupDrag.state.dropIndicatorY !== null ? (
         <WorktreeSidebarDropIndicator y={headerDrag.projectGroupDrag.state.dropIndicatorY} />
+      ) : null}
+      {headerDrag.canReorderProjectGroupHeaders && headerDrag.projectGroupDrag.state.nestTarget ? (
+        <ProjectGroupNestIndicator
+          top={headerDrag.projectGroupDrag.state.nestTarget.top}
+          bottom={headerDrag.projectGroupDrag.state.nestTarget.bottom}
+        />
       ) : null}
       {headerDrag.hostDrag.state.draggingHostId !== null &&
       headerDrag.hostDrag.state.dropIndicatorY !== null ? (

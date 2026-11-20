@@ -7797,7 +7797,8 @@
           "newSubgroup": "New subgroup…",
           "subgroupCreateFailed": "Could not create subgroup",
           "groupMoveFailed": "Could not move group",
-          "groupMoveFailedDesc": "A group can only move into a group on the same computer, and never into itself."
+          "groupMoveFailedDesc": "A group can only move into a group on the same computer, and never into itself.",
+          "groupMoveNeedsUpdate": "Update this machine's Orca to nest groups"
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "Cancel",

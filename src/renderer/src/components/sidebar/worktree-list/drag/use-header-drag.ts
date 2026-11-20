@@ -29,6 +29,8 @@ import {
   getSidebarRootProjectHeaderKeys
 } from './root-project-header-drop'
 import { toast } from 'sonner'
+import { moveProjectGroupToParent } from '../rows/use-project-group-nesting-actions'
+import { useProjectGroupNestDrop } from './use-project-group-nest-drop'
 import { translate } from '@/i18n/i18n'
 
 const readLiveRepos = (): readonly Repo[] => useAppStore.getState().repos
@@ -194,6 +196,19 @@ export function useWorktreeSidebarHeaderDrag(args: {
     },
     [projectGroupOwnerHostIdByGroupId, onScrollIntent, updateProjectGroup]
   )
+  const commitProjectGroupParent = useCallback(
+    (groupId: string, parentGroupId: string) => {
+      onScrollIntent()
+      const ownerHostId = projectGroupOwnerHostIdByGroupId.get(groupId)
+      void moveProjectGroupToParent({
+        updateProjectGroup,
+        groupId,
+        parentGroupId,
+        hostId: ownerHostId ?? undefined
+      })
+    },
+    [projectGroupOwnerHostIdByGroupId, onScrollIntent, updateProjectGroup]
+  )
   const commitRootProjectOrder = useCallback(
     (visibleKeys: readonly string[], draggedKey: string, dropIndex: number) => {
       const save = () =>
@@ -232,13 +247,19 @@ export function useWorktreeSidebarHeaderDrag(args: {
     onCommitRootProjectOrder: commitRootProjectOrder,
     getScrollContainer: () => scrollRef.current
   })
+  const projectGroupNestDrop = useProjectGroupNestDrop({
+    projectGroupById: projectGroupByIdForHeaderDrag,
+    projectGroupOwnerHostIdByGroupId,
+    onCommitProjectGroupParent: commitProjectGroupParent
+  })
   const projectGroupDrag = useProjectGroupHeaderDrag({
     sidebarProjectGroupHeaderIdsByBucket,
     projectGroupById: projectGroupByIdForHeaderDrag,
     onCommitProjectGroupTabOrder: commitProjectGroupHeaderOrder,
     rootProjectHeaderKeys,
     onCommitRootProjectOrder: commitRootProjectOrder,
-    getScrollContainer: () => scrollRef.current
+    getScrollContainer: () => scrollRef.current,
+    nestDrop: projectGroupNestDrop
   })
   const repoHeaderSectionEndByRepoId = useMemo(
     () =>
