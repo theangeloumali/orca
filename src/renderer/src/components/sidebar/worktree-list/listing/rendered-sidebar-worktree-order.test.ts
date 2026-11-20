@@ -44,7 +44,7 @@ describe('computeRenderedSidebarWorktreeOrder with machine sections', () => {
       collapsedGroups: new Set(['workspace-status:completed:host:runtime:m1'])
     })
 
-    const order = computeRenderedSidebarWorktreeOrder(store.getState(), [
+    const order = computeRenderedSidebarWorktreeOrder(store.getState(), new Map(), [
       completedWorktree(onM5),
       completedWorktree(onM1)
     ])
