@@ -22,7 +22,7 @@ export function renderWorktreeSidebarDropIndicators(args: {
       headerDrag.projectGroupDrag.state.dropIndicatorY !== null ? (
         <WorktreeSidebarDropIndicator y={headerDrag.projectGroupDrag.state.dropIndicatorY} />
       ) : null}
-      {headerDrag.canReorderProjectGroupHeaders && headerDrag.projectGroupDrag.state.nestTarget ? (
+      {headerDrag.projectGroupDrag.state.nestTarget ? (
         <ProjectGroupNestIndicator
           top={headerDrag.projectGroupDrag.state.nestTarget.top}
           bottom={headerDrag.projectGroupDrag.state.nestTarget.bottom}

@@ -8,7 +8,6 @@ import type {
 } from './project-group-header-drop'
 import { REPO_HEADER_ACTION_SELECTOR } from './project-header-drag-contract'
 import type { ProjectGroupNestTarget } from './project-group-header-nest-drop'
-import type { ProjectGroupNestDrop } from './use-project-group-nest-drop'
 
 export type ProjectGroupDragState = {
   draggingGroupId: string | null
@@ -26,6 +25,15 @@ export const INITIAL_PROJECT_GROUP_DRAG_STATE: ProjectGroupDragState = {
   dropIndicatorY: null
 }
 
+/** Drag-to-nest controller: tracks the group under the pointer's middle band and commits it. */
+export type ProjectGroupNestDrop = {
+  /** True when the pointer is over a header's middle band and the drop would nest. */
+  resolve: (session: ProjectGroupHeaderDragSession, contentY: number) => boolean
+  current: () => ProjectGroupNestTarget | null
+  /** Clears the target, then nests the dragged group into it when the drop commits. */
+  finish: (groupId: string, commit: boolean) => boolean
+}
+
 export function isSameProjectGroupDragState(
   a: ProjectGroupDragState,
   b: ProjectGroupDragState
@@ -34,7 +42,9 @@ export function isSameProjectGroupDragState(
     a.draggingGroupId === b.draggingGroupId &&
     a.dropIndex === b.dropIndex &&
     a.dropIndicatorY === b.dropIndicatorY &&
-    a.nestTarget?.groupId === b.nestTarget?.groupId
+    a.nestTarget?.groupId === b.nestTarget?.groupId &&
+    a.nestTarget?.top === b.nestTarget?.top &&
+    a.nestTarget?.bottom === b.nestTarget?.bottom
   )
 }
 

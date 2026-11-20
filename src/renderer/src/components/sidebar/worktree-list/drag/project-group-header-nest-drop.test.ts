@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { findProjectGroupNestTarget } from './project-group-header-nest-drop'
+import { findProjectGroupNestTarget, hasSameHostGroupPair } from './project-group-header-nest-drop'
 
 // Headers are 30px tall; the middle band of "work" runs from 109 to 121.
 const rects = [
@@ -46,5 +46,27 @@ describe('findProjectGroupNestTarget', () => {
     expect(find(195, 'zkidz')).toBeNull()
     expect(find(155, 'films')).toBeNull()
     expect(find(235, 'one')).toBeNull()
+  })
+})
+
+describe('hasSameHostGroupPair', () => {
+  it('needs two groups on one machine before nesting is offered', () => {
+    expect(
+      hasSameHostGroupPair(
+        new Map([
+          ['a', 'local'],
+          ['b', 'runtime:m1']
+        ])
+      )
+    ).toBe(false)
+    expect(
+      hasSameHostGroupPair(
+        new Map([
+          ['a', 'local'],
+          ['b', null],
+          ['c', 'local']
+        ])
+      )
+    ).toBe(true)
   })
 })
