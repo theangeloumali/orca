@@ -7,6 +7,8 @@ import type {
   ProjectGroupHeaderDragRect
 } from './project-group-header-drop'
 import { REPO_HEADER_ACTION_SELECTOR } from './project-header-drag-contract'
+import type { ProjectGroupNestTarget } from './project-group-header-nest-drop'
+import type { ProjectGroupNestDrop } from './use-project-group-nest-drop'
 
 export type ProjectGroupDragState = {
   draggingGroupId: string | null
@@ -14,12 +16,26 @@ export type ProjectGroupDragState = {
   dropIndicatorY: number | null
   /** How far each other row slides to open the drop gap; only with a floating preview. */
   previewOffsetsById?: ReadonlyMap<string, number>
+  /** The group the dragged group drops into, when the pointer is over a header's middle band. */
+  nestTarget?: ProjectGroupNestTarget | null
 }
 
 export const INITIAL_PROJECT_GROUP_DRAG_STATE: ProjectGroupDragState = {
   draggingGroupId: null,
   dropIndex: null,
   dropIndicatorY: null
+}
+
+export function isSameProjectGroupDragState(
+  a: ProjectGroupDragState,
+  b: ProjectGroupDragState
+): boolean {
+  return (
+    a.draggingGroupId === b.draggingGroupId &&
+    a.dropIndex === b.dropIndex &&
+    a.dropIndicatorY === b.dropIndicatorY &&
+    a.nestTarget?.groupId === b.nestTarget?.groupId
+  )
 }
 
 export type UseProjectGroupHeaderDragArgs = RootProjectHeaderDrag & {
@@ -32,6 +48,8 @@ export type UseProjectGroupHeaderDragArgs = RootProjectHeaderDrag & {
   getScrollContainer: () => HTMLElement | null
   /** Drag a floating copy of the row, as workspace rows do, rather than lifting it in place. */
   floatingPreview?: boolean
+  /** Drag-to-nest: dropping on a same-machine group header's middle band moves the group into it. */
+  nestDrop?: ProjectGroupNestDrop
 }
 
 export type ProjectGroupHeaderDragController = {
@@ -47,6 +65,8 @@ export type ProjectGroupHeaderDragSession = {
   rootProjectHeaderHostId?: string
   pointerId: number
   headerRects: ProjectGroupHeaderDragRect[]
+  /** Every group header on screen, across buckets: nesting can target any same-machine group. */
+  nestRects?: ProjectGroupHeaderDragRect[]
   handleEl: HTMLElement
   startX: number
   startY: number

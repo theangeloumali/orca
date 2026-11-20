@@ -26,3 +26,20 @@ export function WorktreeSidebarDropIndicator({
     </div>
   )
 }
+
+/** Outlines the group a dragged group will move into. */
+export function ProjectGroupNestIndicator({
+  top,
+  bottom
+}: {
+  top: number
+  bottom: number
+}): ReactElement {
+  return (
+    <div
+      role="presentation"
+      className="pointer-events-none absolute left-2 right-2 z-30 rounded-md ring-2 ring-worktree-sidebar-ring"
+      style={{ top: `${top}px`, height: `${bottom - top}px` }}
+    />
+  )
+}
