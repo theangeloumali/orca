@@ -1921,11 +1921,17 @@
     },
     "notifications": {
       "perfNotices": {
+        "disk": {
+          "label": "Disk almost full",
+          "description": "Suggest cleaning up workspaces when your disk is almost full."
+        },
         "hiddenTabs": {
           "label": "Hidden browser tabs",
           "description": "Suggest Memory Saver when many hidden browser tabs stay loaded."
         },
         "search": {
+          "disk": "disk",
+          "warning": "warning",
           "tabs": "tabs",
           "memory": "memory"
         }
@@ -22061,8 +22067,9 @@
         "again": "{{name}} started setting up again"
       },
       "connectorOffer": {
+        "heading": "Connect a service",
+        "connectService": "Connect {{service}}",
         "connected": "Connected",
-        "connect": "Connect",
         "connectedIn": "Connected in {{places}}",
         "addOrg": "Add org",
         "addWorkspace": "Add workspace",
@@ -22175,7 +22182,6 @@
         "changed": "Comes over with changes",
         "already": "Already here",
         "stays": "Stays in {{app}}",
-        "heading": "Import plan",
         "fromAgain": "From {{app}}, again",
         "from": "From {{app}}",
         "selected": "{{chosen}} of {{total}} selected · keys and logins are never copied",
@@ -22193,11 +22199,17 @@
         "paused": "Automations are paused so nothing runs twice. Turn them on once the old bot is switched off in {{app}}."
       },
       "botCreateOffer": {
+        "heading": "New bot",
         "takesOverOne": "Takes over 1 workspace",
         "takesOverMany": "Takes over {{count}} workspaces",
         "created": "Created",
         "createdTookOverOne": "Created · took over 1 workspace",
         "createdTookOverMany": "Created · took over {{count}} workspaces",
+        "askedOne": "Asked to take over 1 workspace",
+        "askedMany": "Asked to take over {{count}} workspaces",
+        "tookOverSome": "Took over {{taken}} of {{count}} workspaces",
+        "tookOverOne": "Took over 1 workspace",
+        "tookOverMany": "Took over {{count}} workspaces",
         "watches": "Watches",
         "reports": "Reports",
         "takesOver": "Takes over",
@@ -22214,7 +22226,8 @@
         "createdTookOverSome": "Created · took over {{taken}} of {{count}} workspaces",
         "deleted": "Created, then deleted",
         "does": "Does",
-        "willPropose": "Will propose"
+        "willPropose": "Will propose",
+        "details": "Details of {{name}}"
       },
       "usage": {
         "description": "Show usage for this chat’s Codex account",
@@ -22332,6 +22345,7 @@
         "finishedWith": "Sign-in finished · {{message}}"
       },
       "offerCard": {
+        "notNow": "Not now",
         "dismiss": "Dismiss",
         "notSent": "Couldn't send that to the bot. Try again."
       },
@@ -27137,7 +27151,8 @@
         "linkOnce": "(works once).",
         "tryIt": "Try it in any channel or direct message",
         "connectAnother": "Connect another Slack workspace",
-        "connect": "Connect Slack"
+        "connect": "Connect Slack",
+        "openInSlack": "Message it in Slack"
       },
       "connection": {
         "appSettings": "Slack app settings",
@@ -28247,7 +28262,6 @@
         "guideHereNote": "You click, in Orca",
         "guideBrowserNote": "You click, in your browser"
       },
-      "dismiss": "Dismiss",
       "account": {
         "title": "Which Google account should I use?",
         "note": "Every Google Cloud page opens as the account you pick.",
@@ -28321,7 +28335,9 @@
         "apiOff": "{{services}} is turned off in Google Cloud.",
         "adminBlocked": "Your company’s Google admin blocked {{services}}.",
         "checkFailed": "Orca couldn’t check {{services}}."
-      }
+      },
+      "notNow": "Not now",
+      "importSetupFile": "Import setup file"
     },
     "import": {
       "nudgeOne": "We found a bot in {{app}}.",
@@ -28594,6 +28610,9 @@
       "lines": "{{count}} lines",
       "flagOnLine": "{{flag}} on line {{line}}",
       "memory": "Memory",
+      "all": "All",
+      "previewFile": "Preview {{name}}",
+      "memoryLimit": "Up to {{count}} files",
       "linkCopied": "Link copied",
       "stopped": "Stopped sharing {{name}}",
       "webhookNotShared": "Webhook · not shared",
@@ -29036,7 +29055,8 @@
     },
     "tabs": {
       "homeDetail": "Home: the bot's main chat. Its memory, automations and requests from others land here.",
-      "sideDetail": "Side chat: a separate topic with this bot."
+      "sideDetail": "Side chat: a separate topic with this bot.",
+      "homeBanner": "Open {{name}}'s page"
     },
     "settingsView": {
       "pathCopied": "Path copied",
@@ -29652,6 +29672,11 @@
       "descriptionOneHour_one": "You have {{count}} tab you haven't viewed in over an hour. Turn on Memory Saver to free up its memory.",
       "descriptionOneHour_other": "You have {{count}} tabs you haven't viewed in over an hour. Turn on Memory Saver to free up their memory.",
       "turnOnMemorySaver": "Turn on Memory Saver"
+    },
+    "disk": {
+      "title": "Your disk is almost full",
+      "description": "Find workspaces you no longer need in Settings > Workspace Cleanup.",
+      "reviewOld": "Review old workspaces"
     },
     "dontShowAgain": "Don't show again"
   },
