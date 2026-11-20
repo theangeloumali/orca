@@ -172,7 +172,7 @@ export function getDefaultUIState(): PersistedUIState {
     worktreeCardProperties: [...DEFAULT_WORKTREE_CARD_PROPERTIES],
     _worktreeCardModeDefaulted: true,
     showAgentModels: true,
-    showWorkspaceHostSections: false,
+    showWorkspaceHostSections: true,
     agentActivityDisplayMode: DEFAULT_AGENT_ACTIVITY_DISPLAY_MODE,
     workspaceStatuses: cloneDefaultWorkspaceStatuses(),
     workspaceBoardOpacity: 1,

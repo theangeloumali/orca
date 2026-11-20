@@ -226,7 +226,7 @@ export function createUiPreferenceActions(set: UISliceSet, get: UISliceGet): Par
       set({ showAgentModels: show })
       window.api.ui.set({ showAgentModels: show }).catch(console.error)
     },
-    showWorkspaceHostSections: false,
+    showWorkspaceHostSections: true,
     setShowWorkspaceHostSections: (show) => {
       set({ showWorkspaceHostSections: show })
       window.api.ui.set({ showWorkspaceHostSections: show }).catch(console.error)

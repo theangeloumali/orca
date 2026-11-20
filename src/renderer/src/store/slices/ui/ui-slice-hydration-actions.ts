@@ -182,7 +182,7 @@ export function createUiHydrationActions(set: UISliceSet, _get: UISliceGet): Par
           worktreeCardProperties: normalizeWorktreeCardProperties(ui.worktreeCardProperties),
           _worktreeCardModeDefaulted: ui._worktreeCardModeDefaulted === true,
           showAgentModels: ui.showAgentModels !== false,
-          showWorkspaceHostSections: ui.showWorkspaceHostSections === true,
+          showWorkspaceHostSections: ui.showWorkspaceHostSections !== false,
           agentActivityDisplayMode: normalizeAgentActivityDisplayMode(ui.agentActivityDisplayMode),
           workspaceStatuses: normalizeWorkspaceStatuses(ui.workspaceStatuses),
           workspaceBoardOpacity: clampWorkspaceBoardOpacity(ui.workspaceBoardOpacity),
