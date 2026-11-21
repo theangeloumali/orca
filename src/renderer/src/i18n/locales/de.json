@@ -7387,10 +7387,11 @@
         },
         "activeOnly": {
           "label": "Nur aktive",
-          "tooltipOn": "Alle Projekte anzeigen",
+          "tooltipOn": "Alle Workspaces anzeigen",
           "tooltipOff": "Nur Workspaces mit laufendem Terminal anzeigen",
           "filterAria": "Nur Workspaces mit laufendem Terminal anzeigen",
           "status": "{{shown}} von {{total}} Projekten",
+          "statusWorkspaces": "{{shown}} von {{total}} Workspaces",
           "showAll": "Alle anzeigen",
           "hiddenNeedsYou_one": "{{count}} ausgeblendetes braucht dich",
           "hiddenNeedsYou_other": "{{count}} ausgeblendete brauchen dich"

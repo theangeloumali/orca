@@ -7214,12 +7214,13 @@
         },
         "activeOnly": {
           "label": "僅活動中",
-          "tooltipOn": "顯示所有專案",
+          "tooltipOn": "顯示所有工作區",
           "tooltipOff": "僅顯示有執行中終端機的工作區",
           "filterAria": "僅顯示有執行中終端機的工作區",
           "status": "顯示 {{total}} 個專案中的 {{shown}} 個",
+          "statusWorkspaces": "顯示 {{total}} 個工作區中的 {{shown}} 個",
           "showAll": "全部顯示",
-          "hiddenNeedsYou_other": "{{count}} 個已隱藏的專案需要你"
+          "hiddenNeedsYou_other": "{{count}} 個已隱藏的工作區需要你"
         }
       },
       "shared": {

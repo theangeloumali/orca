@@ -7494,13 +7494,14 @@
         },
         "activeOnly": {
           "label": "Yalnızca etkin",
-          "tooltipOn": "Tüm projeleri göster",
+          "tooltipOn": "Tüm çalışma alanlarını göster",
           "tooltipOff": "Yalnızca terminali çalışan çalışma alanlarını göster",
           "filterAria": "Yalnızca terminali çalışan çalışma alanlarını göster",
           "status": "{{total}} projeden {{shown}} tanesi gösteriliyor",
+          "statusWorkspaces": "{{total}} çalışma alanından {{shown}} tanesi gösteriliyor",
           "showAll": "Tümünü göster",
-          "hiddenNeedsYou_one": "{{count}} gizli proje sizi bekliyor",
-          "hiddenNeedsYou_other": "{{count}} gizli proje sizi bekliyor"
+          "hiddenNeedsYou_one": "{{count}} gizli çalışma alanı sizi bekliyor",
+          "hiddenNeedsYou_other": "{{count}} gizli çalışma alanı sizi bekliyor"
         }
       },
       "shared": {

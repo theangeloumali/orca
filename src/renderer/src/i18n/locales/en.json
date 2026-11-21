@@ -8573,8 +8573,9 @@
         },
         "activeOnly": {
           "status": "Showing {{shown}} of {{total}} projects",
+          "statusWorkspaces": "Showing {{shown}} of {{total}} workspaces",
           "showAll": "Show all",
-          "tooltipOn": "Show all projects",
+          "tooltipOn": "Show all workspaces",
           "tooltipOff": "Show only workspaces with a running terminal",
           "label": "Active only",
           "filterAria": "Show only workspaces with a running terminal",

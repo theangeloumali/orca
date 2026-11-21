@@ -7008,10 +7008,11 @@
         },
         "activeOnly": {
           "label": "Solo activos",
-          "tooltipOn": "Mostrar todos los proyectos",
+          "tooltipOn": "Mostrar todos los espacios",
           "tooltipOff": "Mostrar solo espacios con una terminal en ejecución",
           "filterAria": "Mostrar solo espacios con una terminal en ejecución",
           "status": "Mostrando {{shown}} de {{total}} proyectos",
+          "statusWorkspaces": "Mostrando {{shown}} de {{total}} espacios",
           "showAll": "Mostrar todo",
           "hiddenNeedsYou_one": "{{count}} oculto te necesita",
           "hiddenNeedsYou_other": "{{count}} ocultos te necesitan",

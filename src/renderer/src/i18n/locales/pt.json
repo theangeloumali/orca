@@ -13294,10 +13294,11 @@
         },
         "activeOnly": {
           "label": "Só ativos",
-          "tooltipOn": "Mostrar todos os projetos",
+          "tooltipOn": "Mostrar todos os workspaces",
           "tooltipOff": "Mostrar só workspaces com um terminal em execução",
           "filterAria": "Mostrar só workspaces com um terminal em execução",
           "status": "Mostrando {{shown}} de {{total}} projetos",
+          "statusWorkspaces": "Mostrando {{shown}} de {{total}} workspaces",
           "showAll": "Mostrar tudo",
           "hiddenNeedsYou_one": "{{count}} oculto precisa de você",
           "hiddenNeedsYou_other": "{{count}} ocultos precisam de você",

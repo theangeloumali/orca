@@ -6736,10 +6736,11 @@
         },
         "activeOnly": {
           "label": "활성만",
-          "tooltipOn": "모든 프로젝트 표시",
+          "tooltipOn": "모든 워크스페이스 표시",
           "tooltipOff": "실행 중인 터미널이 있는 워크스페이스만 표시",
           "filterAria": "실행 중인 터미널이 있는 워크스페이스만 표시",
           "status": "프로젝트 {{total}}개 중 {{shown}}개 표시",
+          "statusWorkspaces": "워크스페이스 {{total}}개 중 {{shown}}개 표시",
           "showAll": "모두 표시",
           "hiddenNeedsYou_other": "숨겨진 {{count}}개가 확인 필요"
         }

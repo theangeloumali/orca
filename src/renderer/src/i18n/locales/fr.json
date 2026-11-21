@@ -7277,10 +7277,11 @@
         },
         "activeOnly": {
           "label": "Actifs uniquement",
-          "tooltipOn": "Afficher tous les projets",
+          "tooltipOn": "Afficher tous les espaces",
           "tooltipOff": "Afficher seulement les espaces avec un terminal actif",
           "filterAria": "Afficher seulement les espaces avec un terminal actif",
           "status": "{{shown}} projets affichés sur {{total}}",
+          "statusWorkspaces": "{{shown}} espaces affichés sur {{total}}",
           "showAll": "Tout afficher",
           "hiddenNeedsYou_one": "{{count}} masqué a besoin de vous",
           "hiddenNeedsYou_other": "{{count}} masqués ont besoin de vous",

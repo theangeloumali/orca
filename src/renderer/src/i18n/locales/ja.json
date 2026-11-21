@@ -7344,10 +7344,11 @@
         },
         "activeOnly": {
           "label": "アクティブのみ",
-          "tooltipOn": "すべてのプロジェクトを表示",
+          "tooltipOn": "すべてのワークスペースを表示",
           "tooltipOff": "実行中のターミナルがあるワークスペースのみ表示",
           "filterAria": "実行中のターミナルがあるワークスペースのみ表示",
           "status": "{{total}} 件中 {{shown}} 件のプロジェクトを表示",
+          "statusWorkspaces": "{{total}} 件中 {{shown}} 件のワークスペースを表示",
           "showAll": "すべて表示",
           "hiddenNeedsYou_other": "非表示のうち {{count}} 件が対応待ち"
         }

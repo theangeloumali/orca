@@ -7629,12 +7629,13 @@
         },
         "activeOnly": {
           "label": "仅活动中",
-          "tooltipOn": "显示所有项目",
+          "tooltipOn": "显示所有工作区",
           "tooltipOff": "仅显示有运行中终端的工作区",
           "filterAria": "仅显示有运行中终端的工作区",
           "status": "显示 {{total}} 个项目中的 {{shown}} 个",
+          "statusWorkspaces": "显示 {{total}} 个工作区中的 {{shown}} 个",
           "showAll": "全部显示",
-          "hiddenNeedsYou_other": "{{count}} 个已隐藏的项目需要你"
+          "hiddenNeedsYou_other": "{{count}} 个已隐藏的工作区需要你"
         }
       },
       "shared": {
