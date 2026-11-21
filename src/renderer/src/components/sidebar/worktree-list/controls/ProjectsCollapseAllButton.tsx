@@ -22,16 +22,11 @@ export function ProjectsCollapseAllButton({
     <SectionCollapseAllButton
       allCollapsed={allCollapsed}
       onToggle={onToggle}
-      collapseLabel={t(
-        'auto.components.sidebar.SidebarHeader.collapseAllProjects',
-        'Collapse all projects'
-      )}
-      expandLabel={t(
-        'auto.components.sidebar.SidebarHeader.expandAllProjects',
-        'Expand all projects'
-      )}
+      collapseLabel={t('auto.components.sidebar.SidebarHeader.collapseAll', 'Collapse all')}
+      expandLabel={t('auto.components.sidebar.SidebarHeader.expandAll', 'Expand all')}
       shortcut={shortcut}
       announcing={announcing}
+      alwaysVisible
       toggleAttributes={PROJECTS_TOGGLE_ATTRIBUTES}
     />
   )

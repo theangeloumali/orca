@@ -2,9 +2,18 @@ import { recordCollapsedGroupChanges } from '@/store/slices/ui/collapsed-group-t
 import { isProjectOrPinnedSectionGroupKey } from '../../../../../../shared/sidebar-list/sections/group-keys'
 import type { HostSectionRow } from '../../../../../../shared/sidebar-list/hosts/host-section-rows'
 
+// Machine sections fold with projects; per-host lanes like `pinned:host:x` stay out.
+function isCollapseAllGroupKey(key: string): boolean {
+  return key.startsWith('host:') || isProjectOrPinnedSectionGroupKey(key)
+}
+
 export function getRenderedProjectCollapseKeys(rows: readonly HostSectionRow[]): string[] {
   const keys = new Set<string>()
   for (const row of rows) {
+    if (row.type === 'host-header') {
+      keys.add(row.key)
+      continue
+    }
     if (row.type !== 'header') {
       continue
     }
@@ -23,15 +32,13 @@ export function areAllProjectsCollapsed(
   return projectKeys.length > 0 && projectKeys.every((key) => collapsedGroups.has(key))
 }
 
-// Expanding clears pinned and every project key, including hidden nested projects.
+// Expanding clears pinned, machine and every project key, including hidden nested projects.
 export function setAllProjectsCollapsed(
   collapsedGroups: ReadonlySet<string>,
   projectKeys: readonly string[],
   collapsed: boolean
 ): Set<string> {
-  const keys = collapsed
-    ? projectKeys
-    : [...collapsedGroups].filter(isProjectOrPinnedSectionGroupKey)
+  const keys = collapsed ? projectKeys : [...collapsedGroups].filter(isCollapseAllGroupKey)
   const next = new Set(collapsedGroups)
   for (const key of keys) {
     if (collapsed) {
