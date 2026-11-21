@@ -231,6 +231,8 @@ export const electronViteConfig: UserConfig = {
       ORCA_BUILD_COMMIT: ORCA_BUILD_COMMIT_LITERAL,
       // Fork-only: fork release builds export ORCA_FORK_BUILD=1 so official updates stay off.
       ORCA_FORK_BUILD: JSON.stringify(process.env.ORCA_FORK_BUILD === '1'),
+      // The fork release this build is, so it can tell when a newer one is out.
+      ORCA_FORK_RELEASE_TAG: JSON.stringify(process.env.ORCA_FORK_RELEASE_TAG?.trim() || null),
       ...DARK_BUILD_DEFINES
     },
     // @xterm/headless declares exports:null; point Vite directly at its published CJS main to permit inlining.

@@ -11,5 +11,7 @@ declare const ORCA_DIAGNOSTICS_TOKEN_URL: string | null
 declare const ORCA_BUILD_COMMIT: string
 /** True in fork release builds (theangeloumali/orca); vitest leaves it undefined. */
 declare const ORCA_FORK_BUILD: boolean | undefined
+/** The fork release tag (v<version>-angelo.<run>); null outside fork release builds. */
+declare const ORCA_FORK_RELEASE_TAG: string | null | undefined
 
 // ORCA_LAYOUT_OWNER is declared and read in one place: src/shared/workspace-layout/layout-owner-switch.ts.

@@ -249,6 +249,12 @@ jobs:
         shell: bash
         run: ${{ matrix.install }}
       - uses: ./.github/actions/install-mobile-dependencies
+      # Baked into the app so it can tell when a newer fork release is out.
+      - name: Name this fork release
+        shell: bash
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          echo "ORCA_FORK_RELEASE_TAG=v$version-angelo.$GITHUB_RUN_NUMBER" >>"$GITHUB_ENV"
       - name: Build the app
         shell: bash
         run: pnpm build:release
@@ -291,6 +297,8 @@ jobs:
           version="$(gh api "repos/$GITHUB_REPOSITORY/contents/package.json?ref=$target" \
             -H 'Accept: application/vnd.github.raw' | jq -r .version)"
           [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::unexpected version '$version'"; exit 1; }
+          # The fork updater checks every download against this list.
+          (cd installers && shasum -a 512 -- * >fork-sha512sums.txt)
           gh release create "v$version-angelo.$GITHUB_RUN_NUMBER" installers/* \
             --repo "$GITHUB_REPOSITORY" \
             --target "$target" \

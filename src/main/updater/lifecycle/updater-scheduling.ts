@@ -70,8 +70,11 @@ export abstract class UpdaterScheduling extends UpdaterCheckFailure {
     ) {
       return false
     }
-    // Fork builds are unsigned; an official update would replace them with stock Orca.
-    if (!app.isPackaged || OFFICIAL_UPDATES_DISABLED) {
+    // Fork builds never take official updates; the fork updater owns their update status.
+    if (OFFICIAL_UPDATES_DISABLED) {
+      return false
+    }
+    if (!app.isPackaged) {
       this.sendStatus({ state: 'not-available' })
       return false
     }

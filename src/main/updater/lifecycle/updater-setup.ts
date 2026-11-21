@@ -69,6 +69,11 @@ export class UpdaterSetup extends UpdaterDownloadInstall {
     return super.isQuittingForUpdate()
   }
 
+  /** Lets the fork updater drive the same status the update UI already renders. */
+  publishExternalStatus(status: UpdateStatus): void {
+    this.sendStatus(status, { force: true })
+  }
+
   getUpdateStatus(): UpdateStatus {
     return super.getUpdateStatus()
   }
