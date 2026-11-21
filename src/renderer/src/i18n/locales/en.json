@@ -8562,6 +8562,9 @@
           "machines": "Machines",
           "projects": "Projects",
           "label": "Sidebar layout"
+        },
+        "moveToGroup": {
+          "otherDevice": "On another device"
         }
       },
       "shared": {
