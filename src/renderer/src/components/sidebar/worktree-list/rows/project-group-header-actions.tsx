@@ -19,6 +19,9 @@ import { ProjectGroupMoveSubmenu } from './ProjectGroupMoveSubmenu'
 import { useRuntimeEnvironmentCapability } from '@/runtime/rpc/compatibility/use-runtime-environment-capability'
 import { PROJECT_GROUP_PARENT_UPDATE_RUNTIME_CAPABILITY } from '../../../../../../shared/remote-runtime/protocol/worktree-runtime-capabilities'
 import { REPO_HEADER_ACTION_BUTTON_CLASS } from './repo-header-action-button-class'
+import { SectionCollapseAllButton } from '../controls/SectionCollapseAllButton'
+import { getShortcutPlatform } from '@/lib/keyboard/shortcut-platform'
+import { useProjectGroupSubtreeCollapse } from './use-project-group-subtree-collapse'
 import {
   handleRepoHeaderActionPointerDown,
   stopRepoHeaderKeyboardToggle,
@@ -62,67 +65,113 @@ export function ProjectGroupHeaderMenu({
   )
   const nestingSupported = runtimeEnvironmentId === null || remoteSupportsNesting
   return (
-    <DropdownMenu modal={false}>
-      <DropdownMenuTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-xs"
-          className={REPO_HEADER_ACTION_BUTTON_CLASS}
-          data-repo-header-action=""
-          aria-label={t(
-            'auto.components.sidebar.WorktreeList.79465e9034',
-            'Group actions for {{value0}}',
-            { value0: label }
-          )}
-          onClick={(event) => event.stopPropagation()}
-          onKeyDown={stopRepoHeaderKeyboardToggle}
-          onPointerDown={handleRepoHeaderActionPointerDown}
+    <>
+      <ProjectGroupCollapseAllButton groupId={groupId} label={label} />
+      <DropdownMenu modal={false}>
+        <DropdownMenuTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-xs"
+            className={REPO_HEADER_ACTION_BUTTON_CLASS}
+            data-repo-header-action=""
+            aria-label={t(
+              'auto.components.sidebar.WorktreeList.79465e9034',
+              'Group actions for {{value0}}',
+              { value0: label }
+            )}
+            onClick={(event) => event.stopPropagation()}
+            onKeyDown={stopRepoHeaderKeyboardToggle}
+            onPointerDown={handleRepoHeaderActionPointerDown}
+          >
+            <Ellipsis className="size-3.5" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="end"
+          side="bottom"
+          sideOffset={6}
+          // Why: Radix portals keep React bubbling through the project header; block menu events from arming row drag/collapse.
+          onPointerDown={stopRepoHeaderMenuEvent}
+          onMouseDown={stopRepoHeaderMenuEvent}
+          onPointerUp={stopRepoHeaderMenuEvent}
+          onMouseUp={stopRepoHeaderMenuEvent}
+          onClick={stopRepoHeaderMenuEvent}
+          onKeyDown={stopRepoHeaderMenuEvent}
         >
-          <Ellipsis className="size-3.5" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="end"
-        side="bottom"
-        sideOffset={6}
-        // Why: Radix portals keep React bubbling through the project header; block menu events from arming row drag/collapse.
-        onPointerDown={stopRepoHeaderMenuEvent}
-        onMouseDown={stopRepoHeaderMenuEvent}
-        onPointerUp={stopRepoHeaderMenuEvent}
-        onMouseUp={stopRepoHeaderMenuEvent}
-        onClick={stopRepoHeaderMenuEvent}
-        onKeyDown={stopRepoHeaderMenuEvent}
-      >
-        {onRefresh ? (
-          <DropdownMenuItem onSelect={onRefresh}>
-            <RefreshCw className="size-3.5" />
-            {t('auto.components.sidebar.WorktreeList.refreshProjectGroup', 'Refresh projects')}
+          {onRefresh ? (
+            <DropdownMenuItem onSelect={onRefresh}>
+              <RefreshCw className="size-3.5" />
+              {t('auto.components.sidebar.WorktreeList.refreshProjectGroup', 'Refresh projects')}
+            </DropdownMenuItem>
+          ) : null}
+          {onCreateSubgroup ? (
+            <DropdownMenuItem onSelect={() => onCreateSubgroup(groupId, label, hostId)}>
+              <FolderPlus className="size-3.5" />
+              {t('auto.components.sidebar.WorktreeList.newSubgroup', 'New subgroup…')}
+            </DropdownMenuItem>
+          ) : null}
+          {onMoveGroup && projectGroups ? (
+            <ProjectGroupMoveSubmenu
+              groupId={groupId}
+              hostId={hostId}
+              projectGroups={projectGroups}
+              disabled={!nestingSupported}
+              onMove={onMoveGroup}
+            />
+          ) : null}
+          <DropdownMenuItem onSelect={() => onRename(groupId, label, hostId)}>
+            {t('auto.components.sidebar.WorktreeList.4d7b73658c', 'Rename group')}
           </DropdownMenuItem>
-        ) : null}
-        {onCreateSubgroup ? (
-          <DropdownMenuItem onSelect={() => onCreateSubgroup(groupId, label, hostId)}>
-            <FolderPlus className="size-3.5" />
-            {t('auto.components.sidebar.WorktreeList.newSubgroup', 'New subgroup…')}
+          <DropdownMenuItem variant="destructive" onSelect={() => onDelete(groupId, label, hostId)}>
+            {t('auto.components.sidebar.WorktreeList.902115cdbe', 'Delete group')}
           </DropdownMenuItem>
-        ) : null}
-        {onMoveGroup && projectGroups ? (
-          <ProjectGroupMoveSubmenu
-            groupId={groupId}
-            hostId={hostId}
-            projectGroups={projectGroups}
-            disabled={!nestingSupported}
-            onMove={onMoveGroup}
-          />
-        ) : null}
-        <DropdownMenuItem onSelect={() => onRename(groupId, label, hostId)}>
-          {t('auto.components.sidebar.WorktreeList.4d7b73658c', 'Rename group')}
-        </DropdownMenuItem>
-        <DropdownMenuItem variant="destructive" onSelect={() => onDelete(groupId, label, hostId)}>
-          {t('auto.components.sidebar.WorktreeList.902115cdbe', 'Delete group')}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
+  )
+}
+
+// Marks the toggle as a header action so its click never also folds the group row.
+const COLLAPSE_ALL_TOGGLE_ATTRIBUTES: Record<`data-${string}`, string> = {
+  'data-repo-header-action': ''
+}
+
+function ProjectGroupCollapseAllButton({
+  groupId,
+  label
+}: {
+  groupId: string
+  label: string
+}): React.JSX.Element | null {
+  const t = useTranslate()
+  const { hasSubtree, allCollapsed, toggle } = useProjectGroupSubtreeCollapse(groupId)
+  if (!hasSubtree) {
+    return null
+  }
+  const altKey = getShortcutPlatform() === 'darwin' ? '⌥' : 'Alt'
+  return (
+    <span className="contents" onPointerDown={handleRepoHeaderActionPointerDown}>
+      <SectionCollapseAllButton
+        allCollapsed={allCollapsed}
+        onToggle={toggle}
+        collapseLabel={t(
+          'auto.components.sidebar.WorktreeList.collapseAllInGroup',
+          'Collapse all in {{value0}}',
+          { value0: label }
+        )}
+        expandLabel={t(
+          'auto.components.sidebar.WorktreeList.expandAllInGroup',
+          'Expand all in {{value0}}',
+          { value0: label }
+        )}
+        shortcut={{
+          keys: [altKey, t('auto.components.sidebar.WorktreeList.clickKeyLabel', 'Click')],
+          doubleTap: false
+        }}
+        toggleAttributes={COLLAPSE_ALL_TOGGLE_ATTRIBUTES}
+      />
+    </span>
   )
 }
 
