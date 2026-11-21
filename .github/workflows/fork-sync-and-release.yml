@@ -9,6 +9,9 @@ name: Fork sync and release
 # GITHUB_TOKEN may not push workflow edits, so no long-lived write token is needed.
 
 on:
+  # A merged fork PR ships right away; the workflow's own push to main uses GITHUB_TOKEN, which starts no run.
+  push:
+    branches: [main]
   schedule:
     # Every 4 hours, off the hour (GitHub delays on-the-hour schedules); upstream can ship several releases a day.
     - cron: '17 */4 * * *'
@@ -42,7 +45,7 @@ jobs:
       conflict: ${{ steps.merge.outputs.conflict }}
       # main as checked out; what force_release builds when upstream had nothing new.
       base_sha: ${{ steps.merge.outputs.base_sha }}
-      # True when upstream has a release this fork has not built yet.
+      # True for a merged fork change, or an upstream release this fork has not built yet.
       release_needed: ${{ steps.version.outputs.release_needed }}
     steps:
       - uses: actions/checkout@v6
@@ -97,7 +100,7 @@ jobs:
           fi
           # Fork releases are tagged v<upstream version>-angelo.<run>.
           built="$(gh release list --repo "$GITHUB_REPOSITORY" --limit 1 --json tagName -q '.[0].tagName // ""')"
-          if [[ "$built" == "v$version-angelo."* ]]; then
+          if [ "$GITHUB_EVENT_NAME" != push ] && [[ "$built" == "v$version-angelo."* ]]; then
             echo "release_needed=false" >>"$GITHUB_OUTPUT"
           else
             echo "release_needed=true" >>"$GITHUB_OUTPUT"
@@ -195,7 +198,7 @@ jobs:
 
   build:
     needs: [merge, verify, publish-main]
-    # Installers are built once per upstream release (or on force_release), never after a failed merge, verify or push.
+    # Installers are built per merged fork change, per upstream release, or on force_release; never after a failed merge, verify or push.
     if: >-
       ${{ !cancelled() && needs.merge.result == 'success' &&
       needs.merge.outputs.conflict != 'true' && needs.verify.result != 'failure' &&
