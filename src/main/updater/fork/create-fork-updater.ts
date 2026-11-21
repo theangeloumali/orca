@@ -24,7 +24,7 @@ export function createForkUpdater(args: {
   const exePath = app.getPath('exe')
   // One folder per profile, so two running profiles never wipe each other's staged update.
   const profileKey = createHash('sha1').update(app.getPath('userData')).digest('hex').slice(0, 8)
-  return new ForkUpdater({
+  const forkUpdater = new ForkUpdater({
     currentTag: FORK_RELEASE_TAG,
     platform: process.platform,
     // .../Orca.app/Contents/MacOS/Orca → .../Orca.app
@@ -71,6 +71,12 @@ export function createForkUpdater(args: {
     quit: () => app.quit(),
     publish: args.publish
   })
+  // As soon as Electron is ready, tell a pending swap that this build started cleanly.
+  void app
+    .whenReady()
+    .then(() => forkUpdater.markLaunched())
+    .catch((error: unknown) => console.warn('[fork-updater] could not record the launch:', error))
+  return forkUpdater
 }
 
 let checksStarted = false

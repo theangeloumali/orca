@@ -91,6 +91,9 @@ export function applyAutomaticUpdatesSetting(enabled: boolean | undefined): void
 
 export function downloadUpdate(): void {
   if (forkUpdater) {
+    if (!forkUpdaterActive) {
+      return
+    }
     void forkUpdater.download()
     return
   }
@@ -99,6 +102,10 @@ export function downloadUpdate(): void {
 
 export function quitAndInstall(): void {
   if (forkUpdater) {
+    if (!forkUpdaterActive) {
+      updater.notifyQuitAndInstallAborted()
+      return
+    }
     // The window is waiting to restart; tell it when nothing started so it can recover.
     void forkUpdater.install().then((started) => {
       if (!started) {
@@ -145,10 +152,6 @@ export function setupAutoUpdater(
   if (forkUpdater && mainWindow) {
     forkUpdaterActive = true
     automaticDownloads = opts?.getAutomaticUpdates ?? (() => true)
-    // The window is up: tell a pending swap that this build started cleanly.
-    void forkUpdater.markLaunched().catch((error: unknown) => {
-      console.warn('[fork-updater] could not record the launch:', error)
-    })
     startForkUpdateChecks(forkUpdater)
   }
 }

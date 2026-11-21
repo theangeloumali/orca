@@ -21,7 +21,8 @@ export function buildMacSwapScript(args: {
   const staged = shellWord(args.stagedAppPath)
   const marker = shellWord(args.launchedMarkerPath)
   const lock = shellWord(args.lockPath)
-  const settleTicks = (args.settleSeconds ?? 45) * 2
+  const settleTicks = (args.settleSeconds ?? 120) * 2
+  const binaries = shellWord(`${args.appPath}/Contents/MacOS/`)
   return [
     `mkdir ${lock} 2>/dev/null || exit 0`,
     `trap ${shellWord(`rm -rf ${lock}`)} EXIT`,
@@ -35,6 +36,8 @@ export function buildMacSwapScript(args: {
     `if open ${app}; then`,
     `  i=0; while [ "$i" -lt ${settleTicks} ]; do [ -f ${marker} ] && { rm -rf ${previous}; exit 0; }; i=$((i+1)); sleep 0.5; done`,
     'fi',
+    // Stop a new build that never reported starting before putting the old one back.
+    `pkill -f -- ${binaries} 2>/dev/null; sleep 1`,
     `rm -rf ${app}`,
     `mv ${previous} ${app}`,
     `open ${app}`,

@@ -142,9 +142,12 @@ export class ForkUpdater {
         }
         // The installer replaces running files, so start it only as Orca's process exits.
         const unsubscribe = this.deps.onAppExit(() => {
-          void this.deps.spawnDetached(prepared.installerPath, args).catch((error: unknown) => {
+          // Nothing async runs during exit, so a synchronous throw is the only failure to catch.
+          try {
+            void this.deps.spawnDetached(prepared.installerPath, args).catch(() => {})
+          } catch (error) {
             console.error('[fork-updater] could not start the installer:', error)
-          })
+          }
         })
         this.quitOrResume(unsubscribe)
         return true
