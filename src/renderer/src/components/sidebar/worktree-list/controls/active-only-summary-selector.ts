@@ -80,10 +80,12 @@ function buildOptions(state: AppState, context: ActiveOnlySummaryContext): Visib
     context.statuses,
     getIndexedRepoMap(state.repos)
   )
+  const tabsByWorktree = getVisibleWorktreeTerminalActivityTabs(state.tabsByWorktree)
+  const browserTabsByWorktree = getVisibleWorktreeBrowserActivityTabs(state.browserTabsByWorktree)
   return {
     ...options,
-    tabsByWorktree: getVisibleWorktreeTerminalActivityTabs(state.tabsByWorktree),
-    browserTabsByWorktree: getVisibleWorktreeBrowserActivityTabs(state.browserTabsByWorktree),
+    tabsByWorktree,
+    browserTabsByWorktree,
     botListedWorktreeIdentities: context.botListed
   }
 }
