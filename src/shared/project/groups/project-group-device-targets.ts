@@ -1,4 +1,5 @@
 import {
+  canonicalExecutionHostId,
   LOCAL_EXECUTION_HOST_ID,
   parseExecutionHostId,
   type ExecutionHostId
@@ -27,7 +28,9 @@ export type ProjectGroupDeviceTargets = {
 // SSH hosts keep their groups in this computer's catalog; only a paired server has its own.
 function sharesGroupCatalog(hostId: ExecutionHostId, otherHostId: ExecutionHostId): boolean {
   const isRuntime = (id: ExecutionHostId) => parseExecutionHostId(id)?.kind === 'runtime'
-  return isRuntime(hostId) || isRuntime(otherHostId) ? hostId === otherHostId : true
+  return isRuntime(hostId) || isRuntime(otherHostId)
+    ? canonicalExecutionHostId(hostId) === canonicalExecutionHostId(otherHostId)
+    : true
 }
 
 export function getProjectGroupTargetsByDevice(args: {

@@ -55,6 +55,15 @@ describe('getProjectGroupTargetsByDevice', () => {
     ])
   })
 
+  it('treats equivalent spellings of a paired server as the same catalog', () => {
+    const sections = getProjectGroupTargetsByDevice({
+      groups: [group('wsl-work', 'Work', 'runtime:wsl:x')],
+      hostOrder: [],
+      ownerHostId: 'runtime:wsl%3Ax'
+    })
+    expect(sections.map(({ available }) => available)).toEqual([true])
+  })
+
   it("lets an SSH project join this computer's groups, which share its catalog", () => {
     const sections = getProjectGroupTargetsByDevice({
       groups,

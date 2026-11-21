@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import type { ProjectGroup } from '../../../../../../shared/project/groups/project-group-types'
 import type { Repo } from '../../../../../../shared/repository/repo-types'
+import { getProjectHostSetupProjectionFromState } from '@/store/projects/project-host-setup-selector'
+import { getSidebarProjectGrouping } from '../listing/sidebar-project-grouping'
 import { getSidebarRowRevealAncestorKeys } from './reveal-ancestors'
 
 const group = (id: string, executionHostId?: ProjectGroup['executionHostId']): ProjectGroup => ({
@@ -35,5 +37,35 @@ describe('getSidebarRowRevealAncestorKeys', () => {
     expect(reveal('repo:pb-m1', true)).toEqual(['host:runtime:m1', 'project-group:work-m1'])
     expect(reveal('project-group:work-m1', true)).toEqual(['host:runtime:m1'])
     expect(reveal('repo:pb-m1', false)).toEqual(['project-group:work-m1'])
+  })
+
+  it("unfolds only this computer's section for its copy of a shared project", () => {
+    const remote = {
+      canonicalKey: 'github.com/acme/picklebook',
+      remoteName: 'origin',
+      remoteUrl: 'x'
+    }
+    const onM5: Repo = {
+      ...onM1,
+      id: 'pb-m5',
+      projectGroupId: undefined,
+      executionHostId: undefined,
+      gitRemoteIdentity: remote
+    }
+    const m1Copy: Repo = { ...onM1, gitRemoteIdentity: remote }
+    const repos = [onM5, m1Copy]
+    const projectGrouping = getSidebarProjectGrouping(
+      getProjectHostSetupProjectionFromState({ repos }),
+      true
+    )
+    expect(
+      getSidebarRowRevealAncestorKeys({
+        rowKey: 'project:github:acme/picklebook',
+        repoMap: new Map(repos.map((repo) => [repo.id, repo])),
+        projectGroups,
+        projectGrouping,
+        hostSections: true
+      })
+    ).toEqual(['host:local'])
   })
 })

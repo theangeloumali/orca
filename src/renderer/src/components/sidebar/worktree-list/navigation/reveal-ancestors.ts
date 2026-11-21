@@ -19,7 +19,8 @@ function getProjectIdFromHeaderRowKey(rowKey: string): string | null {
 function getRepoIdsFromHeaderRowKey(
   rowKey: string,
   repoMap: Map<string, Repo>,
-  projectGrouping?: ProjectGroupingModel
+  projectGrouping?: ProjectGroupingModel,
+  hostSections = false
 ): string[] {
   if (rowKey.startsWith('repo:')) {
     return [rowKey.slice('repo:'.length)]
@@ -38,6 +39,10 @@ function getRepoIdsFromHeaderRowKey(
     if (setup.projectId === projectId && repoMap.has(setup.repoId)) {
       repoIds.add(setup.repoId)
     }
+  }
+  // Machine sections scope a project header to its setups; sourceRepoIds spans every machine.
+  if (hostSections) {
+    return [...repoIds]
   }
   const project = projectGrouping?.projects.find((candidate) => candidate.id === projectId)
   for (const repoId of project?.sourceRepoIds ?? []) {
@@ -91,7 +96,8 @@ export function getSidebarRowRevealAncestorKeys(args: {
   for (const repoId of getRepoIdsFromHeaderRowKey(
     args.rowKey,
     args.repoMap,
-    args.projectGrouping
+    args.projectGrouping,
+    args.hostSections
   )) {
     const repo = args.repoMap.get(repoId)
     for (const key of [
