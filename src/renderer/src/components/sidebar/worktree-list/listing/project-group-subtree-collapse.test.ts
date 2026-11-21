@@ -95,13 +95,34 @@ describe('getProjectGroupSubtreeCollapseKeys', () => {
     expect(headerKey('old', true)).not.toBe('repo:old-m1')
   })
 
-  it('stays finite when parent links form a cycle', () => {
-    const cyclic = [group('a', 'c'), group('b', 'a'), group('c', 'b')]
-    const keys = getProjectGroupSubtreeCollapseKeys('a', cyclic, [], {
+  it('is empty when every project beneath is hidden', () => {
+    const hiddenOnly = [{ ...repo('gone', 'archive'), hiddenAt: 5 }]
+    const keys = getProjectGroupSubtreeCollapseKeys('client', groups, hiddenOnly, {
       projects: [],
       projectHostSetups: []
     })
-    expect(new Set(keys)).toEqual(new Set(['project-group:b', 'project-group:c']))
+    expect(keys).toEqual([])
+  })
+
+  it('leaves hidden projects out of a listed subtree', () => {
+    const mixed = [repo('web', 'client'), { ...repo('gone', 'client'), hiddenAt: 5 }]
+    const grouping = getSidebarProjectGrouping(
+      getProjectHostSetupProjectionFromState({ repos: mixed }),
+      false
+    )
+    const keys = getProjectGroupSubtreeCollapseKeys('client', groups, mixed, grouping)
+    const repoMap = new Map(mixed.map((entry) => [entry.id, entry]))
+    expect(keys).toContain(getProjectHeaderRevealTarget('web', repoMap, grouping).key)
+    expect(keys).not.toContain(getProjectHeaderRevealTarget('gone', repoMap, grouping).key)
+  })
+
+  it('stays finite when parent links form a cycle', () => {
+    const cyclic = [group('a', 'c'), group('b', 'a'), group('c', 'b')]
+    const keys = getProjectGroupSubtreeCollapseKeys('a', cyclic, [repo('leaf', 'c')], {
+      projects: [],
+      projectHostSetups: []
+    })
+    expect(new Set(keys)).toEqual(new Set(['project-group:b', 'project-group:c', 'repo:leaf']))
   })
 })
 

@@ -5,7 +5,7 @@ function handlers() {
   return {
     toggleGroupWithScrollAnchor: vi.fn(),
     toggleAllProjects: vi.fn(),
-    toggleProjectGroupSubtree: vi.fn()
+    toggleProjectGroupSubtree: vi.fn(() => true)
   }
 }
 
@@ -29,6 +29,14 @@ describe('toggleSectionHeaderCollapse', () => {
     const ctx = handlers()
     toggleSectionHeaderCollapse({ altKey: true }, 'project-group:ungrouped', ctx)
     expect(ctx.toggleProjectGroupSubtree).not.toHaveBeenCalled()
+  })
+
+  it('Alt-click on a group with nothing listed beneath falls back to all projects', () => {
+    const ctx = { ...handlers(), toggleProjectGroupSubtree: vi.fn(() => false) }
+    toggleSectionHeaderCollapse({ altKey: true }, 'project-group:empty', ctx)
+    expect(ctx.toggleProjectGroupSubtree).toHaveBeenCalledWith('empty')
+    expect(ctx.toggleAllProjects).toHaveBeenCalledOnce()
+    expect(ctx.toggleGroupWithScrollAnchor).not.toHaveBeenCalled()
   })
 
   it('a plain click folds only the clicked group', () => {

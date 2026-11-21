@@ -2,8 +2,8 @@ import type React from 'react'
 import '../drag/project-header-drag'
 import { isRepoHeaderActionTarget } from '../drag/project-header-drag-contract'
 import {
-  getProjectGroupHeaderKey,
-  isProjectOrPinnedSectionGroupKey
+  isProjectOrPinnedSectionGroupKey,
+  parseProjectGroupHeaderKey
 } from '../../../../../../shared/sidebar-list/sections/group-keys'
 
 export function stopRepoHeaderKeyboardToggle(event: React.KeyboardEvent<HTMLElement>): void {
@@ -34,29 +34,21 @@ export function shouldIgnoreRepoHeaderToggle(event: React.SyntheticEvent<HTMLEle
   return isRepoHeaderActionTarget(event.target, event.currentTarget)
 }
 
-const PROJECT_GROUP_KEY_PREFIX = 'project-group:'
-const UNGROUPED_PROJECT_GROUP_KEY = getProjectGroupHeaderKey(null)
-
-function getSubtreeGroupId(collapseKey: string): string | null {
-  return collapseKey.startsWith(PROJECT_GROUP_KEY_PREFIX) &&
-    collapseKey !== UNGROUPED_PROJECT_GROUP_KEY
-    ? collapseKey.slice(PROJECT_GROUP_KEY_PREFIX.length)
-    : null
-}
-
-// Alt/Option-click folds a group's whole subtree, or on other headers all projects and Pinned.
+// Alt/Option-click folds a group's whole subtree, or (also for an empty subtree) all projects and Pinned.
 export function toggleSectionHeaderCollapse(
   event: Pick<React.MouseEvent | React.KeyboardEvent, 'altKey'>,
   collapseKey: string,
   ctx: {
     toggleGroupWithScrollAnchor: (key: string) => void
     toggleAllProjects?: () => void
-    toggleProjectGroupSubtree?: (groupId: string) => void
+    /** False when nothing listed sits beneath the group. */
+    toggleProjectGroupSubtree?: (groupId: string) => boolean
   }
 ): void {
-  const subtreeGroupId = event.altKey ? getSubtreeGroupId(collapseKey) : null
-  if (subtreeGroupId && ctx.toggleProjectGroupSubtree) {
-    ctx.toggleProjectGroupSubtree(subtreeGroupId)
+  const subtreeGroupId = event.altKey
+    ? (parseProjectGroupHeaderKey(collapseKey)?.groupId ?? null)
+    : null
+  if (subtreeGroupId && ctx.toggleProjectGroupSubtree?.(subtreeGroupId)) {
     return
   }
   if (event.altKey && ctx.toggleAllProjects && isProjectOrPinnedSectionGroupKey(collapseKey)) {

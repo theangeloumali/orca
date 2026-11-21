@@ -2,6 +2,7 @@ import type { ProjectGroup } from '../../../../../../shared/project/groups/proje
 import type { Repo } from '../../../../../../shared/repository/repo-types'
 import {
   getProjectGroupHeaderKey,
+  parseProjectGroupHeaderKey,
   PROJECTS_SECTION_GROUP_KEY
 } from '../../../../../../shared/sidebar-list/sections/group-keys'
 import type { ProjectGroupingModel } from '../../../../../../shared/sidebar-list/sections/project-section-grouping'
@@ -83,10 +84,10 @@ export function getSidebarRowRevealAncestorKeys(args: {
 }): string[] {
   const hostKey = (record: Parameters<typeof getRepoExecutionHostId>[0] | undefined) =>
     args.hostSections && record ? [`host:${getRepoExecutionHostId(record)}`] : []
-  if (args.rowKey.startsWith('project-group:')) {
-    const groupId = args.rowKey.slice('project-group:'.length)
+  const groupHeader = parseProjectGroupHeaderKey(args.rowKey)
+  if (groupHeader) {
     // Why the last copy: same-id host copies render as that one (getDistinctProjectGroups).
-    const group = args.projectGroups.findLast((candidate) => candidate.id === groupId)
+    const group = args.projectGroups.findLast((candidate) => candidate.id === groupHeader.groupId)
     return [
       ...hostKey(group),
       ...getProjectGroupAncestorKeys(group?.parentGroupId, args.projectGroups)

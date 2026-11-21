@@ -1,6 +1,7 @@
 import { recordCollapsedGroupChanges } from '@/store/slices/ui/collapsed-group-toggle'
 import type { ProjectGroup } from '../../../../../../shared/project/groups/project-group-types'
 import type { Repo } from '../../../../../../shared/repository/repo-types'
+import { isRepoHidden } from '../../../../../../shared/project/catalog/hidden-projects'
 import { getProjectGroupHeaderKey } from '../../../../../../shared/sidebar-list/sections/group-keys'
 import {
   getProjectHeaderRevealTarget,
@@ -26,7 +27,7 @@ function getDescendantGroupIds(
   return descendants
 }
 
-/** Every collapse key beneath a group: nested group headers and project headers as drawn. */
+/** Collapse keys beneath a group as drawn; empty when no listed (non-hidden) project sits there. */
 export function getProjectGroupSubtreeCollapseKeys(
   groupId: string,
   projectGroups: readonly Pick<ProjectGroup, 'id' | 'parentGroupId'>[],
@@ -34,15 +35,17 @@ export function getProjectGroupSubtreeCollapseKeys(
   projectGrouping: ProjectGroupingModel
 ): string[] {
   const descendants = getDescendantGroupIds(groupId, projectGroups)
-  const keys = new Set([...descendants].map(getProjectGroupHeaderKey))
   const repoMap = new Map(repos.map((repo) => [repo.id, repo]))
+  const projectKeys = new Set<string>()
   for (const repo of repos) {
     const memberOf = repo.projectGroupId
-    if (memberOf && (memberOf === groupId || descendants.has(memberOf))) {
-      keys.add(getProjectHeaderRevealTarget(repo.id, repoMap, projectGrouping).key)
+    if (!isRepoHidden(repo) && memberOf && (memberOf === groupId || descendants.has(memberOf))) {
+      projectKeys.add(getProjectHeaderRevealTarget(repo.id, repoMap, projectGrouping).key)
     }
   }
-  return [...keys]
+  return projectKeys.size === 0
+    ? []
+    : [...[...descendants].map(getProjectGroupHeaderKey), ...projectKeys]
 }
 
 // Expands only when everything beneath is already collapsed, like the Projects toggle.

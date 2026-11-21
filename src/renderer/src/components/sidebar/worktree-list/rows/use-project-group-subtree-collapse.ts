@@ -24,15 +24,15 @@ function getSubtreeKeysFromState(state: AppState, groupId: string): string[] {
   )
 }
 
-// Reads the store at call time so Alt-click on a header needs no hook.
-export function toggleProjectGroupSubtree(groupId: string): void {
+// Reads the store at call time so Alt-click needs no hook; false means nothing listed to fold.
+export function toggleProjectGroupSubtree(groupId: string): boolean {
   const state = useAppStore.getState()
-  state.setCollapsedGroups(
-    toggleProjectGroupSubtreeCollapsed(
-      state.collapsedGroups,
-      getSubtreeKeysFromState(state, groupId)
-    )
-  )
+  const subtreeKeys = getSubtreeKeysFromState(state, groupId)
+  if (subtreeKeys.length === 0) {
+    return false
+  }
+  state.setCollapsedGroups(toggleProjectGroupSubtreeCollapsed(state.collapsedGroups, subtreeKeys))
+  return true
 }
 
 export function useProjectGroupSubtreeCollapse(groupId: string): {
