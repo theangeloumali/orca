@@ -6,7 +6,7 @@ import { getRepoExecutionHostId } from '../../../../../../shared/execution-host/
 import type { ProjectGroup } from '../../../../../../shared/project/groups/project-group-types'
 import type { Repo } from '../../../../../../shared/repository/repo-types'
 import { getProjectGroupTargetsByDevice } from '../../../../../../shared/project/groups/project-group-device-targets'
-import { useDeviceLabels, useDeviceOrder } from '../controls/use-device-labels'
+import { useAppStore } from '@/store'
 
 /** "Move to group" choices headed by machine: the project's own machine first, the others greyed. */
 export function ProjectGroupTargetsByDevice({
@@ -21,19 +21,16 @@ export function ProjectGroupTargetsByDevice({
   onSelect: (groupId: string) => void
 }): React.JSX.Element {
   const t = useTranslate()
-  const labels = useDeviceLabels()
-  const order = useDeviceOrder()
+  const hostOrder = useAppStore((s) => s.workspaceHostOrder)
   const ownerHostId = getRepoExecutionHostId(repo)
   const deviceTargets = useMemo(
-    () => getProjectGroupTargetsByDevice({ groups: projectGroups, hosts: order, ownerHostId }),
-    [order, ownerHostId, projectGroups]
+    () => getProjectGroupTargetsByDevice({ groups: projectGroups, hostOrder, ownerHostId }),
+    [hostOrder, ownerHostId, projectGroups]
   )
   const otherDeviceNote = t('auto.components.sidebar.moveToGroup.otherDevice', 'On another device')
   return (
     <MenuDeviceSections
       sections={deviceTargets}
-      labels={labels}
-      showHeadings={labels.size > 1}
       noteFor={(section) => (section.available ? undefined : otherDeviceNote)}
       renderItems={(section) => (
         <DropdownMenuRadioGroup value={repo.projectGroupId ?? ''} onValueChange={onSelect}>

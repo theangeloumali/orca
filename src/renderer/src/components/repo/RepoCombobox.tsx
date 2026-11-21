@@ -17,10 +17,7 @@ import { useMountedRef } from '@/hooks/useMountedRef'
 import type { Repo } from '../../../../shared/repository/repo-types'
 import RepoBadgeLabel from './RepoBadgeLabel'
 import { useTranslate } from '@/i18n/use-translate'
-import { DeviceChip } from '@/components/host-picker/DeviceChip'
-import { useDeviceLabels } from '@/components/sidebar/worktree-list/controls/use-device-labels'
-import { getRepoExecutionHostId } from '../../../../shared/execution-host/execution-host'
-import { getDeviceLabel } from '../../../../shared/sidebar-list/hosts/device-sections'
+import { RepoDeviceBadge } from './RepoDeviceBadge'
 
 type RepoComboboxProps = {
   repos: readonly Repo[]
@@ -48,7 +45,6 @@ export default function RepoCombobox({
   describedBy
 }: RepoComboboxProps): React.JSX.Element {
   const t = useTranslate()
-  const deviceLabels = useDeviceLabels()
   const [open, setOpen] = useState(autoOpenOnMount)
   const [query, setQuery] = useState('')
   // Control cmdk selection so hovering the external footer can clear the last repo highlight.
@@ -200,9 +196,7 @@ export default function RepoCombobox({
                   color={selectedRepo.badgeColor}
                   badgeClassName="size-1.5"
                 />
-                <DeviceChip
-                  label={getDeviceLabel(getRepoExecutionHostId(selectedRepo), deviceLabels)}
-                />
+                <RepoDeviceBadge repo={selectedRepo} />
               </span>
             ) : (
               <span className="text-muted-foreground">{placeholder}</span>
@@ -256,9 +250,7 @@ export default function RepoCombobox({
                         color={repo.badgeColor}
                         className="max-w-full"
                       />
-                      <DeviceChip
-                        label={getDeviceLabel(getRepoExecutionHostId(repo), deviceLabels)}
-                      />
+                      <RepoDeviceBadge repo={repo} />
                     </span>
                     <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{repo.path}</p>
                   </div>

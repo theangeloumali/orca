@@ -31,15 +31,15 @@ const groups = [
   group('zkidz-msi', 'ZKidz', 'runtime:msi'),
   group('work-m1', 'Work M1 Max', 'runtime:m1')
 ]
-const hosts = [
-  { id: 'local' as const },
-  { id: 'runtime:m1' as const },
-  { id: 'runtime:msi' as const }
-]
+const hostOrder = ['local', 'runtime:m1', 'runtime:msi'] as const
 
 describe('getProjectGroupTargetsByDevice', () => {
   it("offers the project's own machine first and shows other machines' groups as unavailable", () => {
-    const sections = getProjectGroupTargetsByDevice({ groups, hosts, ownerHostId: 'runtime:msi' })
+    const sections = getProjectGroupTargetsByDevice({
+      groups,
+      hostOrder,
+      ownerHostId: 'runtime:msi'
+    })
     expect(
       sections.map((section) => ({
         hostId: section.hostId,

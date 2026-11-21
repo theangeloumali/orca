@@ -12,29 +12,27 @@ type DeviceTargetGroup = Pick<
   'id' | 'name' | 'parentGroupId' | 'tabOrder' | 'connectionId' | 'executionHostId'
 >
 
-export type ProjectGroupDeviceTargets<Host extends { id: ExecutionHostId }> = {
+export type ProjectGroupDeviceTargets = {
   hostId: ExecutionHostId
-  host?: Host
   /** Only the project's own machine can take it; other machines' groups are listed for orientation. */
   available: boolean
   groupChoices: ProjectGroupMoveTarget[]
 }
 
 /** "Move to group" choices split by machine, each machine's groups as its sidebar tree. */
-export function getProjectGroupTargetsByDevice<Host extends { id: ExecutionHostId }>(args: {
+export function getProjectGroupTargetsByDevice(args: {
   groups: readonly DeviceTargetGroup[]
-  hosts: readonly Host[]
+  hostOrder: readonly ExecutionHostId[]
   ownerHostId: ExecutionHostId
-}): ProjectGroupDeviceTargets<Host>[] {
+}): ProjectGroupDeviceTargets[] {
   return groupByExecutionHost({
     items: args.groups,
     // Server groups are stamped on adoption, so an unstamped group is this computer's.
     getHostId: (group) => getProjectGroupExecutionHostIdForRows(group, LOCAL_EXECUTION_HOST_ID),
-    hosts: args.hosts,
+    hostOrder: args.hostOrder,
     anchorHostId: args.ownerHostId
   }).map((section) => ({
     hostId: section.hostId,
-    host: section.host,
     available: section.hostId === args.ownerHostId,
     // No group is moving here, so nothing in the tree is blocked.
     groupChoices: getProjectGroupMoveTargets(section.items, '')

@@ -1,27 +1,42 @@
 import React, { useId } from 'react'
 import { DropdownMenuGroup, DropdownMenuLabel } from '@/components/ui/dropdown-menu'
+import { useHostDisplayLabel } from '@/components/sidebar/worktree-list/controls/use-host-display-label'
 import type { ExecutionHostId } from '../../../../shared/execution-host/execution-host'
 import { HostRowIcon } from './host-row-icon'
 
-/** A menu section headed by its machine; with one machine the heading is left out. */
+/** A menu section headed by its machine; without a heading it renders its rows alone. */
 export function MenuDeviceGroup({
   hostId,
-  label,
   showHeading,
   note,
   children
 }: {
   hostId: ExecutionHostId
-  label: string
   showHeading: boolean
   /** Why this machine's rows are unavailable, shown after its name. */
   note?: string
   children: React.ReactNode
 }): React.JSX.Element {
+  return showHeading ? (
+    <HeadedDeviceGroup hostId={hostId} note={note}>
+      {children}
+    </HeadedDeviceGroup>
+  ) : (
+    <>{children}</>
+  )
+}
+
+function HeadedDeviceGroup({
+  hostId,
+  note,
+  children
+}: {
+  hostId: ExecutionHostId
+  note?: string
+  children: React.ReactNode
+}): React.JSX.Element {
   const labelId = useId()
-  if (!showHeading) {
-    return <>{children}</>
-  }
+  const label = useHostDisplayLabel(hostId)
   return (
     <DropdownMenuGroup aria-labelledby={labelId}>
       <DropdownMenuLabel id={labelId}>
@@ -36,17 +51,13 @@ export function MenuDeviceGroup({
   )
 }
 
-/** One headed group per machine section; host lists render here (host-list-render ratchet). */
+/** One group per machine section, headed when there is more than one (host-list-render ratchet). */
 export function MenuDeviceSections<Section extends { hostId: ExecutionHostId }>({
   sections,
-  labels,
-  showHeadings,
   noteFor,
   renderItems
 }: {
   sections: readonly Section[]
-  labels: ReadonlyMap<ExecutionHostId, string>
-  showHeadings: boolean
   noteFor: (section: Section) => string | undefined
   renderItems: (section: Section) => React.ReactNode
 }): React.JSX.Element {
@@ -56,8 +67,7 @@ export function MenuDeviceSections<Section extends { hostId: ExecutionHostId }>(
         <MenuDeviceGroup
           key={section.hostId}
           hostId={section.hostId}
-          label={labels.get(section.hostId) ?? section.hostId}
-          showHeading={showHeadings}
+          showHeading={sections.length > 1}
           note={noteFor(section)}
         >
           {renderItems(section)}

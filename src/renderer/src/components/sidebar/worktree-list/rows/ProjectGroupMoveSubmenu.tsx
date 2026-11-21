@@ -8,7 +8,6 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useTranslate } from '@/i18n/use-translate'
 import { MenuDeviceGroup } from '@/components/host-picker/MenuDeviceGroup'
-import { useDeviceLabels } from '../controls/use-device-labels'
 import {
   LOCAL_EXECUTION_HOST_ID,
   type ExecutionHostId
@@ -34,7 +33,6 @@ export function ProjectGroupMoveSubmenu({
   onMove: (groupId: string, parentGroupId: string | null, hostId?: ExecutionHostId) => void
 }): React.JSX.Element {
   const t = useTranslate()
-  const labels = useDeviceLabels()
   const ownerHostId = hostId ?? LOCAL_EXECUTION_HOST_ID
   const ownGroups = useMemo(
     () => filterProjectGroupsForOwnerHost(projectGroups, ownerHostId),
@@ -54,11 +52,7 @@ export function ProjectGroupMoveSubmenu({
       </DropdownMenuSubTrigger>
       <DropdownMenuSubContent>
         {/* A group can only move within its own machine, so only that machine is listed. */}
-        <MenuDeviceGroup
-          hostId={ownerHostId}
-          label={labels.get(ownerHostId) ?? ownerHostId}
-          showHeading={labels.size > 1}
-        >
+        <MenuDeviceGroup hostId={ownerHostId} showHeading={ownGroups.length < projectGroups.length}>
           <DropdownMenuItem disabled={currentParentId === null} onSelect={() => moveTo(null)}>
             {t('auto.components.sidebar.WorktreeList.moveGroupTopLevel', 'Top level')}
           </DropdownMenuItem>

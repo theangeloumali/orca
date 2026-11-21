@@ -16,10 +16,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import RepoBadgeLabel from '@/components/repo/RepoBadgeLabel'
 import { QUICK_COMMAND_TOGGLE_ITEM_CLASS } from './terminal-quick-command-toggle-style'
 import { useTranslate } from '@/i18n/use-translate'
-import { DeviceChip } from '@/components/host-picker/DeviceChip'
-import { useDeviceLabels } from '@/components/sidebar/worktree-list/controls/use-device-labels'
-import { getRepoExecutionHostId } from '../../../../shared/execution-host/execution-host'
-import { getDeviceLabel } from '../../../../shared/sidebar-list/hosts/device-sections'
+import { RepoDeviceBadge } from '@/components/repo/RepoDeviceBadge'
 
 type TerminalQuickCommandScopeFieldProps = {
   disabled: boolean
@@ -56,7 +53,6 @@ export function TerminalQuickCommandScopeField({
   rememberRepoScopeId,
   setDraft
 }: TerminalQuickCommandScopeFieldProps): React.JSX.Element {
-  const deviceLabels = useDeviceLabels()
   const t = useTranslate()
   return (
     <div className="space-y-2">
@@ -141,9 +137,7 @@ export function TerminalQuickCommandScopeField({
                       color={repo.badgeColor}
                       className="max-w-full"
                     />
-                    <DeviceChip
-                      label={getDeviceLabel(getRepoExecutionHostId(repo), deviceLabels)}
-                    />
+                    <RepoDeviceBadge repo={repo} />
                   </SelectItem>
                 ))}
               </SelectContent>
