@@ -198,5 +198,10 @@ export function useVisibleSidebarWorktrees(args: {
   // Reuse equal visibility results across epochs to avoid churning the entire row-model chain.
   const visibleWorktrees = useReusedArrayIdentity(recomputedVisibleWorktrees)
 
-  return { visibleWorktrees, pairedDeviceIdsByEnvironment, botListedWorktreeIdentities }
+  return {
+    visibleWorktrees,
+    pairedDeviceIdsByEnvironment,
+    botListedWorktreeIdentities,
+    lineageParentIdentities
+  }
 }

@@ -71,7 +71,7 @@ export type WorkspaceRowFactReader<Row> = {
   isDetachedHead: (row: Row) => boolean
   isMainWorktree: (row: Row) => boolean
   isSleeping: (row: Row) => boolean
-  /** A local live PTY or a host-counted live terminal; a row with no fact to judge reads true. */
+  /** Desktop reads local live PTYs; the feed and phone read the host's count, lost contact included. */
   hasRunningTerminal: (row: Row) => boolean
 }
 
@@ -136,13 +136,42 @@ function buildWorkspaceRowPredicate<Row>(
   }
 }
 
-/** Folder workspaces skip the row filters, so Active only drops the idle ones here. */
+/** What Active only reads to judge a folder workspace and the lineage drawn beneath it. */
+export type FolderActiveOnlyReader<Folder> = {
+  hasRunningTerminal: (folder: Folder) => boolean
+  identityOf: (folder: Folder) => string
+  /** Host identities of the rows the list keeps. */
+  listedRowIdentities: Iterable<string>
+  parentIdentityOf: (identity: string) => string | undefined
+}
+
+/** Folder workspaces skip the row filters, so Active only drops the idle ones here; an idle folder
+ *  above a running row or folder stays, since the tree draws that row beneath it. */
 export function filterFolderWorkspacesForActiveOnly<Folder>(
   folders: readonly Folder[],
   filters: Pick<WorkspaceRowFilters, 'showOnlyRunningTerminals'>,
-  hasRunningTerminal: (folder: Folder) => boolean
+  read: FolderActiveOnlyReader<Folder>
 ): readonly Folder[] {
-  return filters.showOnlyRunningTerminals ? folders.filter(hasRunningTerminal) : folders
+  if (!filters.showOnlyRunningTerminals) {
+    return folders
+  }
+  const kept = new Set<string>()
+  // Stopping at a kept identity also ends a corrupt parent cycle.
+  const keepWithAncestors = (identity: string): void => {
+    for (let id: string | undefined = identity; id !== undefined && !kept.has(id);) {
+      kept.add(id)
+      id = read.parentIdentityOf(id)
+    }
+  }
+  for (const folder of folders) {
+    if (read.hasRunningTerminal(folder)) {
+      keepWithAncestors(read.identityOf(folder))
+    }
+  }
+  for (const identity of read.listedRowIdentities) {
+    keepWithAncestors(identity)
+  }
+  return folders.filter((folder) => kept.has(read.identityOf(folder)))
 }
 
 /** The rows the Workspace options filters keep, in their given order. */

@@ -30,9 +30,9 @@ import { getHostDisplayLabelOverrides } from '../../../../../../shared/execution
 import { EMPTY_SIDEBAR_FEED_DOMAINS } from '../../../../../../shared/sidebar-feed-client/sidebar-feed-snapshot'
 import {
   planSidebarFeedRows,
-  renderSidebarFeedRows,
   type SidebarFeedView
 } from '../../../../../../shared/sidebar-list/feed/sidebar-feed-rows'
+import { renderSidebarFeedRows } from '../../../../../../shared/sidebar-list/feed/sidebar-feed-render-rows'
 import {
   indexSidebarFeed,
   rankSidebarFeedWorktrees

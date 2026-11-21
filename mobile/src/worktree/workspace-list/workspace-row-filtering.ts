@@ -71,7 +71,8 @@ function phoneRowFacts(
     // Why the guess: #8873's exemption must fail open on hosts that predate isMainWorktree.
     isMainWorktree: (w) => w.isMainWorktree ?? guessDefaultBranchWorkspace(w),
     isSleeping: (w) => !isWorktreeActive(w),
-    hasRunningTerminal: (w) => w.liveTerminalCount > 0
+    // Lost contact is unverifiable, never gone, as the feed reads it (activityHasRunningTerminal).
+    hasRunningTerminal: (w) => w.liveTerminalCount > 0 || (w.unverifiableTerminalCount ?? 0) > 0
   }
 }
 

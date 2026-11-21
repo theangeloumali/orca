@@ -50,7 +50,10 @@ describe('ActiveOnlyStatusLine', () => {
     const showAll = screen.getByRole('button', { name: 'Show all' })
     expect(showAll.dataset.variant).toBe('link-muted')
     expect(showAll.dataset.size).toBe('inlineText')
-    expect(showAll.closest('[data-sidebar-header-actions]')).not.toBeNull()
+    const slot = showAll.closest<HTMLElement>('[data-sidebar-header-actions]')
+    expect(slot).not.toBeNull()
+    // relative is what lifts the slot above the list's sticky headers in paint order.
+    expect(slot?.className.split(' ')).toContain('relative')
     fireEvent.click(showAll)
     expect(useAppStore.getState().showOnlyRunningTerminals).toBe(false)
   })

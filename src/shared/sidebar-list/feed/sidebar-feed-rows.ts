@@ -32,13 +32,8 @@ import {
   filterReposForVisibleHosts,
   getVisibleSidebarHostIdSet
 } from '../hosts/host-filtering'
-import { deferHostSectionCollapse, scopeHostSectionCollapse } from '../hosts/host-section-collapse'
 import { orderHostSectionOptions } from '../hosts/host-section-order'
-import {
-  addHostSectionRows,
-  type HostSectionOption,
-  type HostSectionRow
-} from '../hosts/host-section-rows'
+import type { HostSectionOption, HostSectionRow } from '../hosts/host-section-rows'
 import type { PinnedWorktreeDisplayPolicy, Row, WorktreeGroupBy } from '../row-types'
 import type { SidebarFeedWindowExtras } from '../sidebar-feed-extras'
 import type { SidebarFeedDomains } from './sidebar-feed-domains'
@@ -49,7 +44,9 @@ import {
   selectVisibleSidebarWorktrees,
   withoutBotListedWorktrees
 } from '../selection/visible-worktrees'
-import { selectVisibleFeedFolderWorkspaces } from './sidebar-feed-folder-workspaces'
+import { selectVisibleFolderWorkspaces } from '../folders/visible-folder-workspaces'
+import { renderSidebarFeedRows } from './sidebar-feed-render-rows'
+import { getFolderWorkspaceWorktree } from '../../folder-workspaces/folder-workspace-worktree'
 import {
   activityHasRunningTerminal,
   isIdleWorkspaceActivity
@@ -142,6 +139,8 @@ export function planSidebarFeedRows(
   const retained = new Set(domains.retention?.retainedIds)
   const rankByIdentity = new Map(rankedIdentities.map((identity, rank) => [identity, rank]))
   const factsOf = (worktree: Worktree) => byIdentity.get(getWorktreeHostIdentity(worktree))?.facts
+  const runningAt = (row: Worktree) =>
+    activityHasRunningTerminal(domains.activity.get(getWorktreeHostIdentity(row)))
   const pairedDeviceIdsByEnvironment = feedPairedDeviceIdsByEnvironment(domains)
   const hiddenProjects = indexHiddenProjects(repos, defaultHostId)
 
@@ -163,8 +162,7 @@ export function planSidebarFeedRows(
       isCliCreated: (worktree) => factsOf(worktree)?.cliCreated === true,
       isDetachedHead: (worktree) => factsOf(worktree)?.detachedHead === true,
       isMainWorktree: (worktree) => worktree.isMainWorktree,
-      hasRunningTerminal: (worktree) =>
-        activityHasRunningTerminal(domains.activity.get(getWorktreeHostIdentity(worktree))),
+      hasRunningTerminal: runningAt,
       isSleeping: (worktree) => {
         const identity = getWorktreeHostIdentity(worktree)
         const activity = domains.activity.get(identity)
@@ -178,20 +176,20 @@ export function planSidebarFeedRows(
     forcedVisibleWorktreeIds: extras.forcedVisibleWorktreeIds
   })
 
-  const visibleHostIdSet = getVisibleSidebarHostIdSet(
-    view.visibleWorkspaceHostIds,
-    view.workspaceHostScope
-  )
+  const { visibleWorkspaceHostIds, workspaceHostScope } = view
+  const visibleHostIdSet = getVisibleSidebarHostIdSet(visibleWorkspaceHostIds, workspaceHostScope)
   const visibleRepos = filterReposForVisibleHosts(repos, visibleHostIdSet, defaultHostId)
-  const visibleFolderWorkspaces = selectVisibleFeedFolderWorkspaces({
-    domains,
+  const visibleFolderWorkspaces = selectVisibleFolderWorkspaces({
     folderWorkspaces,
     projectGroups,
     filters: view.filters,
     visibleHostIdSet,
     defaultHostId,
     pairedDeviceIdsByEnvironment,
-    botListedIdentities: extras.botListedWorktreeIdentities
+    botListedIdentities: extras.botListedWorktreeIdentities,
+    hasRunningTerminal: (folder) => runningAt(getFolderWorkspaceWorktree(folder)),
+    listedWorktrees: visibleWorktrees,
+    lineageParentIdentities: index.lineageParentIdentities
   })
   const visibleProjectGroups = filterProjectGroupsForVisibleHosts(
     projectGroups,
@@ -236,6 +234,8 @@ export function planSidebarFeedRows(
     pendingCreations,
     projectGrouping: catalog.projectGrouping,
     folderWorkspaces: visibleFolderWorkspaces,
+    // The window list prunes empty groups the same way (use-section-rows.ts).
+    hideEmptyProjectGroups: view.filters.showOnlyRunningTerminals === true,
     hostLabelById: new Map(hostOptions.map((host) => [host.id, host.label])),
     defaultHostId,
     pinnedDisplayPolicy: view.pinnedDisplayPolicy,
@@ -259,35 +259,6 @@ export function planSidebarFeedRows(
       view.workspaceHostScope !== ALL_EXECUTION_HOSTS_SCOPE ||
       view.visibleWorkspaceHostIds !== null
   }
-}
-
-/** The planned rows under `collapsedGroups`, wrapped in host sections. */
-export function renderSidebarFeedRows(
-  planned: SidebarFeedPlan,
-  view: SidebarFeedView,
-  collapsedGroups: ReadonlySet<string>,
-  forceCollapseHosts = false
-): Pick<SidebarFeedRows, 'rows' | 'sectionRows'> {
-  const collapsed = new Set(collapsedGroups)
-  const rows = planned.plan.render(
-    planned.hostScoped ? deferHostSectionCollapse(collapsed) : collapsed
-  )
-  const sectioned = addHostSectionRows({
-    rows,
-    hostOptions: planned.orderedHostOptions,
-    workspaceHostScope: view.workspaceHostScope,
-    visibleWorkspaceHostIds: view.visibleWorkspaceHostIds,
-    defaultHostId: view.defaultHostId,
-    localHostLabel: view.localHostLabel,
-    collapsedHostKeys: collapsed,
-    forceCollapseHosts,
-    preferProjectGrouping: true,
-    showHostSections: view.showHostSections
-  })
-  const sectionRows = planned.hostScoped
-    ? scopeHostSectionCollapse({ rows: sectioned, collapsedGroups: collapsed })
-    : sectioned
-  return { rows, sectionRows }
 }
 
 /** Build from published host inputs through shared filters/grouping without a clock; transient window overlays/cards stay outside. */

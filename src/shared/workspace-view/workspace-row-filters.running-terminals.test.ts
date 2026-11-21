@@ -79,25 +79,70 @@ describe('showOnlyRunningTerminals', () => {
       'wt-2'
     ])
   })
+
+  it('keeps a phone row whose host lost contact with its terminal, as the feed does', () => {
+    const lostContact: PhoneWorktree = {
+      worktreeId: 'wt-3',
+      repoId: 'repo-1',
+      repo: 'repo',
+      path: '/repo',
+      branch: 'feature',
+      displayName: 'feature',
+      liveTerminalCount: 0,
+      unverifiableTerminalCount: 1,
+      hasAttachedPty: false,
+      unread: false,
+      isPinned: false,
+      linkedPR: null
+    }
+    expect(filterWorktrees([lostContact], activeOnly, '').map((w) => w.worktreeId)).toEqual([
+      'wt-3'
+    ])
+  })
 })
 
 describe('filterFolderWorkspacesForActiveOnly', () => {
-  const folders = [
+  type Folder = { id: string; running: boolean }
+  const folders: Folder[] = [
     { id: 'idle', running: false },
     { id: 'live', running: true }
   ]
-  const isRunning = (folder: { running: boolean }): boolean => folder.running
+  const lineage = (listedRowIdentities: string[] = [], parents: Record<string, string> = {}) => ({
+    hasRunningTerminal: (folder: Folder) => folder.running,
+    identityOf: (folder: Folder) => folder.id,
+    listedRowIdentities,
+    parentIdentityOf: (identity: string): string | undefined => parents[identity]
+  })
+  const keep = (rows: readonly Folder[], read = lineage()): string[] =>
+    ids([...filterFolderWorkspacesForActiveOnly(rows, activeOnly, read)])
 
   it('keeps only folder workspaces with a running terminal while on', () => {
-    expect(ids([...filterFolderWorkspacesForActiveOnly(folders, activeOnly, isRunning)])).toEqual([
-      'live'
-    ])
+    expect(keep(folders)).toEqual(['live'])
   })
 
   it('keeps every folder workspace while off', () => {
-    expect(filterFolderWorkspacesForActiveOnly(folders, NO_WORKSPACE_ROW_FILTERS, isRunning)).toBe(
+    expect(filterFolderWorkspacesForActiveOnly(folders, NO_WORKSPACE_ROW_FILTERS, lineage())).toBe(
       folders
     )
+  })
+
+  it('keeps an idle folder that a listed running row nests under', () => {
+    expect(keep(folders, lineage(['wt-1'], { 'wt-1': 'idle' }))).toEqual(['idle', 'live'])
+  })
+
+  it('keeps an idle parent folder above a running child folder', () => {
+    const nested = [
+      { id: 'parent', running: false },
+      { id: 'child', running: true }
+    ]
+    expect(keep(nested, lineage([], { child: 'parent' }))).toEqual(['parent', 'child'])
+  })
+
+  it('stays finite when parent links form a cycle', () => {
+    expect(keep(folders, lineage(['wt-1'], { 'wt-1': 'idle', idle: 'wt-1' }))).toEqual([
+      'idle',
+      'live'
+    ])
   })
 })
 

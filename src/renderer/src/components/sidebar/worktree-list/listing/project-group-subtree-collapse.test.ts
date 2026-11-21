@@ -116,6 +116,21 @@ describe('getProjectGroupSubtreeCollapseKeys', () => {
     expect(keys).not.toContain(getProjectHeaderRevealTarget('gone', repoMap, grouping).key)
   })
 
+  it('follows the last host copy of a group, as the drawn tree does', () => {
+    // The same group id on two hosts: the last copy moved it from work to home.
+    const copies = [
+      group('work', null),
+      group('moved', 'work'),
+      group('home', null),
+      group('moved', 'home')
+    ]
+    const keys = getProjectGroupSubtreeCollapseKeys('work', copies, [repo('m', 'moved')], {
+      projects: [],
+      projectHostSetups: []
+    })
+    expect(keys).toEqual([])
+  })
+
   it('stays finite when parent links form a cycle', () => {
     const cyclic = [group('a', 'c'), group('b', 'a'), group('c', 'b')]
     const keys = getProjectGroupSubtreeCollapseKeys('a', cyclic, [repo('leaf', 'c')], {

@@ -37,6 +37,7 @@ import {
   isWorkspaceOwnedBySomeoneElse
 } from '../../../../../../shared/workspace-view/workspace-creator-visibility'
 import { createSleepingSweepHiddenCheck } from './sleeping-sweep-visibility'
+import { worktreeHasRunningTerminal } from './desktop-workspace-row-facts'
 import { selectFolderWorkspaces } from '@/store/workspaces/catalog/workspace-record-fields'
 
 export type SidebarWorktreeFilters = ReturnType<typeof useSidebarWorktreeFilters>
@@ -98,8 +99,12 @@ const REVEAL_WORKSPACE: Record<keyof WorkspaceRowFilters, (context: RevealContex
   },
   // Turning the exemption off only narrows; "Hide sleeping" above is what reveals.
   alwaysShowDefaultBranchWorkspace: () => {},
-  // A revealed workspace may have nothing running, so drop the whole filter.
-  showOnlyRunningTerminals: ({ state }) => state.setShowOnlyRunningTerminals(false)
+  // Active only has no per-row switch, so only an idle target turns the whole filter off.
+  showOnlyRunningTerminals: ({ state, worktree }) => {
+    if (!worktreeHasRunningTerminal(state.tabsByWorktree, state.ptyIdsByTabId, worktree.id)) {
+      state.setShowOnlyRunningTerminals(false)
+    }
+  }
 }
 
 function getRevealTargetHostId(state: AppState, worktree: Worktree, repo: Repo | undefined) {
