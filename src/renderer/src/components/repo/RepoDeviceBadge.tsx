@@ -17,6 +17,10 @@ export function RepoDeviceBadge({
   return isLocalExecutionHost(hostId) ? null : <RemoteDeviceBadge hostId={hostId} />
 }
 
-function RemoteDeviceBadge({ hostId }: { hostId: ReturnType<typeof getRepoExecutionHostId> }) {
+function RemoteDeviceBadge({
+  hostId
+}: {
+  hostId: ReturnType<typeof getRepoExecutionHostId>
+}): React.JSX.Element {
   return <WorktreeHostContextBadge label={useHostDisplayLabel(hostId)} />
 }

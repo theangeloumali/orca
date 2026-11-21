@@ -39,7 +39,7 @@ export function ProjectGroupTargetsByDevice({
               key={choice.id}
               value={choice.id}
               textValue={choice.name}
-              disabled={disabled || !section.available}
+              disabled={disabled || !section.available || choice.id === repo.projectGroupId}
             >
               {/* Indent by tree depth so nesting reads like the sidebar. */}
               <span

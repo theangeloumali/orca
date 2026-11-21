@@ -7256,6 +7256,9 @@
           "inProgress": "En cours",
           "inReview": "En revue",
           "done": "Terminé"
+        },
+        "moveToGroup": {
+          "otherDevice": "Sur un autre appareil"
         }
       },
       "shared": {

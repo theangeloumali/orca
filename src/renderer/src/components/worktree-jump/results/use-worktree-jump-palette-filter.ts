@@ -24,6 +24,7 @@ type WorktreeJumpPaletteFilterInput = Pick<
   | 'workspaces'
   | 'projects'
   | 'projectHostSetups'
+  | 'showMachineSections'
   | 'projectGroups'
 > &
   Pick<WorktreeJumpPaletteLocalState, 'filter'>
@@ -38,6 +39,7 @@ export function useWorktreeJumpPaletteFilter({
   workspaces,
   projects,
   projectHostSetups,
+  showMachineSections,
   projectGroups,
   filter
 }: WorktreeJumpPaletteFilterInput) {
@@ -84,9 +86,18 @@ export function useWorktreeJumpPaletteFilter({
         hostOptions,
         projects,
         projectHostSetups,
+        showMachineSections,
         defaultHostId
       }),
-    [workspaces, defaultHostId, hostOptions, projectHostSetups, projects, repos]
+    [
+      workspaces,
+      defaultHostId,
+      hostOptions,
+      projectHostSetups,
+      projects,
+      repos,
+      showMachineSections
+    ]
   )
   const filterActive = isPaletteFilterActive(filter)
   const hostFilterActive = filter.hostIds.length > 0

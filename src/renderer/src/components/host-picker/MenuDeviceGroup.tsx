@@ -51,7 +51,7 @@ function HeadedDeviceGroup({
   )
 }
 
-/** One group per machine section, headed when there is more than one (host-list-render ratchet). */
+/** One group per machine section, headed when there are several or one needs its note (host-list-render ratchet). */
 export function MenuDeviceSections<Section extends { hostId: ExecutionHostId }>({
   sections,
   noteFor,
@@ -63,16 +63,19 @@ export function MenuDeviceSections<Section extends { hostId: ExecutionHostId }>(
 }): React.JSX.Element {
   return (
     <>
-      {sections.map((section) => (
-        <MenuDeviceGroup
-          key={section.hostId}
-          hostId={section.hostId}
-          showHeading={sections.length > 1}
-          note={noteFor(section)}
-        >
-          {renderItems(section)}
-        </MenuDeviceGroup>
-      ))}
+      {sections.map((section) => {
+        const note = noteFor(section)
+        return (
+          <MenuDeviceGroup
+            key={section.hostId}
+            hostId={section.hostId}
+            showHeading={sections.length > 1 || note !== undefined}
+            note={note}
+          >
+            {renderItems(section)}
+          </MenuDeviceGroup>
+        )
+      })}
     </>
   )
 }

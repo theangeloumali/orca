@@ -6,6 +6,7 @@ import {
   buildProjectGroupingIndex,
   getProjectGroupingForRepo
 } from '../../../../../../shared/sidebar-list/sections/project-section-grouping'
+import { getSidebarProjectGrouping } from '../../worktree-list/listing/sidebar-project-grouping'
 import type { Worktree } from '../../../../../../shared/worktree/types'
 import { getWorktreeHostIdentity } from '../../../../../../shared/worktree/host-qualified-identity'
 import { DeleteWorktreeDirtyChangeHint } from './DeleteWorktreeDirtyChangeHint'
@@ -48,13 +49,17 @@ export function DeleteWorktreeLineageNotice({
   const t = useTranslate()
   const projects = useAppStore((s) => s.projects)
   const projectHostSetups = useAppStore((s) => s.projectHostSetups)
+  const showMachineSections = useAppStore((s) => s.showWorkspaceHostSections)
+  // Label children by the project rows the sidebar draws.
   const projectIndex = useMemo(
     () =>
-      buildProjectGroupingIndex({
-        projects: projects ?? [],
-        projectHostSetups: projectHostSetups ?? []
-      }),
-    [projects, projectHostSetups]
+      buildProjectGroupingIndex(
+        getSidebarProjectGrouping(
+          { projects: projects ?? [], setups: projectHostSetups ?? [] },
+          showMachineSections
+        )
+      ),
+    [projects, projectHostSetups, showMachineSections]
   )
   const projectLabels = new Map<string, string>()
   if (parent && repoMap) {

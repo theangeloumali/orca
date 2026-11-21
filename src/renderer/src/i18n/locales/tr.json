@@ -7473,6 +7473,9 @@
           "inProgress": "Devam ediyor",
           "inReview": "İncelemede",
           "done": "Tamamlandı"
+        },
+        "moveToGroup": {
+          "otherDevice": "Başka bir cihazda"
         }
       },
       "shared": {

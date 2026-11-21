@@ -54,4 +54,17 @@ describe('getProjectGroupTargetsByDevice', () => {
       { hostId: 'runtime:m1', available: false, groupChoices: ['Work M1 Max'] }
     ])
   })
+
+  it("lets an SSH project join this computer's groups, which share its catalog", () => {
+    const sections = getProjectGroupTargetsByDevice({
+      groups,
+      hostOrder,
+      ownerHostId: 'ssh:devbox'
+    })
+    expect(sections.map(({ hostId, available }) => ({ hostId, available }))).toEqual([
+      { hostId: 'local', available: true },
+      { hostId: 'runtime:m1', available: false },
+      { hostId: 'runtime:msi', available: false }
+    ])
+  })
 })

@@ -6712,6 +6712,9 @@
           "inProgress": "진행 중",
           "inReview": "검토 중",
           "done": "완료"
+        },
+        "moveToGroup": {
+          "otherDevice": "다른 기기"
         }
       },
       "shared": {

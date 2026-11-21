@@ -7324,6 +7324,9 @@
           "browseFolder": "フォルダーを参照…",
           "cloneFromUrl": "URL からクローン…",
           "createNewProject": "新規プロジェクトを作成…"
+        },
+        "moveToGroup": {
+          "otherDevice": "別のデバイス"
         }
       },
       "shared": {

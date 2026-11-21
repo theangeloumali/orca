@@ -6987,6 +6987,9 @@
           "inProgress": "En curso",
           "inReview": "En revisión",
           "done": "Hecho"
+        },
+        "moveToGroup": {
+          "otherDevice": "En otro dispositivo"
         }
       },
       "shared": {

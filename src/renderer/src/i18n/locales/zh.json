@@ -7357,7 +7357,10 @@
           "showLess": "收起",
           "showMore_other": "再显示 {{count}} 行"
         },
-        "projectOrderSaveFailed": "无法保存完整的项目顺序"
+        "projectOrderSaveFailed": "无法保存完整的项目顺序",
+        "moveToGroup": {
+          "otherDevice": "在其他设备上"
+        }
       },
       "shared": {
         "useDaemonActions": {

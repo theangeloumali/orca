@@ -73,6 +73,7 @@ export function useWorktreeJumpPaletteStoreState({
   )
   const projects = useAppStore((state) => state.projects)
   const projectHostSetups = useAppStore((state) => state.projectHostSetups)
+  const showMachineSections = useAppStore((state) => state.showWorkspaceHostSections)
   const detectedWorktreesByRepo = useAppStore((state) => selectDetectedWorktreesByRepo(state))
   const pendingWorktreeCreations = useAppStore((state) => state.pendingWorktreeCreations)
   const pluginCommands = usePluginCommands()
@@ -171,6 +172,7 @@ export function useWorktreeJumpPaletteStoreState({
     projectGroups,
     projects,
     projectHostSetups,
+    showMachineSections,
     detectedWorktreesByRepo,
     pendingWorktreeCreations,
     pluginCommands,

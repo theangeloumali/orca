@@ -13189,6 +13189,9 @@
           "inProgress": "Em andamento",
           "inReview": "Em revisão",
           "done": "Concluído"
+        },
+        "moveToGroup": {
+          "otherDevice": "Em outro dispositivo"
         }
       },
       "editor": {
