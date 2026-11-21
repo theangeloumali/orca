@@ -9,6 +9,7 @@ import {
   readHiddenVmCheckouts,
   subscribeHiddenVmCheckouts
 } from '@/runtime/ephemeral-vm/vm-create-hidden-checkouts'
+import { useAgentSendTargetWorktreeId } from '../listing/use-agent-send-target'
 import { createActiveOnlySummarySelector } from './active-only-summary-selector'
 import type { ActiveOnlySummary } from './active-only-project-summary'
 
@@ -17,11 +18,12 @@ export function useActiveOnlySummary(): ActiveOnlySummary {
   const now = useNow(30_000)
   const botListed = useBotListedWorktreeIdentities()
   const hiddenVmCheckouts = useSyncExternalStore(subscribeHiddenVmCheckouts, readHiddenVmCheckouts)
+  const agentSendTarget = useAgentSendTargetWorktreeId()
   const [select] = useState(createActiveOnlySummarySelector)
   const selector = useCallback(
     (state: AppState, statuses: RuntimeStatuses) =>
-      select(state, { now, statuses, hiddenVmCheckouts, botListed }),
-    [select, now, hiddenVmCheckouts, botListed]
+      select(state, { now, statuses, hiddenVmCheckouts, botListed, agentSendTarget }),
+    [select, now, hiddenVmCheckouts, botListed, agentSendTarget]
   )
   return useAppStoreWithHostStatuses(selector, shallow)
 }

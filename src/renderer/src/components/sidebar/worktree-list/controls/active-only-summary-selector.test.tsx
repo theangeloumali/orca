@@ -24,6 +24,7 @@ const idle = { ...worktree, id: 'wt-idle' }
 const runningFolder = folder('fw-running', 'pg-1')
 const STATUSES = new Map()
 const idleFolder = folder('fw-idle', 'pg-1')
+const emptyRepo = { ...repo, id: 'repo-empty', path: '/tmp/empty', displayName: 'empty' }
 
 function context(overrides: Partial<ActiveOnlySummaryContext> = {}): ActiveOnlySummaryContext {
   return {
@@ -31,6 +32,7 @@ function context(overrides: Partial<ActiveOnlySummaryContext> = {}): ActiveOnlyS
     statuses: STATUSES,
     hiddenVmCheckouts: readHiddenVmCheckouts(),
     botListed: undefined,
+    agentSendTarget: null,
     ...overrides
   }
 }
@@ -94,6 +96,34 @@ describe('createActiveOnlySummarySelector', () => {
     const select = createActiveOnlySummarySelector()
     const first = select(useAppStore.getState(), context())
     expect(select(useAppStore.getState(), context({ statuses: new Map() }))).not.toBe(first)
+  })
+
+  it('counts the agent send target as shown, as the list forces it visible', () => {
+    const select = createActiveOnlySummarySelector()
+    const summary = select(useAppStore.getState(), context({ agentSendTarget: idle.id }))
+    expect(summary.shownWorkspaces).toBe(2)
+  })
+
+  it('counts empty project headers in the total but not as shown', () => {
+    useAppStore.setState({ repos: [repo, emptyRepo], groupBy: 'repo' })
+    const summary = createActiveOnlySummarySelector()(useAppStore.getState(), context())
+    expect(summary.shownProjects).toBe(1)
+    expect(summary.totalProjects).toBe(2)
+  })
+
+  it('leaves empty projects out when the list is not grouped by project', () => {
+    useAppStore.setState({ repos: [repo, emptyRepo], groupBy: 'none' })
+    const summary = createActiveOnlySummarySelector()(useAppStore.getState(), context())
+    expect(summary.totalProjects).toBe(1)
+  })
+
+  it('keeps the cache across a title-only write with an empty project listed', () => {
+    useAppStore.setState({ repos: [repo, emptyRepo], groupBy: 'repo' })
+    const select = createActiveOnlySummarySelector()
+    const first = select(useAppStore.getState(), context())
+    const retitled = makeTab({ id: 'tab-1', worktreeId: running.id, title: 'agent: done' })
+    useAppStore.setState({ tabsByWorktree: { [running.id]: [retitled] } })
+    expect(select(useAppStore.getState(), context())).toBe(first)
   })
 
   it('counts folder workspaces like the rows the sidebar draws', () => {

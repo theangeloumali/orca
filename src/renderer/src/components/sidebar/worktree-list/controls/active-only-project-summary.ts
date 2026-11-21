@@ -15,6 +15,8 @@ export function summarizeActiveOnly(args: {
   sectionKeyOf: (worktree: Worktree) => string
   /** Run on hidden rows only, so the attention pass stays off the shown list. */
   needsYouIds: (hidden: readonly Worktree[]) => ReadonlySet<string>
+  /** Headers drawn only with Active only off, such as empty projects. */
+  listedOnlySectionKeys?: Iterable<string>
 }): ActiveOnlySummary {
   const { shown, all, sectionKeyOf } = args
   const shownRows = new Set(shown)
@@ -22,7 +24,7 @@ export function summarizeActiveOnly(args: {
   const needsYou = hidden.length > 0 ? args.needsYouIds(hidden) : new Set<string>()
   return {
     shownProjects: new Set(shown.map(sectionKeyOf)).size,
-    totalProjects: new Set(all.map(sectionKeyOf)).size,
+    totalProjects: new Set([...all.map(sectionKeyOf), ...(args.listedOnlySectionKeys ?? [])]).size,
     shownWorkspaces: shown.length,
     totalWorkspaces: all.length,
     hiddenNeedsYouCount: hidden.filter((worktree) => needsYou.has(worktree.id)).length
