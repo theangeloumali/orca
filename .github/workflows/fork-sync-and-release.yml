@@ -254,6 +254,7 @@ jobs:
         shell: bash
         run: |
           version="$(node -p "require('./package.json').version")"
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::unexpected version '$version'"; exit 1; }
           echo "ORCA_FORK_RELEASE_TAG=v$version-angelo.$GITHUB_RUN_NUMBER" >>"$GITHUB_ENV"
       - name: Build the app
         shell: bash

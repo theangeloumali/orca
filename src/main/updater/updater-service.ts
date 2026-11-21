@@ -18,8 +18,13 @@ import { createForkUpdater, startForkUpdateChecks } from './fork/create-fork-upd
 
 const updater = new UpdaterSetup()
 // Fork builds update from the fork's own releases; the official updater stays off for them.
+let automaticDownloads: () => boolean = () => true
 const forkUpdater = OFFICIAL_UPDATES_DISABLED
-  ? createForkUpdater((status) => updater.publishExternalStatus(status))
+  ? createForkUpdater({
+      publish: (status) => updater.publishExternalStatus(status),
+      automaticDownloads: () => automaticDownloads(),
+      windowsInstallDirectory: () => updater.getWindowsInstallDirectory()
+    })
   : null
 
 export function resolveUpdateInstallMode(isServeMode: boolean): UpdateInstallMode {
@@ -77,8 +82,7 @@ export function applyAutomaticUpdatesSetting(enabled: boolean | undefined): void
 
 export function downloadUpdate(): void {
   if (forkUpdater) {
-    // The fork updater downloads as soon as it finds a release; this retries a failed one.
-    void forkUpdater.check(true)
+    void forkUpdater.download()
     return
   }
   updater.downloadUpdate()
@@ -86,7 +90,12 @@ export function downloadUpdate(): void {
 
 export function quitAndInstall(): void {
   if (forkUpdater) {
-    void forkUpdater.install()
+    // The window is waiting to restart; tell it when nothing started so it can recover.
+    void forkUpdater.install().then((started) => {
+      if (!started) {
+        updater.notifyQuitAndInstallAborted()
+      }
+    })
     return
   }
   updater.quitAndInstall()
@@ -124,7 +133,9 @@ export function setupAutoUpdater(
   opts?: UpdaterSetupOptions
 ): void {
   updater.setupAutoUpdater(mainWindow, opts)
-  if (forkUpdater) {
+  // Headless serve hosts have no window to restart, so they never self-install.
+  if (forkUpdater && mainWindow) {
+    automaticDownloads = opts?.getAutomaticUpdates ?? (() => true)
     startForkUpdateChecks(forkUpdater)
   }
 }

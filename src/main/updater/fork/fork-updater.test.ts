@@ -1,63 +1,68 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createHash } from 'node:crypto'
-import { mkdtempSync, readFileSync } from 'node:fs'
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import type { UpdateStatus } from '../../../shared/updater/update-status-types'
 import { ForkUpdater, type ForkUpdaterDeps } from './fork-updater'
 
-const ZIP = Buffer.from('orca-1.4.268-arm64-zip-bytes')
-const zipName = 'Orca-1.4.268-arm64-mac.zip'
-const asBody = (value: Buffer | string) =>
-  typeof value === 'string' ? value : new Uint8Array(value)
+const ZIP = new Uint8Array(Buffer.from('orca-1.4.268-arm64-zip-bytes'))
+const DOWNLOAD = 'https://github.com/theangeloumali/orca/releases/download/v1.4.268-angelo.6/'
+const sha512 = (bytes: Uint8Array) => createHash('sha512').update(bytes).digest('hex')
 
-function release(tag: string, checksum = createHash('sha512').update(ZIP).digest('hex')) {
-  const files: Record<string, Buffer | string> = {
-    [zipName]: ZIP,
-    'fork-sha512sums.txt': `${checksum}  ${zipName}\n`
-  }
-  const fetch = vi.fn(async (url: string) => {
+function release(
+  options: { tag?: string; checksum?: string; installer?: string; host?: string } = {}
+) {
+  const installer = options.installer ?? 'Orca-1.4.268-arm64-mac.zip'
+  const base = options.host ?? DOWNLOAD
+  return vi.fn(async (url: string) => {
     if (url.endsWith('/releases/latest')) {
       return Response.json({
-        tag_name: tag,
-        assets: Object.keys(files).map((name) => ({
+        tag_name: options.tag ?? 'v1.4.268-angelo.6',
+        assets: [installer, 'fork-sha512sums.txt'].map((name) => ({
           name,
-          browser_download_url: `https://download/${name}`,
-          size: Buffer.byteLength(files[name])
+          browser_download_url: base + name,
+          size: ZIP.length
         }))
       })
     }
-    const name = url.slice('https://download/'.length)
-    return new Response(asBody(files[name]), {
-      headers: { 'content-length': String(Buffer.byteLength(files[name])) }
-    })
+    return url.endsWith('fork-sha512sums.txt')
+      ? new Response(`${options.checksum ?? sha512(ZIP)}  ${installer}\n`)
+      : new Response(ZIP, { headers: { 'content-length': String(ZIP.length) } })
   })
-  return fetch
 }
 
-function updater(overrides: Partial<ForkUpdaterDeps>) {
+function updater(overrides: Partial<ForkUpdaterDeps> = {}) {
   const statuses: UpdateStatus[] = []
+  const willQuit: (() => void)[] = []
   const deps: ForkUpdaterDeps = {
     currentTag: 'v1.4.266-angelo.2',
     platform: 'darwin',
     appPath: '/Applications/Orca.app',
     workDir: mkdtempSync(join(tmpdir(), 'orca-fork-update-')),
     pid: 4242,
-    fetch: release('v1.4.268-angelo.6'),
+    windowsInstallDirectory: () => undefined,
+    fetch: release(),
+    automaticDownloads: () => true,
+    checkAppReplaceable: async () => null,
     extractMacApp: vi.fn(async (_zip: string, destination: string) =>
       join(destination, 'Orca.app')
     ),
-    spawnDetached: vi.fn(),
+    spawnDetached: vi.fn(async () => {}),
+    onWillQuit: (listener) => {
+      willQuit.push(listener)
+      return () => {}
+    },
     quit: vi.fn(),
     publish: (status) => statuses.push(status),
     ...overrides
   }
-  return { forkUpdater: new ForkUpdater(deps), deps, statuses }
+  return { forkUpdater: new ForkUpdater(deps), deps, statuses, willQuit }
 }
 
-describe('ForkUpdater', () => {
+describe('ForkUpdater checks', () => {
   it('offers a newer fork release, downloads it and has it ready to install', async () => {
-    const { forkUpdater, statuses } = updater({})
+    const { forkUpdater, statuses } = updater()
     await forkUpdater.check(true)
     expect(statuses.map((status) => status.state)).toEqual([
       'checking',
@@ -65,14 +70,7 @@ describe('ForkUpdater', () => {
       'downloading',
       'downloaded'
     ])
-    expect(statuses.at(-1)).toMatchObject({ state: 'downloaded', version: '1.4.268' })
-  })
-
-  it('refuses an installer whose checksum does not match', async () => {
-    const { forkUpdater, deps, statuses } = updater({ fetch: release('v1.4.268-angelo.6', 'bad') })
-    await forkUpdater.check(true)
-    expect(statuses.at(-1)).toMatchObject({ state: 'error' })
-    expect(deps.extractMacApp).not.toHaveBeenCalled()
+    expect(statuses.at(-1)).toMatchObject({ state: 'downloaded', version: '1.4.268-angelo.6' })
   })
 
   it('reports up to date when this build is the latest fork release', async () => {
@@ -81,48 +79,87 @@ describe('ForkUpdater', () => {
     expect(statuses.at(-1)).toEqual({ state: 'not-available', userInitiated: true })
   })
 
-  it('swaps the Mac app after quitting', async () => {
-    const { forkUpdater, deps } = updater({})
+  it('refuses an installer whose checksum does not match', async () => {
+    const { forkUpdater, statuses } = updater({ fetch: release({ checksum: 'bad' }) })
+    await forkUpdater.check(true)
+    expect(statuses.at(-1)).toMatchObject({ state: 'error' })
+  })
+
+  it("refuses an installer hosted anywhere but the fork's releases", async () => {
+    const { forkUpdater, statuses } = updater({ fetch: release({ host: 'https://evil.example/' }) })
+    await forkUpdater.check(true)
+    expect(statuses.at(-1)).toMatchObject({ state: 'error' })
+  })
+
+  it('stays quiet when a background check cannot reach GitHub', async () => {
+    const { forkUpdater, statuses } = updater({
+      fetch: vi.fn(async () => new Response('', { status: 403 }))
+    })
     await forkUpdater.check(false)
-    await forkUpdater.install()
+    expect(statuses).toEqual([])
+  })
+
+  it('only offers, without downloading, when automatic updates are off', async () => {
+    const { forkUpdater, statuses } = updater({ automaticDownloads: () => false })
+    await forkUpdater.check(false)
+    expect(statuses.map((status) => status.state)).toEqual(['available'])
+    await forkUpdater.download()
+    expect(statuses.at(-1)).toMatchObject({ state: 'downloaded' })
+  })
+})
+
+describe('ForkUpdater install', () => {
+  it('re-checks the download, unpacks it fresh and swaps the Mac app after quitting', async () => {
+    const { forkUpdater, deps } = updater()
+    await forkUpdater.check(false)
+    expect(deps.extractMacApp).not.toHaveBeenCalled()
+    expect(await forkUpdater.install()).toBe(true)
     const [command, args] = vi.mocked(deps.spawnDetached).mock.calls[0]
     expect(command).toBe('/bin/sh')
     expect(readFileSync(args[0], 'utf8')).toContain("'/Applications/Orca.app'")
+    expect(deps.extractMacApp).toHaveBeenCalledOnce()
     expect(deps.quit).toHaveBeenCalledOnce()
   })
 
-  it('runs the Windows installer silently after quitting', async () => {
-    const files = { 'orca-windows-setup.exe': ZIP }
-    const checksum = createHash('sha512').update(ZIP).digest('hex')
-    const fetch = vi.fn(async (url: string) =>
-      url.endsWith('/releases/latest')
-        ? Response.json({
-            tag_name: 'v1.4.268-angelo.6',
-            assets: [
-              {
-                name: 'orca-windows-setup.exe',
-                browser_download_url: 'https://download/exe',
-                size: ZIP.length
-              },
-              {
-                name: 'fork-sha512sums.txt',
-                browser_download_url: 'https://download/sums',
-                size: 1
-              }
-            ]
-          })
-        : new Response(
-            url.endsWith('/sums')
-              ? `${checksum}  orca-windows-setup.exe\n`
-              : files['orca-windows-setup.exe']
-          )
-    )
-    const { forkUpdater, deps } = updater({ platform: 'win32', fetch })
+  it('refuses a second Restart while the first install is under way', async () => {
+    const { forkUpdater, deps } = updater()
     await forkUpdater.check(false)
-    await forkUpdater.install()
+    const [first, second] = await Promise.all([forkUpdater.install(), forkUpdater.install()])
+    expect([first, second]).toEqual([true, false])
+    expect(deps.spawnDetached).toHaveBeenCalledOnce()
+  })
+
+  it('does not install a download that changed on disk since it was checked', async () => {
+    const { forkUpdater, deps, statuses } = updater()
+    await forkUpdater.check(false)
+    writeFileSync(join(deps.workDir, 'update.zip'), 'tampered')
+    expect(await forkUpdater.install()).toBe(false)
+    expect(statuses.at(-1)).toMatchObject({ state: 'error' })
+    expect(deps.quit).not.toHaveBeenCalled()
+  })
+
+  it('does not quit when Orca cannot replace its own app (for example run from Downloads)', async () => {
+    const { forkUpdater, deps, statuses } = updater({
+      checkAppReplaceable: async () => 'Move Orca to Applications'
+    })
+    await forkUpdater.check(false)
+    expect(await forkUpdater.install()).toBe(false)
+    expect(statuses.at(-1)).toMatchObject({ state: 'error', message: 'Move Orca to Applications' })
+    expect(deps.quit).not.toHaveBeenCalled()
+  })
+
+  it('runs the Windows installer silently into the running folder once the quit commits', async () => {
+    const { forkUpdater, deps, willQuit } = updater({
+      platform: 'win32',
+      fetch: release({ installer: 'orca-windows-setup.exe' }),
+      windowsInstallDirectory: () => 'D:\\Apps\\Orca'
+    })
+    await forkUpdater.check(false)
+    expect(await forkUpdater.install()).toBe(true)
+    expect(deps.spawnDetached).not.toHaveBeenCalled()
+    willQuit.forEach((listener) => listener())
     const [command, args] = vi.mocked(deps.spawnDetached).mock.calls[0]
     expect(command.endsWith('orca-windows-setup.exe')).toBe(true)
-    expect(args).toEqual(['--updated', '/S', '--force-run'])
-    expect(deps.quit).toHaveBeenCalledOnce()
+    expect(args).toEqual(['--updated', '/S', '--force-run', '/D=D:\\Apps\\Orca'])
   })
 })

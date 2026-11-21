@@ -5,50 +5,65 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { buildMacSwapScript } from './fork-mac-swap-script'
 
-// Runs the generated script for real against fake app bundles, with `open`/`xattr` stubbed on PATH.
-function runSwap(options: { openFails?: boolean } = {}) {
+type Launch = 'runs' | 'crashes' | 'open-fails'
+
+// Runs the generated script for real against fake app bundles; `open` starts the bundle's binary.
+function runSwap(launch: Launch) {
   const root = mkdtempSync(join(tmpdir(), "orca swap '"))
   const appPath = join(root, 'Applications', 'Orca.app')
   const stagedAppPath = join(root, 'staged', 'Orca.app')
-  mkdirSync(appPath, { recursive: true })
-  mkdirSync(stagedAppPath, { recursive: true })
-  writeFileSync(join(appPath, 'version'), 'old')
-  writeFileSync(join(stagedAppPath, 'version'), 'new')
+  for (const [bundle, version] of [
+    [appPath, 'old'],
+    [stagedAppPath, 'new']
+  ] as const) {
+    mkdirSync(join(bundle, 'Contents', 'MacOS'), { recursive: true })
+    writeFileSync(join(bundle, 'version'), version)
+    const binary = join(bundle, 'Contents', 'MacOS', 'Orca')
+    writeFileSync(
+      binary,
+      launch === 'crashes' && version === 'new' ? '#!/bin/sh\nexit 1\n' : '#!/bin/sh\nsleep 4\n'
+    )
+    chmodSync(binary, 0o755)
+  }
   const bin = join(root, 'bin')
   mkdirSync(bin)
-  const launches = join(root, 'launches')
   writeFileSync(
     join(bin, 'open'),
-    `#!/bin/sh\necho "$1" >> "$ORCA_TEST_LAUNCHES"\nexit ${options.openFails ? 1 : 0}\n`
+    launch === 'open-fails'
+      ? '#!/bin/sh\nexit 1\n'
+      : '#!/bin/sh\n"$1/Contents/MacOS/Orca" >/dev/null 2>&1 &\nexit 0\n'
   )
   writeFileSync(join(bin, 'xattr'), '#!/bin/sh\nexit 0\n')
   chmodSync(join(bin, 'open'), 0o755)
   chmodSync(join(bin, 'xattr'), 0o755)
   const exited = spawnSync('true')
-  const script = buildMacSwapScript({ pid: exited.pid ?? 1, appPath, stagedAppPath })
+  const script = buildMacSwapScript({
+    pid: exited.pid ?? 1,
+    appPath,
+    stagedAppPath,
+    settleSeconds: 1
+  })
   const result = spawnSync('/bin/sh', ['-c', script], {
-    env: { PATH: `${bin}:/usr/bin:/bin`, ORCA_TEST_LAUNCHES: launches },
+    env: { PATH: `${bin}:/usr/bin:/bin` },
     encoding: 'utf8'
   })
   return {
     status: result.status,
     version: readFileSync(join(appPath, 'version'), 'utf8'),
-    previousKept: existsSync(`${appPath}.previous`),
-    launches: existsSync(launches) ? readFileSync(launches, 'utf8').trim().split('\n') : []
+    previousKept: existsSync(`${appPath}.previous`)
   }
 }
 
 describe.skipIf(process.platform === 'win32')('buildMacSwapScript', () => {
-  it('swaps in the new app once Orca has quit, relaunches it and removes the old copy', () => {
-    const outcome = runSwap()
-    expect(outcome).toMatchObject({ status: 0, version: 'new', previousKept: false })
-    expect(outcome.launches).toHaveLength(1)
+  it('swaps in the new app once Orca has quit and drops the old copy when the new one keeps running', () => {
+    expect(runSwap('runs')).toEqual({ status: 0, version: 'new', previousKept: false })
   })
 
-  it('puts the old app back when the new one will not launch', () => {
-    const outcome = runSwap({ openFails: true })
-    expect(outcome.version).toBe('old')
-    expect(outcome.previousKept).toBe(false)
-    expect(outcome.status).not.toBe(0)
+  it('puts the old app back when the new one crashes on launch', () => {
+    expect(runSwap('crashes')).toMatchObject({ version: 'old', previousKept: false, status: 1 })
+  })
+
+  it('puts the old app back when the new one cannot be opened', () => {
+    expect(runSwap('open-fails')).toMatchObject({ version: 'old', previousKept: false, status: 1 })
   })
 })
