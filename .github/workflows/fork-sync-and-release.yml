@@ -1,6 +1,6 @@
 name: Fork sync and release
 
-# Fork-only (theangeloumali/orca): merge upstream main into this fork daily, keep the fork's
+# Fork-only (theangeloumali/orca): merge upstream main into this fork every 4 hours, keep the fork's
 # features, verify, then publish unsigned macOS and Windows builds as a GitHub Release.
 # Jobs that run repository code hold read-only tokens; only push/issue/release jobs can write,
 # and they run no repository code. A conflict or failed job opens an issue and publishes nothing.
@@ -10,7 +10,8 @@ name: Fork sync and release
 
 on:
   schedule:
-    - cron: '17 3 * * *'
+    # Every 4 hours, off the hour (GitHub delays on-the-hour schedules); upstream can ship several releases a day.
+    - cron: '17 */4 * * *'
   workflow_dispatch:
     inputs:
       force_release:
@@ -37,10 +38,12 @@ jobs:
     permissions:
       contents: read
     outputs:
-      changed: ${{ steps.merge.outputs.changed }}
+      changed: ${{ steps.version.outputs.changed }}
       conflict: ${{ steps.merge.outputs.conflict }}
       # main as checked out; what force_release builds when upstream had nothing new.
       base_sha: ${{ steps.merge.outputs.base_sha }}
+      # True when upstream has a release this fork has not built yet.
+      release_needed: ${{ steps.version.outputs.release_needed }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -56,7 +59,6 @@ jobs:
           git remote add upstream "https://github.com/$UPSTREAM_REPO.git"
           git fetch upstream main --no-tags
           if git merge-base --is-ancestor upstream/main HEAD; then
-            echo "changed=false" >>"$GITHUB_OUTPUT"
             exit 0
           fi
           # Conflicts are expected here and detected below; any other failure leaves no MERGE_HEAD.
@@ -69,16 +71,16 @@ jobs:
           if [ -n "$(git diff --name-only --diff-filter=U)" ]; then
             git merge --abort
             echo "conflict=true" >>"$GITHUB_OUTPUT"
-            echo "changed=false" >>"$GITHUB_OUTPUT"
             exit 0
           fi
           git -c user.name="$FORK_AUTHOR_NAME" -c user.email="$FORK_AUTHOR_EMAIL" commit --no-edit
-          echo "changed=true" >>"$GITHUB_OUTPUT"
       - name: Carry the latest upstream release version
-        if: steps.merge.outputs.changed == 'true'
+        id: version
+        if: steps.merge.outputs.conflict != 'true'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          BASE_SHA: ${{ steps.merge.outputs.base_sha }}
         run: |
           set -euo pipefail
           version="$(gh release view --repo "$UPSTREAM_REPO" --json tagName -q .tagName | sed 's/^v//')"
@@ -88,11 +90,23 @@ jobs:
             git -c user.name="$FORK_AUTHOR_NAME" -c user.email="$FORK_AUTHOR_EMAIL" \
               commit -m "chore(fork): version the fork build as release $version" package.json
           fi
+          if [ "$(git rev-parse HEAD)" = "$BASE_SHA" ]; then
+            echo "changed=false" >>"$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >>"$GITHUB_OUTPUT"
+          fi
+          # Fork releases are tagged v<upstream version>-angelo.<run>.
+          built="$(gh release list --repo "$GITHUB_REPOSITORY" --limit 1 --json tagName -q '.[0].tagName // ""')"
+          if [[ "$built" == "v$version-angelo."* ]]; then
+            echo "release_needed=false" >>"$GITHUB_OUTPUT"
+          else
+            echo "release_needed=true" >>"$GITHUB_OUTPUT"
+          fi
       - name: Bundle the merged commit
-        if: steps.merge.outputs.changed == 'true'
+        if: steps.version.outputs.changed == 'true'
         run: git bundle create merged.bundle origin/main..HEAD
       - uses: actions/upload-artifact@v5
-        if: steps.merge.outputs.changed == 'true'
+        if: steps.version.outputs.changed == 'true'
         with:
           name: merged-bundle
           path: merged.bundle
@@ -181,12 +195,12 @@ jobs:
 
   build:
     needs: [merge, verify, publish-main]
-    # force_release rebuilds an unchanged main, never one that failed to merge, verify or push.
+    # Installers are built once per upstream release (or on force_release), never after a failed merge, verify or push.
     if: >-
-      ${{ !cancelled() && (needs.publish-main.result == 'success' ||
-      (inputs.force_release && needs.merge.result == 'success' &&
+      ${{ !cancelled() && needs.merge.result == 'success' &&
       needs.merge.outputs.conflict != 'true' && needs.verify.result != 'failure' &&
-      needs.publish-main.result != 'failure')) }}
+      needs.publish-main.result != 'failure' &&
+      (inputs.force_release || needs.merge.outputs.release_needed == 'true') }}
     strategy:
       fail-fast: false
       matrix:
