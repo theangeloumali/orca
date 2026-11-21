@@ -33,6 +33,7 @@ import { EMPTY_PROJECT_GROUPS } from '../viewport/viewport-props'
 import { NOOP_WORKSPACE_BOARD_DRAG_PREVIEW_CALLBACK } from '../drag/drop-commit-context'
 import { useAgentSendTargetWorktreeId } from './use-agent-send-target'
 import { useProjectGroupDialogs } from '../rows/use-project-group-dialogs'
+import { getSidebarProjectGrouping } from './sidebar-project-grouping'
 import { useProjectGroupNestingActions } from '../rows/use-project-group-nesting-actions'
 import { useSidebarRevealRequests } from '../navigation/use-reveal-requests'
 import { useSidebarWorktreeFilters } from './use-filters'
@@ -127,12 +128,10 @@ const WorktreeList = React.memo(function WorktreeList({
   const pinnedDisplayPolicy = getPinnedWorktreeDisplayPolicy(settings)
   const defaultHostId = getSettingsFocusedExecutionHostId(settings)
   const projectHostSetupProjection = useProjectHostSetupProjection()
+  const showMachineSections = useAppStore((s) => s.showWorkspaceHostSections)
   const projectGrouping = useMemo(
-    () => ({
-      projects: projectHostSetupProjection.projects,
-      projectHostSetups: projectHostSetupProjection.setups
-    }),
-    [projectHostSetupProjection]
+    () => getSidebarProjectGrouping(projectHostSetupProjection, showMachineSections),
+    [projectHostSetupProjection, showMachineSections]
   )
 
   const agentSendTargetWorktreeId = useAgentSendTargetWorktreeId()

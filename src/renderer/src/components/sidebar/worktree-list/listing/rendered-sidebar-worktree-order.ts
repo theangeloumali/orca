@@ -43,6 +43,7 @@ import {
 } from '../../../../../../shared/sidebar-list/hosts/host-filtering'
 import { selectWorkspaceBoardStatuses } from '@/store/workspaces/status/host-workspace-status-columns'
 import { indexHiddenProjects } from '../../../../../../shared/project/catalog/hidden-projects'
+import { getSidebarProjectGrouping } from './sidebar-project-grouping'
 
 const EMPTY_REPO_ID_SET: ReadonlySet<string> = Object.freeze(new Set<string>())
 const EMPTY_IMPORTED_BY_REPO: ReadonlyMap<string, ImportedWorktreesCardCandidate> = new Map()
@@ -109,7 +110,7 @@ export function computeRenderedSidebarRows(
     importedWorktreesByRepo: EMPTY_IMPORTED_BY_REPO,
     newExternalWorktreesInboxByRepo: EMPTY_INBOX_BY_REPO,
     pendingCreations: EMPTY_PENDING_CREATIONS,
-    projectGrouping: { projects: projection.projects, projectHostSetups: projection.setups },
+    projectGrouping: getSidebarProjectGrouping(projection, state.showWorkspaceHostSections),
     folderWorkspaces: filterFolderWorkspacesForVisibleHosts(
       selectFolderWorkspaces(state),
       projectGroups,
