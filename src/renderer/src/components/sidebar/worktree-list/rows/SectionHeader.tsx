@@ -38,6 +38,7 @@ import {
   ProjectGroupCreateWorkspaceButton,
   ProjectGroupHeaderMenu
 } from './project-group-header-actions'
+import { toggleProjectGroupSubtree } from './use-project-group-subtree-collapse'
 import {
   RepoHeaderCreateWorkspaceButton,
   RepoHeaderProjectActionsMenu
@@ -164,7 +165,7 @@ export function renderWorktreeSectionHeaderRow(
   const collapseKey = row.collapseKey ?? row.key
   const isHeaderCollapsed = ctx.collapsedGroups.has(collapseKey)
   const toggleHeader = (event: React.MouseEvent | React.KeyboardEvent): void =>
-    toggleSectionHeaderCollapse(event, collapseKey, ctx)
+    toggleSectionHeaderCollapse(event, collapseKey, { ...ctx, toggleProjectGroupSubtree })
   // Why: repo/project/status/pinned share compact section chrome; flat "All" stays a simple label.
   const showHeaderCollapseAffordance =
     row.count > 0 &&
@@ -234,6 +235,7 @@ export function renderWorktreeSectionHeaderRow(
           data-workspace-pin-drop-target={isPinnedHeader ? '' : undefined}
           className={cn(
             'group relative flex h-7 w-full items-center gap-1.5 pr-2 text-left transition-all',
+            projectGroupIdForHeader && 'group/sidebar-header',
             !(isDraggableRepoHeader || isDraggableProjectGroupHeader) && 'cursor-pointer',
             ctx.highlightedRevealRowKey === row.key &&
               'rounded-md bg-worktree-sidebar-accent ring-1 ring-worktree-sidebar-ring/50',
