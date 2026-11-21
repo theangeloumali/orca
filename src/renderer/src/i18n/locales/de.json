@@ -6317,7 +6317,9 @@
         },
         "SidebarHeader": {
           "92154beb7e": "Neuer Arbeitsbereich",
-          "addProject": "Projekt hinzufügen"
+          "addProject": "Projekt hinzufügen",
+          "collapseAll": "Alle einklappen",
+          "expandAll": "Alle ausklappen"
         },
         "SidebarNav": {
           "80611a8b10": "Suchen",
@@ -6645,7 +6647,10 @@
           "childCount_other": "{{count}} untergeordnete Arbeitsbereiche",
           "groupProjectsRemained_one": "Verbleibende Projekte aus der gelöschten Gruppe: {{remaining}} von {{count}}.",
           "groupProjectsRemained_other": "Verbleibende Projekte aus der gelöschten Gruppe: {{remaining}} von {{count}}.",
-          "hostServerReplaced": "Anderer Server: entfernen und dann verbinden"
+          "hostServerReplaced": "Anderer Server: entfernen und dann verbinden",
+          "collapseAllInGroup": "Alles in {{value0}} einklappen",
+          "expandAllInGroup": "Alles in {{value0}} ausklappen",
+          "clickKeyLabel": "Klick"
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "Abbrechen",
@@ -7379,6 +7384,16 @@
         },
         "moveToGroup": {
           "otherDevice": "Auf einem anderen Gerät"
+        },
+        "activeOnly": {
+          "label": "Nur aktive",
+          "tooltipOn": "Alle Projekte anzeigen",
+          "tooltipOff": "Nur Workspaces mit laufendem Terminal anzeigen",
+          "filterAria": "Nur Workspaces mit laufendem Terminal anzeigen",
+          "status": "{{shown}} von {{total}} Projekten",
+          "showAll": "Alle anzeigen",
+          "hiddenNeedsYou_one": "{{count}} ausgeblendetes braucht dich",
+          "hiddenNeedsYou_other": "{{count}} ausgeblendete brauchen dich"
         }
       },
       "shared": {

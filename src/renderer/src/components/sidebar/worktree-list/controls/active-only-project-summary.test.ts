@@ -3,7 +3,7 @@ import { summarizeActiveOnlyProjects } from './active-only-project-summary'
 import { makeWorktree } from '@/store/slices/worktrees/worktree.test-fixture'
 
 const repos = [{ id: 'busy' }, { id: 'idle' }, { id: 'waiting' }, { id: 'gone', hiddenAt: 1 }]
-const worktreesByRepo = {
+const workspacesByRepoId = {
   busy: [makeWorktree({ id: 'busy-1', repoId: 'busy' })],
   idle: [makeWorktree({ id: 'idle-1', repoId: 'idle' })],
   waiting: [makeWorktree({ id: 'waiting-1', repoId: 'waiting' })],
@@ -14,7 +14,7 @@ describe('summarizeActiveOnlyProjects', () => {
   it('counts listed projects, the ones running, and hidden ones that need you', () => {
     const summary = summarizeActiveOnlyProjects({
       repos,
-      worktreesByRepo,
+      workspacesByRepoId,
       hasRunningTerminal: (worktreeId) => worktreeId === 'busy-1' || worktreeId === 'gone-1',
       needsYouWorktreeIds: new Set(['waiting-1', 'busy-1'])
     })
@@ -24,7 +24,7 @@ describe('summarizeActiveOnlyProjects', () => {
   it('counts a project once however many copies or workspaces it has', () => {
     const summary = summarizeActiveOnlyProjects({
       repos: [{ id: 'busy' }, { id: 'busy' }],
-      worktreesByRepo: {
+      workspacesByRepoId: {
         busy: [makeWorktree({ id: 'a', repoId: 'busy' }), makeWorktree({ id: 'b', repoId: 'busy' })]
       },
       hasRunningTerminal: () => true,
@@ -36,7 +36,7 @@ describe('summarizeActiveOnlyProjects', () => {
   it('ignores archived workspaces', () => {
     const summary = summarizeActiveOnlyProjects({
       repos: [{ id: 'busy' }],
-      worktreesByRepo: { busy: [makeWorktree({ id: 'a', repoId: 'busy', isArchived: true })] },
+      workspacesByRepoId: { busy: [makeWorktree({ id: 'a', repoId: 'busy', isArchived: true })] },
       hasRunningTerminal: () => true,
       needsYouWorktreeIds: new Set(['a'])
     })

@@ -22,7 +22,8 @@ export function ActiveOnlyStatusLine() {
         <span className="text-foreground">
           <span aria-hidden="true">· </span>
           {t('auto.components.sidebar.activeOnly.hiddenNeedsYou', '{{count}} hidden need you', {
-            count: hiddenNeedsYouCount
+            count: hiddenNeedsYouCount,
+            defaultValue_one: '{{count}} hidden needs you'
           })}
         </span>
       )}

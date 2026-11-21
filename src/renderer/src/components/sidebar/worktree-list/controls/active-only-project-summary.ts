@@ -11,7 +11,7 @@ export type ActiveOnlyProjectSummary = {
 
 export function summarizeActiveOnlyProjects(args: {
   repos: readonly Pick<Repo, 'id' | 'hiddenAt'>[]
-  worktreesByRepo: Readonly<
+  workspacesByRepoId: Readonly<
     Record<string, readonly Pick<Worktree, 'id' | 'isArchived'>[] | undefined>
   >
   hasRunningTerminal: (worktreeId: string) => boolean
@@ -22,7 +22,7 @@ export function summarizeActiveOnlyProjects(args: {
   let shownCount = 0
   let hiddenNeedsYouCount = 0
   for (const repoId of listedRepoIds) {
-    const worktreeIds = (args.worktreesByRepo[repoId] ?? [])
+    const worktreeIds = (args.workspacesByRepoId[repoId] ?? [])
       .filter((worktree) => !worktree.isArchived)
       .map((worktree) => worktree.id)
     if (worktreeIds.some(args.hasRunningTerminal)) {

@@ -5646,7 +5646,9 @@
         },
         "SidebarHeader": {
           "92154beb7e": "새로운 워크스페이스",
-          "addProject": "프로젝트 추가"
+          "addProject": "프로젝트 추가",
+          "collapseAll": "모두 접기",
+          "expandAll": "모두 펼치기"
         },
         "SidebarNav": {
           "80611a8b10": "검색",
@@ -5962,7 +5964,10 @@
           "hideChildWorkspaces_other": "하위 워크스페이스 {{count}}개 숨기기",
           "childCount_other": "하위 {{count}}개",
           "groupProjectsRemained_other": "그룹을 삭제한 후 포함된 프로젝트 {{count}}개 중 {{remaining}}개가 남았습니다.",
-          "hostServerReplaced": "다른 서버: 삭제 후 연결"
+          "hostServerReplaced": "다른 서버: 삭제 후 연결",
+          "collapseAllInGroup": "{{value0}} 안의 모든 항목 접기",
+          "expandAllInGroup": "{{value0}} 안의 모든 항목 펼치기",
+          "clickKeyLabel": "클릭"
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "취소",
@@ -6728,6 +6733,15 @@
         },
         "moveToGroup": {
           "otherDevice": "다른 기기"
+        },
+        "activeOnly": {
+          "label": "활성만",
+          "tooltipOn": "모든 프로젝트 표시",
+          "tooltipOff": "실행 중인 터미널이 있는 워크스페이스만 표시",
+          "filterAria": "실행 중인 터미널이 있는 워크스페이스만 표시",
+          "status": "프로젝트 {{total}}개 중 {{shown}}개 표시",
+          "showAll": "모두 표시",
+          "hiddenNeedsYou_other": "숨겨진 {{count}}개가 확인 필요"
         }
       },
       "shared": {

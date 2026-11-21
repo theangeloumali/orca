@@ -3,7 +3,6 @@ import { useAppStore } from '@/store/index'
 import { useTranslate } from '@/i18n/use-translate'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { cn } from '@/lib/class-names'
 
 export function ActiveOnlyToggle() {
   const t = useTranslate()
@@ -20,13 +19,9 @@ export function ActiveOnlyToggle() {
       <TooltipTrigger asChild>
         <Button
           type="button"
-          variant="ghost"
+          // Filled while on, so a narrowed list is never mistaken for the whole one.
+          variant={active ? 'secondary' : 'muted-field-icon'}
           size="icon-xs"
-          className={cn(
-            'text-muted-foreground',
-            active &&
-              'bg-foreground/10 text-foreground hover:bg-foreground/15 dark:hover:bg-foreground/15'
-          )}
           aria-label={t('auto.components.sidebar.activeOnly.label', 'Active only')}
           aria-pressed={active}
           onClick={() => setActive(!active)}

@@ -6171,7 +6171,9 @@
         },
         "SidebarHeader": {
           "92154beb7e": "Nouvel espace de travail",
-          "addProject": "Ajouter un projet"
+          "addProject": "Ajouter un projet",
+          "collapseAll": "Tout réduire",
+          "expandAll": "Tout développer"
         },
         "SidebarNav": {
           "80611a8b10": "Recherche",
@@ -6512,7 +6514,10 @@
           "groupProjectsRemained_one": "Projets conservés après suppression du groupe : {{remaining}} sur {{count}}.",
           "groupProjectsRemained_other": "Projets conservés après suppression du groupe : {{remaining}} sur {{count}}.",
           "groupProjectsRemained_many": "Projets conservés après suppression du groupe : {{remaining}} sur {{count}}.",
-          "hostServerReplaced": "Serveur différent : oubliez-le, puis connectez-vous"
+          "hostServerReplaced": "Serveur différent : oubliez-le, puis connectez-vous",
+          "collapseAllInGroup": "Tout réduire dans {{value0}}",
+          "expandAllInGroup": "Tout développer dans {{value0}}",
+          "clickKeyLabel": "clic"
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "Annuler",
@@ -7269,6 +7274,17 @@
         },
         "moveToGroup": {
           "otherDevice": "Sur un autre appareil"
+        },
+        "activeOnly": {
+          "label": "Actifs uniquement",
+          "tooltipOn": "Afficher tous les projets",
+          "tooltipOff": "Afficher seulement les espaces avec un terminal actif",
+          "filterAria": "Afficher seulement les espaces avec un terminal actif",
+          "status": "{{shown}} projets affichés sur {{total}}",
+          "showAll": "Tout afficher",
+          "hiddenNeedsYou_one": "{{count}} masqué a besoin de vous",
+          "hiddenNeedsYou_other": "{{count}} masqués ont besoin de vous",
+          "hiddenNeedsYou_many": "{{count}} masqués ont besoin de vous"
         }
       },
       "shared": {

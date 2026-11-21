@@ -30,7 +30,7 @@ function computeSummary(
   )
   return summarizeActiveOnlyProjects({
     repos,
-    worktreesByRepo,
+    workspacesByRepoId: worktreesByRepo,
     hasRunningTerminal: (id) => worktreeHasRunningTerminal(tabsByWorktree, ptyIdsByTabId, id),
     needsYouWorktreeIds
   })
