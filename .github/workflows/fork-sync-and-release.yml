@@ -206,12 +206,14 @@ jobs:
       matrix:
         include:
           # Mirrors upstream's release-mac-build and dev-channel-win-build, minus signing.
+          # Apple Silicon only: both of this fork's Macs are arm64, and the x64 slice's
+          # terminal-host check needs Rosetta, which fails on GitHub's macOS runners.
           - os: macos-latest
-            install: pnpm install --frozen-lockfile --cpu=current,x64,arm64
+            install: pnpm install --frozen-lockfile --cpu=current,arm64
             package: |
-              node config/scripts/orcad-distribution/prebuilds/pinned-node-downloads.mjs darwin-arm64 darwin-x64
+              node config/scripts/orcad-distribution/prebuilds/pinned-node-downloads.mjs darwin-arm64
               node config/scripts/native-build/node-addons/ensure-native-runtime.mjs --runtime=electron
-              pnpm exec electron-builder --config config/electron-builder.config.cjs --mac --publish never
+              pnpm exec electron-builder --config config/electron-builder.config.cjs --mac --arm64 --publish never
             artifacts: |
               dist/*.dmg
               dist/*.zip
