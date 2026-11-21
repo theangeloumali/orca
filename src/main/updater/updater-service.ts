@@ -13,8 +13,22 @@ import type { ReleaseBuild, ReleaseChannel } from '../../shared/updater/release-
 import type { ReleaseBuildListOptions } from './releases/updater-release-build-cache'
 import { UpdaterSetup, type UpdaterSetupOptions } from './lifecycle/updater-setup'
 import type { UpdateInstallMode } from './lifecycle/updater-state'
+import { OFFICIAL_UPDATES_DISABLED } from './fork-build-updates'
+import { createForkUpdater, startForkUpdateChecks } from './fork/create-fork-updater'
 
 const updater = new UpdaterSetup()
+// Fork builds update from the fork's own releases; the official updater stays off for them.
+let automaticDownloads: () => boolean = () => true
+// Headless serve hosts have no window to restart, so the fork updater acts only once one exists.
+let forkUpdaterActive = false
+const forkUpdater = OFFICIAL_UPDATES_DISABLED
+  ? createForkUpdater({
+      publish: (status) => updater.publishExternalStatus(status),
+      automaticDownloads: () => automaticDownloads(),
+      windowsInstallDirectory: () => updater.getWindowsInstallDirectory(),
+      beforeQuit: () => updater.runForkPreInstallCleanup()
+    })
+  : null
 
 export function resolveUpdateInstallMode(isServeMode: boolean): UpdateInstallMode {
   return updater.resolveUpdateInstallMode(isServeMode)
@@ -48,10 +62,24 @@ export function installRemoteServerUpdate(runtimeId: string): RemoteServerUpdate
 }
 
 export function checkForUpdates(): void {
+  if (forkUpdater) {
+    if (!forkUpdaterActive) {
+      return
+    }
+    void forkUpdater.check(false)
+    return
+  }
   updater.checkForUpdates()
 }
 
 export function checkForUpdatesFromMenu(options?: UpdateCheckOptions): void {
+  if (forkUpdater) {
+    if (!forkUpdaterActive) {
+      return
+    }
+    void forkUpdater.check(true)
+    return
+  }
   updater.checkForUpdatesFromMenu(options)
 }
 
@@ -62,10 +90,30 @@ export function applyAutomaticUpdatesSetting(enabled: boolean | undefined): void
 }
 
 export function downloadUpdate(): void {
+  if (forkUpdater) {
+    if (!forkUpdaterActive) {
+      return
+    }
+    void forkUpdater.download()
+    return
+  }
   updater.downloadUpdate()
 }
 
 export function quitAndInstall(): void {
+  if (forkUpdater) {
+    if (!forkUpdaterActive) {
+      updater.notifyQuitAndInstallAborted()
+      return
+    }
+    // The window is waiting to restart; tell it when nothing started so it can recover.
+    void forkUpdater.install().then((started) => {
+      if (!started) {
+        updater.notifyQuitAndInstallAborted()
+      }
+    })
+    return
+  }
   updater.quitAndInstall()
 }
 
@@ -101,4 +149,9 @@ export function setupAutoUpdater(
   opts?: UpdaterSetupOptions
 ): void {
   updater.setupAutoUpdater(mainWindow, opts)
+  if (forkUpdater && mainWindow) {
+    forkUpdaterActive = true
+    automaticDownloads = opts?.getAutomaticUpdates ?? (() => true)
+    startForkUpdateChecks(forkUpdater)
+  }
 }

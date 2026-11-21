@@ -41,6 +41,8 @@ export type UpdaterSetupOptions = {
 }
 
 export class UpdaterSetup extends UpdaterDownloadInstall {
+  private windowsInstallDirectory: string | undefined
+
   checkForUpdates(): void {
     this.checkForUpdatesInBackground()
   }
@@ -67,6 +69,26 @@ export class UpdaterSetup extends UpdaterDownloadInstall {
 
   isQuittingForUpdate(): boolean {
     return super.isQuittingForUpdate()
+  }
+
+  /** Lets the fork updater drive the same status the update UI already renders. */
+  publishExternalStatus(status: UpdateStatus): void {
+    this.sendStatus(status, { force: true })
+  }
+
+  /** The running Windows install folder found at setup, for installers that must update it in place. */
+  getWindowsInstallDirectory(): string | undefined {
+    return this.windowsInstallDirectory
+  }
+
+  /** The same pre-quit cleanup an official update runs, for the fork updater. */
+  async runForkPreInstallCleanup(): Promise<void> {
+    await this.runBeforeUpdateQuitCleanup()
+  }
+
+  /** Tells a window waiting to restart for an update that the install did not start. */
+  notifyQuitAndInstallAborted(): void {
+    this.sendToMainWindow('updater:quitAndInstallAborted')
   }
 
   getUpdateStatus(): UpdateStatus {
@@ -173,6 +195,7 @@ export class UpdaterSetup extends UpdaterDownloadInstall {
       process.platform,
       process.execPath
     )
+    this.windowsInstallDirectory = installDirectory
     if (installDirectory) {
       // NsisUpdater reads installDirectory, which the cross-platform AppUpdater type omits.
       Object.assign(autoUpdater, { installDirectory })
