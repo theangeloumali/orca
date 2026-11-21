@@ -38,6 +38,7 @@ export function useWorktreeJumpPaletteProjectTargets({
   projectGroups,
   projects,
   projectHostSetups,
+  showMachineSections,
   hasQuery,
   deferredQuery,
   filterPredicate,
@@ -97,9 +98,17 @@ export function useWorktreeJumpPaletteProjectTargets({
         repos,
         projects,
         projectHostSetups,
+        showMachineSections,
         renderableRepoIds: renderableProjectRepoIds
       }),
-    [projectGroups, projectHostSetups, projects, renderableProjectRepoIds, repos]
+    [
+      projectGroups,
+      projectHostSetups,
+      projects,
+      renderableProjectRepoIds,
+      repos,
+      showMachineSections
+    ]
   )
   const projectTargetItems = useMemo<ProjectTargetPaletteItem[]>(
     () =>
@@ -110,6 +119,7 @@ export function useWorktreeJumpPaletteProjectTargets({
             repos,
             projects,
             projectHostSetups,
+            showMachineSections,
             renderableRepoIds: renderableProjectRepoIds
           })
             .filter((result) => {
@@ -135,7 +145,8 @@ export function useWorktreeJumpPaletteProjectTargets({
       projectHostSetups,
       projects,
       renderableProjectRepoIds,
-      repos
+      repos,
+      showMachineSections
     ]
   )
   return {

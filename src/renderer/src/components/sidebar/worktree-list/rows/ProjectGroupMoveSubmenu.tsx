@@ -7,6 +7,7 @@ import {
   DropdownMenuSubTrigger
 } from '@/components/ui/dropdown-menu'
 import { useTranslate } from '@/i18n/use-translate'
+import { MenuDeviceGroup } from '@/components/host-picker/MenuDeviceGroup'
 import {
   LOCAL_EXECUTION_HOST_ID,
   type ExecutionHostId
@@ -50,20 +51,23 @@ export function ProjectGroupMoveSubmenu({
         {t('auto.components.sidebar.WorktreeList.moveGroupTo', 'Move group to')}
       </DropdownMenuSubTrigger>
       <DropdownMenuSubContent>
-        <DropdownMenuItem disabled={currentParentId === null} onSelect={() => moveTo(null)}>
-          {t('auto.components.sidebar.WorktreeList.moveGroupTopLevel', 'Top level')}
-        </DropdownMenuItem>
-        {groupDestinations.map((destination) => (
-          <DropdownMenuItem
-            key={destination.id}
-            disabled={destination.disabled || destination.id === currentParentId}
-            onSelect={() => moveTo(destination.id)}
-            // Indent by tree depth so nesting reads like the sidebar.
-            style={{ paddingLeft: `${0.5 + (destination.depth + 1) * 0.75}rem` }}
-          >
-            {destination.name}
+        {/* A group can only move within its own machine, so only that machine is listed. */}
+        <MenuDeviceGroup hostId={ownerHostId} showHeading={ownGroups.length < projectGroups.length}>
+          <DropdownMenuItem disabled={currentParentId === null} onSelect={() => moveTo(null)}>
+            {t('auto.components.sidebar.WorktreeList.moveGroupTopLevel', 'Top level')}
           </DropdownMenuItem>
-        ))}
+          {groupDestinations.map((destination) => (
+            <DropdownMenuItem
+              key={destination.id}
+              disabled={destination.disabled || destination.id === currentParentId}
+              onSelect={() => moveTo(destination.id)}
+              // Indent by tree depth so nesting reads like the sidebar.
+              style={{ paddingLeft: `${0.5 + (destination.depth + 1) * 0.75}rem` }}
+            >
+              {destination.name}
+            </DropdownMenuItem>
+          ))}
+        </MenuDeviceGroup>
       </DropdownMenuSubContent>
     </DropdownMenuSub>
   )

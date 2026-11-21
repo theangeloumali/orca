@@ -7,6 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover'
 import RepoBadgeLabel from '../../repo/RepoBadgeLabel'
 import { cn } from '@/lib/class-names'
 import { useTranslate } from '@/i18n/use-translate'
+import { RepoDeviceBadge } from '../../repo/RepoDeviceBadge'
 
 export const GLOBAL_SCOPE_KEY = '__global__'
 
@@ -141,6 +142,7 @@ export function QuickCommandsScopeFilter({
                       color={repo.badgeColor}
                       className="max-w-full"
                     />
+                    <RepoDeviceBadge repo={repo} />
                   </CommandItem>
                 )
               })}

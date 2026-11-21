@@ -16,10 +16,14 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import RepoBadgeLabel from '@/components/repo/RepoBadgeLabel'
 import { QUICK_COMMAND_TOGGLE_ITEM_CLASS } from './terminal-quick-command-toggle-style'
 import { useTranslate } from '@/i18n/use-translate'
+import { RepoDeviceBadge } from '@/components/repo/RepoDeviceBadge'
 
 type TerminalQuickCommandScopeFieldProps = {
   disabled: boolean
-  repos: readonly Pick<Repo, 'id' | 'displayName' | 'path' | 'badgeColor'>[]
+  repos: readonly Pick<
+    Repo,
+    'id' | 'displayName' | 'path' | 'badgeColor' | 'connectionId' | 'executionHostId'
+  >[]
   selectedScope: TerminalQuickCommandScope
   selectedRepoId: string
   selectedRepoMissing: boolean
@@ -133,6 +137,7 @@ export function TerminalQuickCommandScopeField({
                       color={repo.badgeColor}
                       className="max-w-full"
                     />
+                    <RepoDeviceBadge repo={repo} />
                   </SelectItem>
                 ))}
               </SelectContent>

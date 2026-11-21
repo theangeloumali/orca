@@ -240,7 +240,8 @@ export function preparePendingSidebarRowReveal(
     rowKey: request.rowKey,
     repoMap: args.repoMap,
     projectGroups: args.projectGroups,
-    projectGrouping: args.projectGrouping
+    projectGrouping: args.projectGrouping,
+    hostSections: args.renderRows.some((row) => row.type === 'host-header')
   })) {
     if (args.collapsedGroups.has(groupKey)) {
       args.toggleGroup(groupKey)

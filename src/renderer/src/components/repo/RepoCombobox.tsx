@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react'
-import { Check, ChevronsUpDown, FolderPlus, Server } from 'lucide-react'
+import { Check, ChevronsUpDown, FolderPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Command,
@@ -17,6 +17,7 @@ import { useMountedRef } from '@/hooks/useMountedRef'
 import type { Repo } from '../../../../shared/repository/repo-types'
 import RepoBadgeLabel from './RepoBadgeLabel'
 import { useTranslate } from '@/i18n/use-translate'
+import { RepoDeviceBadge } from './RepoDeviceBadge'
 
 type RepoComboboxProps = {
   repos: readonly Repo[]
@@ -195,12 +196,7 @@ export default function RepoCombobox({
                   color={selectedRepo.badgeColor}
                   badgeClassName="size-1.5"
                 />
-                {selectedRepo.connectionId && (
-                  <span className="shrink-0 inline-flex items-center gap-0.5 rounded bg-muted px-1 py-0.5 text-[9px] font-medium leading-none text-muted-foreground">
-                    <Server className="size-2.5" />
-                    {t('auto.components.repo.RepoCombobox.3639fd9da2', 'SSH')}
-                  </span>
-                )}
+                <RepoDeviceBadge repo={selectedRepo} />
               </span>
             ) : (
               <span className="text-muted-foreground">{placeholder}</span>
@@ -254,12 +250,7 @@ export default function RepoCombobox({
                         color={repo.badgeColor}
                         className="max-w-full"
                       />
-                      {repo.connectionId && (
-                        <span className="shrink-0 inline-flex items-center gap-0.5 rounded bg-muted px-1 py-0.5 text-[9px] font-medium leading-none text-muted-foreground">
-                          <Server className="size-2.5" />
-                          {t('auto.components.repo.RepoCombobox.3639fd9da2', 'SSH')}
-                        </span>
-                      )}
+                      <RepoDeviceBadge repo={repo} />
                     </span>
                     <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{repo.path}</p>
                   </div>

@@ -12,8 +12,6 @@ import {
 import {
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
@@ -21,6 +19,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useTranslate } from '@/i18n/use-translate'
 import type { WorktreeContextMenuModel } from './use-worktree-context-menu-model'
+import { ProjectGroupTargetsByDevice } from '../../worktree-list/rows/ProjectGroupTargetsByDevice'
 import {
   getWorktreeParentPickerLabel,
   isWorktreeParentPickerDisabled
@@ -125,21 +124,12 @@ export function WorktreeProjectGroupSubMenu({ model }: { model: WorktreeContextM
             <DropdownMenuLabel>
               {t('auto.components.sidebar.WorktreeContextMenu.76865d827f', 'Move to group')}
             </DropdownMenuLabel>
-            <DropdownMenuRadioGroup
-              value={repo.projectGroupId ?? ''}
-              onValueChange={model.handleMoveProjectToGroup}
-            >
-              {projectGroups.map((group) => (
-                <DropdownMenuRadioItem
-                  key={group.id}
-                  value={group.id}
-                  textValue={group.name}
-                  disabled={isDeleting || repo.projectGroupId === group.id}
-                >
-                  <span className="max-w-48 truncate">{group.name}</span>
-                </DropdownMenuRadioItem>
-              ))}
-            </DropdownMenuRadioGroup>
+            <ProjectGroupTargetsByDevice
+              repo={repo}
+              projectGroups={projectGroups}
+              disabled={isDeleting}
+              onSelect={model.handleMoveProjectToGroup}
+            />
           </>
         ) : null}
       </DropdownMenuSubContent>

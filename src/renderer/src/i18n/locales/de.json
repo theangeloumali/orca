@@ -7361,6 +7361,9 @@
           "inProgress": "In Bearbeitung",
           "inReview": "In Prüfung",
           "done": "Fertig"
+        },
+        "moveToGroup": {
+          "otherDevice": "Auf einem anderen Gerät"
         }
       },
       "shared": {
@@ -15008,7 +15011,6 @@
         "RepoCombobox": {
           "b3e15f4525": "Projekt hinzufügen",
           "b4a235e886": "Projekt wird hinzugefügt",
-          "3639fd9da2": "SSH",
           "e7ed739236": "Keine Projekte/Ordner entsprechen der Suche.",
           "a0c48f5f29": "Projekte/Ordner suchen…",
           "116812151a": "Projekt wird hinzugefügt…"

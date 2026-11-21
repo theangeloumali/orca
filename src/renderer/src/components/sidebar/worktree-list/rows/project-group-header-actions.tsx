@@ -51,7 +51,8 @@ export function ProjectGroupHeaderMenu({
 }): React.JSX.Element {
   const t = useTranslate()
   const onRefresh = getFolderProjectGroupRefreshHandler(projectGroup, onRefreshProjectGroup)
-  // An older paired server drops parentGroupId and still reports success, so gate on its capability.
+  // Moving needs the server's parent-update capability (an older one drops parentGroupId and still
+  // reports success); creating a subgroup does not, since every server accepts a parent on create.
   const runtimeEnvironmentId = hostId?.startsWith('runtime:')
     ? hostId.slice('runtime:'.length)
     : null
@@ -100,10 +101,7 @@ export function ProjectGroupHeaderMenu({
           </DropdownMenuItem>
         ) : null}
         {onCreateSubgroup ? (
-          <DropdownMenuItem
-            disabled={!nestingSupported}
-            onSelect={() => onCreateSubgroup(groupId, label, hostId)}
-          >
+          <DropdownMenuItem onSelect={() => onCreateSubgroup(groupId, label, hostId)}>
             <FolderPlus className="size-3.5" />
             {t('auto.components.sidebar.WorktreeList.newSubgroup', 'New subgroup…')}
           </DropdownMenuItem>

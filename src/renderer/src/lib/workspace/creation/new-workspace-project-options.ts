@@ -1,3 +1,4 @@
+import { withDeviceLabel } from '../../../../../shared/sidebar-list/hosts/device-sections'
 import { projectHostSetupProjectionFromRepos } from '../../../../../shared/project/host-setup/project-host-setup-projection'
 import type { ProjectGroup } from '../../../../../shared/project/groups/project-group-types'
 import type { Project, ProjectHostSetup } from '../../../../../shared/project/project-types'
@@ -5,9 +6,7 @@ import type { Repo } from '../../../../../shared/repository/repo-types'
 import { isClipboardTextByteLengthOverLimit } from '../../../../../shared/clipboard/clipboard-text'
 import type { ExecutionHostRegistryEntry } from '../../../../../shared/execution-host/execution-host-registry-entry'
 import {
-  getExecutionHostLabel,
   getRepoExecutionHostId,
-  LOCAL_EXECUTION_HOST_ID,
   type ExecutionHostId
 } from '../../../../../shared/execution-host/execution-host'
 import {
@@ -104,7 +103,7 @@ export function buildNewWorkspaceProjectOptions(
   const { eligibleRepos } = input
   const { projects, projectHostSetups } = getProjectModel(input)
   const eligibleRepoById = new Map(eligibleRepos.map((repo) => [repo.id, repo]))
-  const hostLabelById = new Map((input.hosts ?? []).map((host) => [host.id, host.label]))
+  const hostLabelById = getHostLabelById(input.hosts)
   const liveHostIds = input.hosts ? new Set(input.hosts.map((host) => host.id)) : null
   const groupingIndex = buildProjectGroupingIndex({ projects, projectHostSetups })
   const readySetupCountsByProjectId = new Map<string, number>()
@@ -183,11 +182,13 @@ function getCheckoutDetail(
   setup: Pick<ProjectHostSetup, 'hostId' | 'path'>,
   hostLabelById: ReadonlyMap<ExecutionHostId, string>
 ): string {
-  if (setup.hostId === LOCAL_EXECUTION_HOST_ID) {
-    return setup.path
-  }
-  const hostLabel = hostLabelById.get(setup.hostId)?.trim() || getExecutionHostLabel(setup.hostId)
-  return `${hostLabel} · ${setup.path}`
+  return withDeviceLabel(setup.path, setup.hostId, hostLabelById)
+}
+
+function getHostLabelById(
+  hosts: readonly Pick<ExecutionHostRegistryEntry, 'id' | 'label'>[] | undefined
+): Map<ExecutionHostId, string> {
+  return new Map((hosts ?? []).map((host) => [host.id, host.label]))
 }
 
 // Setup ids can repeat across hosts, so a checkout is keyed by both.
@@ -276,6 +277,7 @@ export function buildNewWorkspaceCreateTargetOptions({
 }: BuildNewWorkspaceCreateTargetOptionsInput): NewWorkspaceProjectOption[] {
   const projectOptions = buildNewWorkspaceProjectOptions(projectInput)
   const liveHostIds = projectInput.hosts ? new Set(projectInput.hosts.map((host) => host.id)) : null
+  const hostLabelById = getHostLabelById(projectInput.hosts)
   const groupOptions = projectGroups
     .filter(
       (group) =>
@@ -288,7 +290,12 @@ export function buildNewWorkspaceCreateTargetOptions({
       projectGroupId: group.id,
       displayName: group.name,
       badgeColor: group.color ?? 'var(--muted-foreground)',
-      detail: getProjectGroupDetail(group),
+      // Same-named groups on two machines differ only by device.
+      detail: withDeviceLabel(
+        getProjectGroupDetail(group),
+        getRepoExecutionHostId(group),
+        hostLabelById
+      ),
       parentPath: group.parentPath?.trim() ?? '',
       connectionId: group.connectionId ?? null
     }))

@@ -22,6 +22,8 @@ import {
   pickerExecutionHosts
 } from '../../../../shared/execution-host/managed-orcad-execution-host'
 import { buildPaletteFilterOptionSearchText } from './palette-filter-option-list'
+import { withDeviceLabel } from '../../../../shared/sidebar-list/hosts/device-sections'
+import { getSidebarProjectGrouping } from '@/components/sidebar/worktree-list/listing/sidebar-project-grouping'
 
 export type PaletteFilterOption = {
   id: string
@@ -72,6 +74,11 @@ export type PaletteFilterModel = {
   equivalentHostIdsById?: ReadonlyMap<string, readonly ExecutionHostId[]>
 }
 
+// An unstamped repo belongs to the focused host here, as the host filter counts it.
+function getRepoFilterHostId(repo: Repo, defaultHostId: ExecutionHostId): ExecutionHostId {
+  return repo.connectionId || repo.executionHostId ? getRepoExecutionHostId(repo) : defaultHostId
+}
+
 function buildRepoHostIndex(
   repos: readonly Repo[],
   defaultHostId: ExecutionHostId
@@ -79,9 +86,7 @@ function buildRepoHostIndex(
   const hostIdsByRepoId = new Map<string, Set<ExecutionHostId>>()
   for (const repo of repos) {
     const hostIds = hostIdsByRepoId.get(repo.id) ?? new Set<ExecutionHostId>()
-    hostIds.add(
-      repo.connectionId || repo.executionHostId ? getRepoExecutionHostId(repo) : defaultHostId
-    )
+    hostIds.add(getRepoFilterHostId(repo, defaultHostId))
     hostIdsByRepoId.set(repo.id, hostIds)
   }
   return hostIdsByRepoId
@@ -122,6 +127,7 @@ export function buildPaletteFilterModel({
   hostOptions,
   projects,
   projectHostSetups,
+  showMachineSections,
   defaultHostId = LOCAL_EXECUTION_HOST_ID
 }: {
   repos: readonly Repo[]
@@ -129,14 +135,17 @@ export function buildPaletteFilterModel({
   hostOptions: readonly SidebarHostOption[]
   projects: readonly Project[]
   projectHostSetups: readonly ProjectHostSetup[]
+  /** Project keys follow the sidebar rows, which split per machine when sections are on. */
+  showMachineSections: boolean
   defaultHostId?: ExecutionHostId
 }): PaletteFilterModel {
   const repoById = new Map(repos.map((repo) => [repo.id, repo]))
   const hostIdsByRepoId = buildRepoHostIndex(repos, defaultHostId)
-  const repoIdsByProjectKey = buildRepoIdsByProjectKey([...repoById.values()], repoById, {
-    projects,
-    projectHostSetups
-  })
+  const repoIdsByProjectKey = buildRepoIdsByProjectKey(
+    [...repoById.values()],
+    repoById,
+    getSidebarProjectGrouping({ projects, setups: projectHostSetups }, showMachineSections)
+  )
 
   const worktreeCountByHostId = new Map<string, number>()
   const worktreeCountByRepoId = new Map<string, number>()
@@ -175,6 +184,10 @@ export function buildPaletteFilterModel({
 
   // Keep repository IDs aligned with the sidebar; project grouping remains a row concern.
   const repositoryLabels = getRepoDisplayLabelsByPath([...repoById.values()])
+  // The same repo on two machines appears twice; the detail names the other machine.
+  const deviceLabels = new Map(
+    hostOptions.map((option) => [option.id, translateHostDisplayLabel(option)])
+  )
   const listedRepoIds = new Set(withoutHiddenRepos(repos).map((repo) => repo.id))
   const repositories = [...repoById.values()]
     .filter((repo) => listedRepoIds.has(repo.id))
@@ -182,7 +195,7 @@ export function buildPaletteFilterModel({
       toFilterOption({
         id: repo.id,
         label: repositoryLabels.get(getRepoDisplayLabelKey(repo)) ?? repo.displayName,
-        detail: repo.path,
+        detail: withDeviceLabel(repo.path, getRepoFilterHostId(repo, defaultHostId), deviceLabels),
         count: worktreeCountByRepoId.get(repo.id) ?? 0
       })
     )

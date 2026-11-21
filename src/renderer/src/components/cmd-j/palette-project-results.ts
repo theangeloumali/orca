@@ -15,7 +15,7 @@ import type { Translate } from '@/i18n/use-translate'
 import { getProjectGroupHeaderKey } from '../../../../shared/sidebar-list/sections/group-keys'
 import { getDistinctProjectGroups } from '../../../../shared/project/groups/project-groups'
 import { getProjectHeaderRevealTarget } from '../../../../shared/sidebar-list/sections/project-section-grouping'
-import type { ProjectGroupingModel } from '../../../../shared/sidebar-list/sections/project-section-grouping'
+import { getSidebarProjectGrouping } from '@/components/sidebar/worktree-list/listing/sidebar-project-grouping'
 
 export type CmdJProjectGroupResult = {
   id: string
@@ -59,6 +59,16 @@ function projectRuleQualityClass(rule: number): PaletteResultQualityClass {
   return rule <= 4 ? 'visible-prefix' : 'partial-evidence'
 }
 
+type CmdJProjectSearchInput = {
+  projectGroups: readonly ProjectGroup[]
+  repos: readonly Repo[]
+  projects: readonly Project[]
+  projectHostSetups: readonly ProjectHostSetup[]
+  /** Machine sections list each machine's copy as its own row, so results must too. */
+  showMachineSections: boolean
+  renderableRepoIds?: ReadonlySet<string>
+}
+
 const PROJECT_GROUP_ALIASES = ['group', 'repo group']
 const PROJECT_ALIASES = ['project', 'repo']
 
@@ -68,17 +78,15 @@ function buildCmdJProjectSearchCandidates(
     repos,
     projects,
     projectHostSetups,
+    showMachineSections,
     renderableRepoIds
-  }: {
-    projectGroups: readonly ProjectGroup[]
-    repos: readonly Repo[]
-    projects: readonly Project[]
-    projectHostSetups: readonly ProjectHostSetup[]
-    renderableRepoIds?: ReadonlySet<string>
-  },
+  }: CmdJProjectSearchInput,
   t: Translate = translate
 ): CmdJProjectSearchResult[] {
-  const projectGrouping: ProjectGroupingModel = { projects, projectHostSetups }
+  const projectGrouping = getSidebarProjectGrouping(
+    { projects, setups: projectHostSetups },
+    showMachineSections
+  )
   const repoMap = new Map(repos.map((repo) => [repo.id, repo]))
   const candidates: CmdJProjectSearchResult[] = []
 
@@ -124,33 +132,10 @@ function buildCmdJProjectSearchCandidates(
 }
 
 export function hasCmdJProjectSearchCandidates(
-  {
-    projectGroups,
-    repos,
-    projects,
-    projectHostSetups,
-    renderableRepoIds
-  }: {
-    projectGroups: readonly ProjectGroup[]
-    repos: readonly Repo[]
-    projects: readonly Project[]
-    projectHostSetups: readonly ProjectHostSetup[]
-    renderableRepoIds?: ReadonlySet<string>
-  },
+  input: CmdJProjectSearchInput,
   t?: Translate
 ): boolean {
-  return (
-    buildCmdJProjectSearchCandidates(
-      {
-        projectGroups,
-        repos,
-        projects,
-        projectHostSetups,
-        renderableRepoIds
-      },
-      t
-    ).length > 0
-  )
+  return buildCmdJProjectSearchCandidates(input, t).length > 0
 }
 
 function projectRankingForCandidate(
@@ -190,21 +175,7 @@ function compareProjectRanked(a: RankedProjectResult, b: RankedProjectResult): n
 }
 
 export function searchCmdJProjectResults(
-  {
-    query,
-    projectGroups,
-    repos,
-    projects,
-    projectHostSetups,
-    renderableRepoIds
-  }: {
-    query: string
-    projectGroups: readonly ProjectGroup[]
-    repos: readonly Repo[]
-    projects: readonly Project[]
-    projectHostSetups: readonly ProjectHostSetup[]
-    renderableRepoIds?: ReadonlySet<string>
-  },
+  { query, ...input }: CmdJProjectSearchInput & { query: string },
   t?: Translate
 ): CmdJRankedProjectSearchResult[] {
   // Bound pasted queries before scanning potentially private project, repo or group names.
@@ -217,16 +188,7 @@ export function searchCmdJProjectResults(
     return []
   }
   const queryTokens = uniqueCmdJPaletteQueryTokens(normalizedQuery)
-  return buildCmdJProjectSearchCandidates(
-    {
-      projectGroups,
-      repos,
-      projects,
-      projectHostSetups,
-      renderableRepoIds
-    },
-    t
-  )
+  return buildCmdJProjectSearchCandidates(input, t)
     .map((candidate) => projectRankingForCandidate(normalizedQuery, queryTokens, candidate))
     .filter((entry): entry is RankedProjectResult => entry !== null)
     .sort(compareProjectRanked)

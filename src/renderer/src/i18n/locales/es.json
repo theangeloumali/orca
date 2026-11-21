@@ -6982,6 +6982,9 @@
           "inProgress": "En curso",
           "inReview": "En revisión",
           "done": "Hecho"
+        },
+        "moveToGroup": {
+          "otherDevice": "En otro dispositivo"
         }
       },
       "shared": {
@@ -14699,7 +14702,6 @@
         "RepoCombobox": {
           "b3e15f4525": "Agregar proyecto",
           "b4a235e886": "Agregando proyecto",
-          "3639fd9da2": "SSH",
           "e7ed739236": "Ningún proyecto o carpeta coincide con tu búsqueda.",
           "a0c48f5f29": "Buscar proyectos/carpetas...",
           "116812151a": "Agregando proyecto…"

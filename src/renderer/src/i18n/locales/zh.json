@@ -7620,7 +7620,10 @@
           "showLess": "收起",
           "showMore_other": "再显示 {{count}} 行"
         },
-        "projectOrderSaveFailed": "无法保存完整的项目顺序"
+        "projectOrderSaveFailed": "无法保存完整的项目顺序",
+        "moveToGroup": {
+          "otherDevice": "在其他设备上"
+        }
       },
       "shared": {
         "useDaemonActions": {
@@ -15453,7 +15456,6 @@
         "RepoCombobox": {
           "b3e15f4525": "添加项目",
           "b4a235e886": "添加项目",
-          "3639fd9da2": "SSH",
           "e7ed739236": "没有项目/文件夹与您的搜索匹配",
           "a0c48f5f29": "搜索项目/文件夹...",
           "116812151a": "添加项目..."
