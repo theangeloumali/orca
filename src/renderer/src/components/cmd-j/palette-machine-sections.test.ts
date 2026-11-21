@@ -33,7 +33,7 @@ describe('Cmd-J project rows with machine sections', () => {
         projectHostSetups: setups,
         showMachineSections
       }).map((result) => result.rowKey)
-    expect(search(true)).toEqual(['repo:pb-m5', 'repo:pb-m1'])
+    expect(search(true)).toEqual(['project:github:acme/picklebook', 'repo:pb-m1'])
     expect(search(false)).toHaveLength(1)
   })
 
@@ -47,7 +47,7 @@ describe('Cmd-J project rows with machine sections', () => {
       showMachineSections: true
     })
     expect(Object.fromEntries(model.repoIdsByProjectKey)).toEqual({
-      'repo:pb-m5': ['pb-m5'],
+      'project:github:acme/picklebook': ['pb-m5'],
       'repo:pb-m1': ['pb-m1']
     })
   })

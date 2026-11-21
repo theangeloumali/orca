@@ -8,6 +8,7 @@ import { getProjectHostSetupProjectionFromState } from '@/store/projects/project
 import type { Repo } from '../../../../../../shared/repository/repo-types'
 import type { ProjectGroup } from '../../../../../../shared/project/groups/project-group-types'
 import type { Worktree } from '../../../../../../shared/worktree/types'
+import { getProjectHeaderRevealTarget } from '../../../../../../shared/sidebar-list/sections/project-section-grouping'
 import { getSidebarProjectGrouping } from './sidebar-project-grouping'
 
 const remote = {
@@ -123,7 +124,26 @@ describe('getSidebarProjectGrouping', () => {
       'repo:pb-m1',
       'imported-worktrees-card'
     ])
-    expect(machineSection(true, 'local')).toEqual(['project-group:work-m5', 'repo:pb-m5', 'item'])
+    expect(machineSection(true, 'local')).toEqual([
+      'project-group:work-m5',
+      'project:github:acme/picklebook',
+      'item'
+    ])
+  })
+
+  it("keeps this computer's copy on its project key, which mobile shares for collapse state", () => {
+    const projection = getProjectHostSetupProjectionFromState({ repos: [onM5, onM1] })
+    const keyFor = (repoId: string, showMachineSections: boolean) =>
+      getProjectHeaderRevealTarget(
+        repoId,
+        new Map([
+          [onM5.id, onM5],
+          [onM1.id, onM1]
+        ]),
+        getSidebarProjectGrouping(projection, showMachineSections)
+      ).key
+    expect(keyFor(onM5.id, true)).toBe(keyFor(onM5.id, false))
+    expect(keyFor(onM1.id, true)).toBe('repo:pb-m1')
   })
 
   it('keeps one merged project header in the Projects layout', () => {
