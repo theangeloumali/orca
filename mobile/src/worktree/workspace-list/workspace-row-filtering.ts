@@ -5,6 +5,7 @@ import {
   type HiddenProjects
 } from '../../../../src/shared/project/catalog/hidden-projects'
 import {
+  filterFolderWorkspacesForActiveOnly,
   filterWorkspaceRows,
   type WorkspaceRowFactReader
 } from '../../../../src/shared/workspace-view/workspace-row-filters'
@@ -47,13 +48,8 @@ export function isPhoneRowInHiddenProject(
 function phoneRowFacts(
   repoHostIdByRepoId: ReadonlyMap<string, ExecutionHostId>,
   hiddenProjects: HiddenProjects,
-  childrenByParentIdentity: ReadonlyMap<string, readonly Worktree[]> | undefined
+  parentByChild: ReadonlyMap<string, string>
 ): WorkspaceRowFactReader<Worktree> {
-  const parentByChild = new Map(
-    [...(childrenByParentIdentity ?? [])].flatMap(([parent, children]) =>
-      children.map((child) => [getWorktreeRowIdentity(child), parent] as const)
-    )
-  )
   return {
     isArchived: (w) => w.isArchived === true,
     isInHiddenProject: (w) =>
@@ -76,6 +72,34 @@ function phoneRowFacts(
   }
 }
 
+// The row pass drops idle folders under Active only; the shared rule keeps those a listed row nests under.
+function withListedFolderAncestors(
+  worktrees: readonly Worktree[],
+  filters: FilterState,
+  read: WorkspaceRowFactReader<Worktree>,
+  parentByChild: ReadonlyMap<string, string>
+): Worktree[] {
+  const listed = filterWorkspaceRows(worktrees, filters, read)
+  if (!filters.showOnlyRunningTerminals) {
+    return listed
+  }
+  const folders = filterWorkspaceRows(
+    worktrees,
+    { ...filters, showOnlyRunningTerminals: false },
+    read
+  ).filter(read.isFolderWorkspace)
+  const kept = new Set<Worktree>([
+    ...listed,
+    ...filterFolderWorkspacesForActiveOnly(folders, filters, {
+      hasRunningTerminal: read.hasRunningTerminal,
+      identityOf: getWorktreeRowIdentity,
+      listedRowIdentities: listed.map(getWorktreeRowIdentity),
+      parentIdentityOf: (identity) => parentByChild.get(identity)
+    })
+  ])
+  return worktrees.filter((w) => kept.has(w))
+}
+
 export function filterWorktrees(
   worktrees: Worktree[],
   filters: FilterState,
@@ -85,11 +109,13 @@ export function filterWorktrees(
   /** The list's nesting; a hidden project's row under a folder workspace stays listed. */
   childrenByParentIdentity?: ReadonlyMap<string, readonly Worktree[]>
 ): Worktree[] {
-  const result = filterWorkspaceRows(
-    worktrees,
-    filters,
-    phoneRowFacts(repoHostIdByRepoId, hiddenProjects, childrenByParentIdentity)
+  const parentByChild = new Map(
+    [...(childrenByParentIdentity ?? [])].flatMap(([parent, children]) =>
+      children.map((child) => [getWorktreeRowIdentity(child), parent] as const)
+    )
   )
+  const read = phoneRowFacts(repoHostIdByRepoId, hiddenProjects, parentByChild)
+  const result = withListedFolderAncestors(worktrees, filters, read, parentByChild)
   const q = search.trim().toLowerCase()
   if (!q) {
     return result

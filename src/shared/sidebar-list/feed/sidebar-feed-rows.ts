@@ -209,7 +209,9 @@ export function planSidebarFeedRows(
     worktreesByRepo,
     visibleWorktrees,
     filterRepoIds: view.filters.filterRepoIds,
-    hiddenProjects
+    hiddenProjects,
+    // The window list passes the same flag (use-empty-project-placeholders.ts).
+    hideEmptyProjects: view.filters.showOnlyRunningTerminals === true
   })
   const plan = planSidebarRows({
     groupBy,
