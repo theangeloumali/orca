@@ -81,6 +81,11 @@ export class UpdaterSetup extends UpdaterDownloadInstall {
     return this.windowsInstallDirectory
   }
 
+  /** The same pre-quit cleanup an official update runs, for the fork updater. */
+  async runForkPreInstallCleanup(): Promise<void> {
+    await this.runBeforeUpdateQuitCleanup()
+  }
+
   /** Tells a window waiting to restart for an update that the install did not start. */
   notifyQuitAndInstallAborted(): void {
     this.sendToMainWindow('updater:quitAndInstallAborted')

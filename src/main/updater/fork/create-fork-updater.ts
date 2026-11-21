@@ -19,6 +19,7 @@ export function createForkUpdater(args: {
   automaticDownloads: () => boolean
   /** The running Windows install folder, resolved once by the updater at setup. */
   windowsInstallDirectory: () => string | undefined
+  beforeQuit: () => Promise<void>
 }): ForkUpdater {
   const exePath = app.getPath('exe')
   // One folder per profile, so two running profiles never wipe each other's staged update.
@@ -62,9 +63,10 @@ export function createForkUpdater(args: {
       // Quit only once it has started; a refused launch rejects instead.
       await once(child, 'spawn')
     },
-    onWillQuit: (listener) => {
-      app.once('will-quit', listener)
-      return () => app.removeListener('will-quit', listener)
+    beforeQuit: args.beforeQuit,
+    onAppExit: (listener) => {
+      process.once('exit', listener)
+      return () => process.removeListener('exit', listener)
     },
     quit: () => app.quit(),
     publish: args.publish

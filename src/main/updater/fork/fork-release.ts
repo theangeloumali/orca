@@ -51,3 +51,32 @@ export function parseSha512Sums(text: string): Map<string, string> {
   }
   return sums
 }
+
+type GitHubAsset = { name: string; browser_download_url: string; size: number }
+export type GitHubRelease = { tag_name: string; assets: GitHubAsset[] }
+
+function isGitHubAsset(value: unknown): value is GitHubAsset {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'name' in value &&
+    typeof value.name === 'string' &&
+    'browser_download_url' in value &&
+    typeof value.browser_download_url === 'string' &&
+    'size' in value &&
+    typeof value.size === 'number'
+  )
+}
+
+/** A GitHub "latest release" body with the fields the updater reads. */
+export function isGitHubRelease(value: unknown): value is GitHubRelease {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'tag_name' in value &&
+    typeof value.tag_name === 'string' &&
+    'assets' in value &&
+    Array.isArray(value.assets) &&
+    value.assets.every(isGitHubAsset)
+  )
+}

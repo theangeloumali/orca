@@ -6,6 +6,7 @@ import { pipeline } from 'node:stream/promises'
 import type { UpdateStatus } from '../../../shared/updater/update-status-types'
 import {
   FORK_RELEASE_CHECKSUMS_ASSET,
+  isGitHubRelease,
   isNewerForkRelease,
   parseSha512Sums,
   pickForkReleaseAsset,
@@ -40,8 +41,10 @@ export type ForkUpdaterDeps = {
   extractMacApp: (zipPath: string, destination: string) => Promise<string>
   /** Resolves once the detached process has started. */
   spawnDetached: (command: string, args: string[]) => Promise<void>
-  /** Runs `listener` once quitting can no longer be cancelled; returns an unsubscribe. */
-  onWillQuit: (listener: () => void) => () => void
+  /** Orca's own pre-update cleanup (saves agent sign-ins, flushes the store). */
+  beforeQuit: () => Promise<void>
+  /** Runs `listener` as the process exits, after every quit step; returns an unsubscribe. */
+  onAppExit: (listener: () => void) => () => void
   quit: () => void
   publish: (status: UpdateStatus) => void
 }
@@ -131,13 +134,14 @@ export class ForkUpdater {
         throw new Error('The downloaded update changed on disk; check for updates again')
       }
       if (this.deps.platform === 'win32') {
+        await this.deps.beforeQuit()
         const args = ['--updated', '/S', '--force-run']
         const installDirectory = this.deps.windowsInstallDirectory()
         if (installDirectory) {
           args.push(`/D=${installDirectory}`)
         }
-        // The installer replaces running files, so start it only once the quit is committed.
-        const unsubscribe = this.deps.onWillQuit(() => {
+        // The installer replaces running files, so start it only as Orca's process exits.
+        const unsubscribe = this.deps.onAppExit(() => {
           void this.deps.spawnDetached(prepared.installerPath, args).catch((error: unknown) => {
             console.error('[fork-updater] could not start the installer:', error)
           })
@@ -155,9 +159,16 @@ export class ForkUpdater {
       const scriptPath = join(this.deps.workDir, 'swap.sh')
       await writeFile(
         scriptPath,
-        buildMacSwapScript({ pid: this.deps.pid, appPath: this.deps.appPath, stagedAppPath }),
+        buildMacSwapScript({
+          pid: this.deps.pid,
+          appPath: this.deps.appPath,
+          stagedAppPath,
+          launchedMarkerPath: this.launchedMarkerPath(),
+          lockPath: join(this.deps.workDir, 'swap.lock')
+        }),
         { mode: 0o700 }
       )
+      await this.deps.beforeQuit()
       // The swap waits for Orca's process to exit, so it can start before quitting.
       await this.deps.spawnDetached('/bin/sh', [scriptPath])
       this.quitOrResume(() => {})
@@ -167,6 +178,19 @@ export class ForkUpdater {
       this.publishError(error, true)
       return false
     }
+  }
+
+  /** Called once the window is up: tells a pending swap that this build started cleanly. */
+  async markLaunched(): Promise<void> {
+    if (!this.deps.currentTag) {
+      return
+    }
+    await mkdir(this.deps.workDir, { recursive: true })
+    await writeFile(this.launchedMarkerPath(), this.deps.currentTag)
+  }
+
+  private launchedMarkerPath(): string {
+    return join(this.deps.workDir, 'launched')
   }
 
   private quitOrResume(unsubscribe: () => void): void {
@@ -206,17 +230,25 @@ export class ForkUpdater {
   }
 
   private async downloadTo(release: FoundRelease, path: string): Promise<void> {
-    const response = await this.deps.fetch(release.installer.url)
-    if (!response.ok || !response.body) {
-      throw new Error(`Download failed (${response.status})`)
+    // One abort covers a server that never answers and a connection that goes quiet mid-download.
+    const controller = new AbortController()
+    let stallTimer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+    const keepAlive = (): void => {
+      clearTimeout(stallTimer)
+      stallTimer = setTimeout(() => controller.abort(), DOWNLOAD_IDLE_TIMEOUT_MS)
     }
-    const total = Number(response.headers.get('content-length')) || release.installer.size
-    const reader = response.body.getReader()
     const output = await open(path, 'w')
-    let received = 0
-    let lastPercent = -1
     try {
-      for (let chunk = await readWithin(reader); !chunk.done; chunk = await readWithin(reader)) {
+      const response = await this.deps.fetch(release.installer.url, { signal: controller.signal })
+      if (!response.ok || !response.body) {
+        throw new Error(`Download failed (${response.status})`)
+      }
+      const total = Number(response.headers.get('content-length')) || release.installer.size
+      const reader = response.body.getReader()
+      let received = 0
+      let lastPercent = -1
+      for (let chunk = await reader.read(); !chunk.done; chunk = await reader.read()) {
+        keepAlive()
         await output.write(chunk.value)
         received += chunk.value.byteLength
         const percent = total > 0 ? Math.min(100, Math.floor((received / total) * 100)) : 0
@@ -225,7 +257,10 @@ export class ForkUpdater {
           this.deps.publish({ state: 'downloading', percent, version: release.version })
         }
       }
+    } catch (error) {
+      throw controller.signal.aborted ? new Error('The download stalled') : error
     } finally {
+      clearTimeout(stallTimer)
       await output.close()
     }
   }
@@ -276,45 +311,6 @@ export class ForkUpdater {
       retryable: true
     })
   }
-}
-
-type GitHubAsset = { name: string; browser_download_url: string; size: number }
-type GitHubRelease = { tag_name: string; assets: GitHubAsset[] }
-
-function isGitHubAsset(value: unknown): value is GitHubAsset {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'name' in value &&
-    typeof value.name === 'string' &&
-    'browser_download_url' in value &&
-    typeof value.browser_download_url === 'string' &&
-    'size' in value &&
-    typeof value.size === 'number'
-  )
-}
-
-function isGitHubRelease(value: unknown): value is GitHubRelease {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'tag_name' in value &&
-    typeof value.tag_name === 'string' &&
-    'assets' in value &&
-    Array.isArray(value.assets) &&
-    value.assets.every(isGitHubAsset)
-  )
-}
-
-/** One read that fails if the connection goes quiet, so a stalled download cannot hang forever. */
-function readWithin(
-  reader: ReadableStreamDefaultReader<Uint8Array>
-): Promise<ReadableStreamReadResult<Uint8Array>> {
-  let timer: ReturnType<typeof setTimeout> | undefined
-  const stalled = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => reject(new Error('The download stalled')), DOWNLOAD_IDLE_TIMEOUT_MS)
-  })
-  return Promise.race([reader.read(), stalled]).finally(() => clearTimeout(timer))
 }
 
 async function sha512OfFile(path: string): Promise<string> {

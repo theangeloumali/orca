@@ -19,11 +19,14 @@ import { createForkUpdater, startForkUpdateChecks } from './fork/create-fork-upd
 const updater = new UpdaterSetup()
 // Fork builds update from the fork's own releases; the official updater stays off for them.
 let automaticDownloads: () => boolean = () => true
+// Headless serve hosts have no window to restart, so the fork updater acts only once one exists.
+let forkUpdaterActive = false
 const forkUpdater = OFFICIAL_UPDATES_DISABLED
   ? createForkUpdater({
       publish: (status) => updater.publishExternalStatus(status),
       automaticDownloads: () => automaticDownloads(),
-      windowsInstallDirectory: () => updater.getWindowsInstallDirectory()
+      windowsInstallDirectory: () => updater.getWindowsInstallDirectory(),
+      beforeQuit: () => updater.runForkPreInstallCleanup()
     })
   : null
 
@@ -60,6 +63,9 @@ export function installRemoteServerUpdate(runtimeId: string): RemoteServerUpdate
 
 export function checkForUpdates(): void {
   if (forkUpdater) {
+    if (!forkUpdaterActive) {
+      return
+    }
     void forkUpdater.check(false)
     return
   }
@@ -68,6 +74,9 @@ export function checkForUpdates(): void {
 
 export function checkForUpdatesFromMenu(options?: UpdateCheckOptions): void {
   if (forkUpdater) {
+    if (!forkUpdaterActive) {
+      return
+    }
     void forkUpdater.check(true)
     return
   }
@@ -133,9 +142,13 @@ export function setupAutoUpdater(
   opts?: UpdaterSetupOptions
 ): void {
   updater.setupAutoUpdater(mainWindow, opts)
-  // Headless serve hosts have no window to restart, so they never self-install.
   if (forkUpdater && mainWindow) {
+    forkUpdaterActive = true
     automaticDownloads = opts?.getAutomaticUpdates ?? (() => true)
+    // The window is up: tell a pending swap that this build started cleanly.
+    void forkUpdater.markLaunched().catch((error: unknown) => {
+      console.warn('[fork-updater] could not record the launch:', error)
+    })
     startForkUpdateChecks(forkUpdater)
   }
 }

@@ -34,7 +34,7 @@ function release(
 
 function updater(overrides: Partial<ForkUpdaterDeps> = {}) {
   const statuses: UpdateStatus[] = []
-  const willQuit: (() => void)[] = []
+  const atExit: (() => void)[] = []
   const deps: ForkUpdaterDeps = {
     currentTag: 'v1.4.266-angelo.2',
     platform: 'darwin',
@@ -49,15 +49,16 @@ function updater(overrides: Partial<ForkUpdaterDeps> = {}) {
       join(destination, 'Orca.app')
     ),
     spawnDetached: vi.fn(async () => {}),
-    onWillQuit: (listener) => {
-      willQuit.push(listener)
+    beforeQuit: vi.fn(async () => {}),
+    onAppExit: (listener) => {
+      atExit.push(listener)
       return () => {}
     },
     quit: vi.fn(),
     publish: (status) => statuses.push(status),
     ...overrides
   }
-  return { forkUpdater: new ForkUpdater(deps), deps, statuses, willQuit }
+  return { forkUpdater: new ForkUpdater(deps), deps, statuses, atExit }
 }
 
 describe('ForkUpdater checks', () => {
@@ -148,8 +149,25 @@ describe('ForkUpdater install', () => {
     expect(deps.quit).not.toHaveBeenCalled()
   })
 
-  it('runs the Windows installer silently into the running folder once the quit commits', async () => {
-    const { forkUpdater, deps, willQuit } = updater({
+  it("runs Orca's pre-update cleanup before quitting", async () => {
+    const order: string[] = []
+    const { forkUpdater } = updater({
+      beforeQuit: vi.fn(async () => void order.push('cleanup')),
+      quit: vi.fn(() => void order.push('quit'))
+    })
+    await forkUpdater.check(false)
+    await forkUpdater.install()
+    expect(order).toEqual(['cleanup', 'quit'])
+  })
+
+  it('records a clean start where the swap looks for it', async () => {
+    const { forkUpdater, deps } = updater({ currentTag: 'v1.4.268-angelo.6' })
+    await forkUpdater.markLaunched()
+    expect(readFileSync(join(deps.workDir, 'launched'), 'utf8')).toBe('v1.4.268-angelo.6')
+  })
+
+  it('runs the Windows installer silently into the running folder once Orca exits', async () => {
+    const { forkUpdater, deps, atExit } = updater({
       platform: 'win32',
       fetch: release({ installer: 'orca-windows-setup.exe' }),
       windowsInstallDirectory: () => 'D:\\Apps\\Orca'
@@ -157,7 +175,7 @@ describe('ForkUpdater install', () => {
     await forkUpdater.check(false)
     expect(await forkUpdater.install()).toBe(true)
     expect(deps.spawnDetached).not.toHaveBeenCalled()
-    willQuit.forEach((listener) => listener())
+    atExit.forEach((listener) => listener())
     const [command, args] = vi.mocked(deps.spawnDetached).mock.calls[0]
     expect(command.endsWith('orca-windows-setup.exe')).toBe(true)
     expect(args).toEqual(['--updated', '/S', '--force-run', '/D=D:\\Apps\\Orca'])
