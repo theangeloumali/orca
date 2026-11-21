@@ -18,7 +18,11 @@ import {
 import { getProjectHeaderRevealTarget } from '../../../../../../shared/sidebar-list/sections/project-section-grouping'
 import { getFolderLaneSectionKey } from '../../../../../../shared/sidebar-list/folders/folder-workspace-occurrences'
 import { selectVisibleFolderWorkspaces } from '../../../../../../shared/sidebar-list/folders/visible-folder-workspaces'
-import { getVisibleSidebarHostIdSet } from '../../../../../../shared/sidebar-list/hosts/host-filtering'
+import {
+  filterReposForVisibleHosts,
+  getVisibleSidebarHostIdSet
+} from '../../../../../../shared/sidebar-list/hosts/host-filtering'
+import { getEmptyProjectPlaceholderRepoIds } from '../../../../../../shared/sidebar-list/catalog/empty-project-placeholder-repos'
 import '../listing/visible-worktrees'
 import {
   computeVisibleWorktrees,
@@ -41,6 +45,7 @@ export type ActiveOnlySummaryContext = {
   statuses: RuntimeStatuses
   hiddenVmCheckouts: ReturnType<typeof readHiddenVmCheckouts>
   botListed: ReadonlySet<string> | undefined
+  agentSendTarget: string | null
 }
 
 // Smart sort's class 1 is the sidebar's own "needs you".
@@ -70,6 +75,7 @@ function summaryKeys(state: AppState, context: ActiveOnlySummaryContext): readon
     state.projectGroups,
     state.sortBy,
     state.showWorkspaceHostSections,
+    state.groupBy,
     ...Object.values(selectSidebarFilterState(state))
   ]
 }
@@ -86,7 +92,9 @@ function buildOptions(state: AppState, context: ActiveOnlySummaryContext): Visib
     ...options,
     tabsByWorktree,
     browserTabsByWorktree,
-    botListedWorktreeIdentities: context.botListed
+    botListedWorktreeIdentities: context.botListed,
+    // The drawn list forces the picker's target visible (use-visible-worktrees.ts).
+    forcedVisibleWorktreeIds: context.agentSendTarget ? [context.agentSendTarget] : undefined
   }
 }
 
@@ -121,6 +129,30 @@ function listFolderRows(
   })
 }
 
+// Empty-project headers drawn with Active only off, as use-empty-project-placeholders.ts lists them.
+function listPlaceholderRepoIds(
+  state: AppState,
+  options: VisibleWorktreeOptions,
+  context: ActiveOnlySummaryContext,
+  allWorktrees: readonly Worktree[]
+): string[] {
+  const visibleHostIdSet = getVisibleSidebarHostIdSet(
+    state.visibleWorkspaceHostIds,
+    state.workspaceHostScope
+  )
+  const placeholderRepoIds = getEmptyProjectPlaceholderRepoIds({
+    groupBy: state.groupBy,
+    repos: filterReposForVisibleHosts(state.repos, visibleHostIdSet, options.defaultHostId),
+    worktreesByRepo: selectWorktreesByRepo(state),
+    visibleWorktrees: allWorktrees,
+    filterRepoIds: state.filterRepoIds,
+    hiddenProjects: options.hiddenProjects,
+    pendingVmRepoIds: context.hiddenVmCheckouts.repoIds
+  })
+  // The header builder skips ids with no repo row (project-section-grouping.ts).
+  return [...placeholderRepoIds].filter((repoId) => options.repoMap.has(repoId))
+}
+
 /** Runs the list pipeline with and without Active only, so the counts match the drawn rows. */
 function computeSummary(
   state: AppState,
@@ -149,13 +181,16 @@ function computeSummary(
     getProjectHostSetupProjectionFromState(state),
     state.showWorkspaceHostSections
   )
+  const sectionKeyOfRepo = (repoId: string): string =>
+    getProjectHeaderRevealTarget(repoId, options.repoMap, grouping).key
   const { projection } = state.agentStatusByPaneKey
   return summarizeActiveOnly({
     shown: [...shownWorktrees, ...folderRowsFor(true, shownWorktrees)],
     all: [...allWorktrees, ...folderRowsFor(false, allWorktrees)],
-    sectionKeyOf: (row) =>
-      folderSectionByRow.get(row) ??
-      getProjectHeaderRevealTarget(row.repoId, options.repoMap, grouping).key,
+    sectionKeyOf: (row) => folderSectionByRow.get(row) ?? sectionKeyOfRepo(row.repoId),
+    listedOnlySectionKeys: listPlaceholderRepoIds(state, options, context, allWorktrees).map(
+      sectionKeyOfRepo
+    ),
     needsYouIds: (hidden) =>
       new Set(
         hidden

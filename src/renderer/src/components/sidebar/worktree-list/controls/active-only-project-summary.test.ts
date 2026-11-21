@@ -47,6 +47,18 @@ describe('summarizeActiveOnly', () => {
     expect(summary.hiddenNeedsYouCount).toBe(1)
   })
 
+  it('counts listed-only sections in the total, never as shown', () => {
+    const summary = summarizeActiveOnly({
+      shown: [busy],
+      all: [busy, idle],
+      sectionKeyOf: sectionOf,
+      needsYouIds: () => new Set(),
+      listedOnlySectionKeys: ['repo:empty', 'repo:busy']
+    })
+    expect(summary.shownProjects).toBe(1)
+    expect(summary.totalProjects).toBe(3)
+  })
+
   it('skips the attention pass when nothing is hidden', () => {
     const needsYouIds = vi.fn(() => new Set<string>())
     summarizeActiveOnly({ shown: [busy], all: [busy], sectionKeyOf: sectionOf, needsYouIds })
