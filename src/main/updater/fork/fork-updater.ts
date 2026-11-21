@@ -1,8 +1,7 @@
 import { createHash } from 'node:crypto'
-import { createReadStream, createWriteStream } from 'node:fs'
-import { mkdir, rm, writeFile } from 'node:fs/promises'
+import { createReadStream } from 'node:fs'
+import { mkdir, open, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { Readable, Transform } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import type { UpdateStatus } from '../../../shared/updater/update-status-types'
 import {
@@ -49,9 +48,7 @@ export class ForkUpdater {
     let version: string | undefined
     try {
       this.deps.publish({ state: 'checking', userInitiated })
-      const release = await this.fetchJson<{ tag_name: string; assets: GitHubAsset[] }>(
-        LATEST_RELEASE_URL
-      )
+      const release = await this.fetchLatestRelease()
       if (!isNewerForkRelease(this.deps.currentTag, release.tag_name)) {
         this.deps.publish({ state: 'not-available', userInitiated })
         return
@@ -126,22 +123,21 @@ export class ForkUpdater {
     const total = Number(response.headers.get('content-length')) || installer.size
     let received = 0
     let lastPercent = -1
-    const progress = new Transform({
-      transform: (chunk: Buffer, _encoding, done) => {
-        received += chunk.length
-        const percent = total > 0 ? Math.floor((received / total) * 100) : 0
+    const output = await open(installerPath, 'w')
+    try {
+      const reader = response.body.getReader()
+      for (let chunk = await reader.read(); !chunk.done; chunk = await reader.read()) {
+        await output.write(chunk.value)
+        received += chunk.value.byteLength
+        const percent = total > 0 ? Math.min(100, Math.floor((received / total) * 100)) : 0
         if (percent !== lastPercent) {
           lastPercent = percent
           this.deps.publish({ state: 'downloading', percent, version })
         }
-        done(null, chunk)
       }
-    })
-    await pipeline(
-      Readable.fromWeb(response.body as Parameters<typeof Readable.fromWeb>[0]),
-      progress,
-      createWriteStream(installerPath)
-    )
+    } finally {
+      await output.close()
+    }
     if (!expected || (await sha512OfFile(installerPath)) !== expected) {
       throw new Error(`The downloaded ${installer.name} does not match its published checksum`)
     }
@@ -155,18 +151,48 @@ export class ForkUpdater {
     return { version, installerPath, stagedAppPath }
   }
 
-  private async fetchJson<T>(url: string): Promise<T> {
-    const response = await this.deps.fetch(url, {
+  private async fetchLatestRelease(): Promise<GitHubRelease> {
+    const response = await this.deps.fetch(LATEST_RELEASE_URL, {
       headers: { Accept: 'application/vnd.github+json' }
     })
     if (!response.ok) {
       throw new Error(`Could not check the fork's releases (${response.status})`)
     }
-    return (await response.json()) as T
+    const body: unknown = await response.json()
+    if (!isGitHubRelease(body)) {
+      throw new Error("The fork's latest release could not be read")
+    }
+    return body
   }
 }
 
 type GitHubAsset = { name: string; browser_download_url: string; size: number }
+type GitHubRelease = { tag_name: string; assets: GitHubAsset[] }
+
+function isGitHubAsset(value: unknown): value is GitHubAsset {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'name' in value &&
+    typeof value.name === 'string' &&
+    'browser_download_url' in value &&
+    typeof value.browser_download_url === 'string' &&
+    'size' in value &&
+    typeof value.size === 'number'
+  )
+}
+
+function isGitHubRelease(value: unknown): value is GitHubRelease {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'tag_name' in value &&
+    typeof value.tag_name === 'string' &&
+    'assets' in value &&
+    Array.isArray(value.assets) &&
+    value.assets.every(isGitHubAsset)
+  )
+}
 
 async function sha512OfFile(path: string): Promise<string> {
   const hash = createHash('sha512')
