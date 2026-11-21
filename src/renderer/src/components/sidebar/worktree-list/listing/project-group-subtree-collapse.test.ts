@@ -95,9 +95,26 @@ describe('getProjectGroupSubtreeCollapseKeys', () => {
     expect(headerKey('old', true)).not.toBe('repo:old-m1')
   })
 
-  it('is empty when every project beneath is hidden', () => {
+  it('still folds the subgroups of a subtree that holds only folders', () => {
+    const keys = getProjectGroupSubtreeCollapseKeys('work', groups, [], {
+      projects: [],
+      projectHostSetups: []
+    })
+    expect(new Set(keys)).toEqual(new Set(['project-group:client', 'project-group:archive']))
+  })
+
+  it('lists subgroups but not projects when every project beneath is hidden', () => {
     const hiddenOnly = [{ ...repo('gone', 'archive'), hiddenAt: 5 }]
     const keys = getProjectGroupSubtreeCollapseKeys('client', groups, hiddenOnly, {
+      projects: [],
+      projectHostSetups: []
+    })
+    expect(keys).toEqual(['project-group:archive'])
+  })
+
+  it('is empty for a leaf group with nothing listed beneath', () => {
+    const hiddenOnly = [{ ...repo('gone', 'archive'), hiddenAt: 5 }]
+    const keys = getProjectGroupSubtreeCollapseKeys('archive', groups, hiddenOnly, {
       projects: [],
       projectHostSetups: []
     })

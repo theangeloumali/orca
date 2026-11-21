@@ -30,7 +30,7 @@ function getDescendantGroupIds(
   return descendants
 }
 
-/** Collapse keys beneath a group as drawn; empty when no listed (non-hidden) project sits there. */
+/** Collapse keys beneath a group as drawn; empty when it has neither subgroups nor listed projects. */
 export function getProjectGroupSubtreeCollapseKeys(
   groupId: string,
   projectGroups: readonly Pick<ProjectGroup, 'id' | 'parentGroupId'>[],
@@ -46,9 +46,7 @@ export function getProjectGroupSubtreeCollapseKeys(
       projectKeys.add(getProjectHeaderRevealTarget(repo.id, repoMap, projectGrouping).key)
     }
   }
-  return projectKeys.size === 0
-    ? []
-    : [...[...descendants].map(getProjectGroupHeaderKey), ...projectKeys]
+  return [...[...descendants].map(getProjectGroupHeaderKey), ...projectKeys]
 }
 
 // Expands only when everything beneath is already collapsed, like the Projects toggle.
