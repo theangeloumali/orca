@@ -213,7 +213,7 @@ jobs:
             package: |
               node config/scripts/orcad-distribution/prebuilds/pinned-node-downloads.mjs darwin-arm64
               node config/scripts/native-build/node-addons/ensure-native-runtime.mjs --runtime=electron
-              pnpm exec electron-builder --config config/electron-builder.config.cjs --mac --arm64 --publish never
+              pnpm exec electron-builder --config config/electron-builder.config.cjs --mac dmg zip --arm64 --publish never
             artifacts: |
               dist/*.dmg
               dist/*.zip
