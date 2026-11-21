@@ -1,3 +1,4 @@
+import { withDeviceLabel } from '../../../../../shared/sidebar-list/hosts/device-sections'
 import { projectHostSetupProjectionFromRepos } from '../../../../../shared/project/host-setup/project-host-setup-projection'
 import type { ProjectGroup } from '../../../../../shared/project/groups/project-group-types'
 import type { Project, ProjectHostSetup } from '../../../../../shared/project/project-types'
@@ -276,6 +277,7 @@ export function buildNewWorkspaceCreateTargetOptions({
 }: BuildNewWorkspaceCreateTargetOptionsInput): NewWorkspaceProjectOption[] {
   const projectOptions = buildNewWorkspaceProjectOptions(projectInput)
   const liveHostIds = projectInput.hosts ? new Set(projectInput.hosts.map((host) => host.id)) : null
+  const deviceLabels = new Map((projectInput.hosts ?? []).map((host) => [host.id, host.label]))
   const groupOptions = projectGroups
     .filter(
       (group) =>
@@ -288,7 +290,12 @@ export function buildNewWorkspaceCreateTargetOptions({
       projectGroupId: group.id,
       displayName: group.name,
       badgeColor: group.color ?? 'var(--muted-foreground)',
-      detail: getProjectGroupDetail(group),
+      // Same-named groups on two machines differ only by device.
+      detail: withDeviceLabel(
+        getProjectGroupDetail(group),
+        getRepoExecutionHostId(group),
+        deviceLabels
+      ),
       parentPath: group.parentPath?.trim() ?? '',
       connectionId: group.connectionId ?? null
     }))

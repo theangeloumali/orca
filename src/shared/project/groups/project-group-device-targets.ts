@@ -17,7 +17,7 @@ export type ProjectGroupDeviceTargets<Host extends { id: ExecutionHostId }> = {
   host?: Host
   /** Only the project's own machine can take it; other machines' groups are listed for orientation. */
   available: boolean
-  targets: ProjectGroupMoveTarget[]
+  groupChoices: ProjectGroupMoveTarget[]
 }
 
 /** "Move to group" choices split by machine, each machine's groups as its sidebar tree. */
@@ -37,6 +37,6 @@ export function getProjectGroupTargetsByDevice<Host extends { id: ExecutionHostI
     host: section.host,
     available: section.hostId === args.ownerHostId,
     // No group is moving here, so nothing in the tree is blocked.
-    targets: getProjectGroupMoveTargets(section.items, '')
+    groupChoices: getProjectGroupMoveTargets(section.items, '')
   }))
 }

@@ -44,12 +44,14 @@ describe('getProjectGroupTargetsByDevice', () => {
       sections.map((section) => ({
         hostId: section.hostId,
         available: section.available,
-        targets: section.targets.map((target) => `${'  '.repeat(target.depth)}${target.name}`)
+        groupChoices: section.groupChoices.map(
+          (choice) => `${'  '.repeat(choice.depth)}${choice.name}`
+        )
       }))
     ).toEqual([
-      { hostId: 'runtime:msi', available: true, targets: ['Jobbify', 'ZKidz'] },
-      { hostId: 'local', available: false, targets: ['Work M5 Max', '  ZKidz'] },
-      { hostId: 'runtime:m1', available: false, targets: ['Work M1 Max'] }
+      { hostId: 'runtime:msi', available: true, groupChoices: ['Jobbify', 'ZKidz'] },
+      { hostId: 'local', available: false, groupChoices: ['Work M5 Max', '  ZKidz'] },
+      { hostId: 'runtime:m1', available: false, groupChoices: ['Work M1 Max'] }
     ])
   })
 })

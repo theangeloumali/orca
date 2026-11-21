@@ -22,6 +22,7 @@ import {
   pickerExecutionHosts
 } from '../../../../shared/execution-host/managed-orcad-execution-host'
 import { buildPaletteFilterOptionSearchText } from './palette-filter-option-list'
+import { withDeviceLabel } from '../../../../shared/sidebar-list/hosts/device-sections'
 
 export type PaletteFilterOption = {
   id: string
@@ -175,6 +176,10 @@ export function buildPaletteFilterModel({
 
   // Keep repository IDs aligned with the sidebar; project grouping remains a row concern.
   const repositoryLabels = getRepoDisplayLabelsByPath([...repoById.values()])
+  // The same repo on two machines appears twice; the detail names the other machine.
+  const deviceLabels = new Map(
+    hostOptions.map((option) => [option.id, translateHostDisplayLabel(option)])
+  )
   const listedRepoIds = new Set(withoutHiddenRepos(repos).map((repo) => repo.id))
   const repositories = [...repoById.values()]
     .filter((repo) => listedRepoIds.has(repo.id))
@@ -182,7 +187,7 @@ export function buildPaletteFilterModel({
       toFilterOption({
         id: repo.id,
         label: repositoryLabels.get(getRepoDisplayLabelKey(repo)) ?? repo.displayName,
-        detail: repo.path,
+        detail: withDeviceLabel(repo.path, getRepoExecutionHostId(repo), deviceLabels),
         count: worktreeCountByRepoId.get(repo.id) ?? 0
       })
     )

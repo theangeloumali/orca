@@ -7,6 +7,10 @@ import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover'
 import RepoBadgeLabel from '../../repo/RepoBadgeLabel'
 import { cn } from '@/lib/class-names'
 import { useTranslate } from '@/i18n/use-translate'
+import { DeviceChip } from '@/components/host-picker/DeviceChip'
+import { useDeviceLabels } from '@/components/sidebar/worktree-list/controls/use-device-labels'
+import { getRepoExecutionHostId } from '../../../../../shared/execution-host/execution-host'
+import { getDeviceLabel } from '../../../../../shared/sidebar-list/hosts/device-sections'
 
 export const GLOBAL_SCOPE_KEY = '__global__'
 
@@ -62,6 +66,7 @@ export function QuickCommandsScopeFilter({
   toggleScope: (key: string) => void
 }): React.JSX.Element {
   const t = useTranslate()
+  const deviceLabels = useDeviceLabels()
   return (
     <div className="flex flex-wrap items-center gap-2">
       <Popover open={scopePopoverOpen} onOpenChange={setScopePopoverOpen}>
@@ -140,6 +145,9 @@ export function QuickCommandsScopeFilter({
                       name={getQuickCommandRepoLabel(repo)}
                       color={repo.badgeColor}
                       className="max-w-full"
+                    />
+                    <DeviceChip
+                      label={getDeviceLabel(getRepoExecutionHostId(repo), deviceLabels)}
                     />
                   </CommandItem>
                 )

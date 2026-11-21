@@ -1,4 +1,4 @@
-import type { ExecutionHostId } from '../../execution-host/execution-host'
+import { LOCAL_EXECUTION_HOST_ID, type ExecutionHostId } from '../../execution-host/execution-host'
 
 export type DeviceSection<Item, Host extends { id: ExecutionHostId }> = {
   hostId: ExecutionHostId
@@ -34,4 +34,25 @@ export function groupByExecutionHost<Item, Host extends { id: ExecutionHostId }>
     const items = itemsByHost.get(hostId)
     return items ? [{ hostId, host: hostById.get(hostId), items }] : []
   })
+}
+
+/** Another machine's name for a list row; null on this Mac (another machine's row implies 2+ machines). */
+export function getDeviceLabel(
+  hostId: ExecutionHostId,
+  labelByHostId: ReadonlyMap<ExecutionHostId, string>
+): string | null {
+  if (hostId === LOCAL_EXECUTION_HOST_ID) {
+    return null
+  }
+  return labelByHostId.get(hostId) ?? hostId
+}
+
+/** "M1 Max · detail" for another machine's row, the same shape as checkout rows. */
+export function withDeviceLabel(
+  detail: string,
+  hostId: ExecutionHostId,
+  labelByHostId: ReadonlyMap<ExecutionHostId, string>
+): string {
+  const device = getDeviceLabel(hostId, labelByHostId)
+  return device ? `${device} · ${detail}` : detail
 }

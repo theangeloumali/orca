@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { groupByExecutionHost } from './device-sections'
+import { getDeviceLabel, groupByExecutionHost, withDeviceLabel } from './device-sections'
 
 const hosts = [
   { id: 'local' as const },
@@ -45,5 +45,21 @@ describe('groupByExecutionHost', () => {
       ['local', 'local'],
       ['ssh:gone', null]
     ])
+  })
+})
+
+describe('device labels for list rows', () => {
+  const labels = new Map([
+    ['local' as const, 'Local Mac'],
+    ['runtime:m1' as const, 'M1 Max']
+  ])
+
+  it("names another machine's item and leaves this Mac's unlabelled", () => {
+    expect(getDeviceLabel('runtime:m1', labels)).toBe('M1 Max')
+    expect(getDeviceLabel('local', labels)).toBeNull()
+    expect(withDeviceLabel('/Users/a/re-client', 'runtime:m1', labels)).toBe(
+      'M1 Max · /Users/a/re-client'
+    )
+    expect(withDeviceLabel('/Users/a/re-client', 'local', labels)).toBe('/Users/a/re-client')
   })
 })
