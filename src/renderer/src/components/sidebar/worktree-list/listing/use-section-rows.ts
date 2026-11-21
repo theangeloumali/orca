@@ -139,6 +139,7 @@ export function useSidebarSectionRows(args: SectionRowsArgs) {
   )
   const hostLabelById = selectHostLabels(hostOptions)
   const showMachineSections = useAppStore((state) => state.showWorkspaceHostSections)
+  const hideEmptyProjectGroups = useAppStore((state) => state.showOnlyRunningTerminals)
 
   const hostScopedGroups =
     showMachineSections ||
@@ -173,9 +174,11 @@ export function useSidebarSectionRows(args: SectionRowsArgs) {
         defaultHostId,
         pinnedDisplayPolicy: args.pinnedDisplayPolicy,
         filterRepoIds: args.filterRepoIds,
-        hiddenProjects: indexHiddenProjects(repos, defaultHostId)
+        hiddenProjects: indexHiddenProjects(repos, defaultHostId),
+        hideEmptyProjectGroups
       }),
     [
+      hideEmptyProjectGroups,
       args.groupBy,
       args.sortBy,
       worktrees,

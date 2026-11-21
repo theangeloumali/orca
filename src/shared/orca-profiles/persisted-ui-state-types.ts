@@ -91,6 +91,8 @@ export type PersistedUIState = {
   hideWorkspacesFromOtherDevices?: boolean
   /** Keep each project's main workspace out of the "Hide sleeping" sweep. Absent means on (#8873). */
   alwaysShowDefaultBranchWorkspace?: boolean
+  /** Sidebar "Active only". A new field: legacy showActiveOnly is forced off on hydration. */
+  showOnlyRunningTerminals?: boolean
   /** Per-worktree Explorer dotfile visibility. Missing entries inherit the default: show. */
   _explorerDisplayRootMigrated?: boolean
   explorerDisplayRootByWorktree?: Record<string, string>

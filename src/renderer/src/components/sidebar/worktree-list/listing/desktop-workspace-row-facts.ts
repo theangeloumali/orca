@@ -20,6 +20,7 @@ import {
   type HiddenProjects
 } from '../../../../../../shared/project/catalog/hidden-projects'
 import { isInactiveWorkspace } from '@/lib/workspace/activity/worktree-activity-state'
+import { tabHasLivePty } from '../../../../../../shared/workspace-layout/terminal-surfaces/tab-has-live-pty'
 
 export type DesktopWorkspaceRowFactInputs = {
   repoMap: ReadonlyMap<string, Repo>
@@ -34,6 +35,16 @@ export type DesktopWorkspaceRowFactInputs = {
   worktreeIdsWithStructuredChat?: ReadonlySet<string>
   /** Rows in a PTY-rebind grace window; read as unverifiable, never as asleep (#15996). */
   sleepingSweepExemptWorktreeIds?: ReadonlySet<string>
+}
+
+/** Whether any of the workspace's terminal tabs still has a live PTY. */
+export function worktreeHasRunningTerminal(
+  tabsByWorktree: DesktopWorkspaceRowFactInputs['tabsByWorktree'],
+  ptyIdsByTabId: DesktopWorkspaceRowFactInputs['ptyIdsByTabId'],
+  worktreeId: string
+): boolean {
+  const livePtyIds = ptyIdsByTabId ?? {}
+  return (tabsByWorktree?.[worktreeId] ?? []).some((tab) => tabHasLivePty(livePtyIds, tab.id))
 }
 
 export function buildDesktopWorkspaceRowFactReader(
@@ -57,6 +68,8 @@ export function buildDesktopWorkspaceRowFactReader(
     isCliCreated: isCliCreatedWorkspace,
     isDetachedHead: isDetachedHeadWorkspace,
     isMainWorktree: (worktree) => worktree.isMainWorktree,
+    hasRunningTerminal: (worktree) =>
+      worktreeHasRunningTerminal(inputs.tabsByWorktree, inputs.ptyIdsByTabId, worktree.id),
     isSleeping: (worktree) =>
       inputs.sleepingSweepExemptWorktreeIds?.has(worktree.id) !== true &&
       isInactiveWorkspace(

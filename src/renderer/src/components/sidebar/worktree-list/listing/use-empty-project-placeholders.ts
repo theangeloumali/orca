@@ -25,6 +25,7 @@ export function useEmptyProjectPlaceholderRepoIds(args: {
   const { groupBy, repos, visibleRepos, visibleWorktrees, filterRepoIds, defaultHostId } = args
   const worktreesByRepo = useAppStore((s) => selectWorktreesByRepo(s))
   const hiddenVmCheckouts = useSyncExternalStore(subscribeHiddenVmCheckouts, readHiddenVmCheckouts)
+  const hideEmptyProjects = useAppStore((s) => s.showOnlyRunningTerminals)
   return useMemo(
     () =>
       getEmptyProjectPlaceholderRepoIds({
@@ -34,7 +35,8 @@ export function useEmptyProjectPlaceholderRepoIds(args: {
         visibleWorktrees,
         filterRepoIds,
         hiddenProjects: indexHiddenProjects(repos, defaultHostId),
-        pendingVmRepoIds: hiddenVmCheckouts.repoIds
+        pendingVmRepoIds: hiddenVmCheckouts.repoIds,
+        hideEmptyProjects
       }),
     [
       groupBy,
@@ -44,7 +46,8 @@ export function useEmptyProjectPlaceholderRepoIds(args: {
       visibleWorktrees,
       filterRepoIds,
       defaultHostId,
-      hiddenVmCheckouts
+      hiddenVmCheckouts,
+      hideEmptyProjects
     ]
   )
 }

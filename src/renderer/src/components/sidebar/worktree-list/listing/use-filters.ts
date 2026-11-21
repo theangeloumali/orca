@@ -97,7 +97,9 @@ const REVEAL_WORKSPACE: Record<keyof WorkspaceRowFilters, (context: RevealContex
     }
   },
   // Turning the exemption off only narrows; "Hide sleeping" above is what reveals.
-  alwaysShowDefaultBranchWorkspace: () => {}
+  alwaysShowDefaultBranchWorkspace: () => {},
+  // A revealed workspace may have nothing running, so drop the whole filter.
+  showOnlyRunningTerminals: ({ state }) => state.setShowOnlyRunningTerminals(false)
 }
 
 function getRevealTargetHostId(state: AppState, worktree: Worktree, repo: Repo | undefined) {

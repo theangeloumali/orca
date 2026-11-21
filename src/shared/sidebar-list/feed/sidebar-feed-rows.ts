@@ -164,6 +164,8 @@ export function planSidebarFeedRows(
       isCliCreated: (worktree) => factsOf(worktree)?.cliCreated === true,
       isDetachedHead: (worktree) => factsOf(worktree)?.detachedHead === true,
       isMainWorktree: (worktree) => worktree.isMainWorktree,
+      // The feed carries no PTY state; keeping rows matches mobile's read.
+      hasRunningTerminal: () => true,
       isSleeping: (worktree) => {
         const identity = getWorktreeHostIdentity(worktree)
         const activity = domains.activity.get(identity)

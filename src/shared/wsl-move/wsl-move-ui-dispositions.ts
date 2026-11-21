@@ -105,6 +105,7 @@ export const UI_STATE_GLOBAL_FIELDS = [
   'hideDetachedHeadWorkspaces',
   'hideWorkspacesFromOtherDevices',
   'alwaysShowDefaultBranchWorkspace',
+  'showOnlyRunningTerminals',
   'agentsHideWorkspacesFromOtherDevices',
   'agentsHideAutomationGeneratedWorkspaces',
   'agentsHideCliCreatedWorkspaces',

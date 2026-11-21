@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react'
 import {
+  Activity,
   CalendarClock,
   Check,
   FolderPlus,
@@ -70,6 +71,8 @@ const SidebarFilter = React.memo(function SidebarFilter({
   const setAlwaysShowDefaultBranchWorkspace = useAppStore(
     (s) => s.setAlwaysShowDefaultBranchWorkspace
   )
+  const showOnlyRunningTerminals = useAppStore((s) => s.showOnlyRunningTerminals)
+  const setShowOnlyRunningTerminals = useAppStore((s) => s.setShowOnlyRunningTerminals)
   const filterRepoIds = useAppStore((s) => s.filterRepoIds)
   const setFilterRepoIds = useAppStore((s) => s.setFilterRepoIds)
   const allRepos = useAppStore((s) => s.repos)
@@ -183,6 +186,16 @@ const SidebarFilter = React.memo(function SidebarFilter({
         className="w-72"
         data-workspace-board-preserve-open={preserveWorkspaceBoardOpen ? '' : undefined}
       >
+        <FilterToggleRow
+          icon={<Activity className="size-3.5" />}
+          label={t('auto.components.sidebar.activeOnly.label', 'Active only')}
+          ariaLabel={t(
+            'auto.components.sidebar.activeOnly.filterAria',
+            'Show only workspaces with a running terminal'
+          )}
+          checked={showOnlyRunningTerminals}
+          onChange={setShowOnlyRunningTerminals}
+        />
         <FilterToggleRow
           icon={<Moon className="size-3.5" />}
           label={t('auto.components.sidebar.SidebarFilter.638a2d221d', 'Hide sleeping')}

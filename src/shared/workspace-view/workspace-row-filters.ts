@@ -12,6 +12,8 @@ export type WorkspaceRowFilters = WorkspaceKindSwitches & {
   /** Keeps each project's main workspace out of the "Hide sleeping" sweep. Absent means on (#8873). */
   alwaysShowDefaultBranchWorkspace?: boolean
   hideWorkspacesFromOtherDevices: boolean
+  /** "Active only": keep just the workspaces with a live terminal. Absent means off. */
+  showOnlyRunningTerminals?: boolean
   filterRepoIds: readonly string[]
   /** The hosts shown; null shows every host. */
   visibleHostIds: readonly ExecutionHostId[] | null
@@ -26,6 +28,7 @@ export const WORKSPACE_ROW_FILTER_UI_FIELDS = {
   hideCliCreatedWorkspaces: 'hideCliCreatedWorkspaces',
   hideDetachedHeadWorkspaces: 'hideDetachedHeadWorkspaces',
   hideWorkspacesFromOtherDevices: 'hideWorkspacesFromOtherDevices',
+  showOnlyRunningTerminals: 'showOnlyRunningTerminals',
   filterRepoIds: 'filterRepoIds',
   visibleHostIds: 'visibleWorkspaceHostIds'
 } as const satisfies { [Key in keyof WorkspaceRowFilters]: keyof PersistedUIState }
@@ -44,6 +47,7 @@ export const NO_WORKSPACE_ROW_FILTERS: WorkspaceRowFilters = {
   hideCliCreatedWorkspaces: false,
   hideDetachedHeadWorkspaces: false,
   hideWorkspacesFromOtherDevices: false,
+  showOnlyRunningTerminals: false,
   filterRepoIds: [],
   visibleHostIds: null
 }
@@ -67,6 +71,8 @@ export type WorkspaceRowFactReader<Row> = {
   isDetachedHead: (row: Row) => boolean
   isMainWorktree: (row: Row) => boolean
   isSleeping: (row: Row) => boolean
+  /** A surface that cannot see terminals reads true, so Active only never hides what it can't judge. */
+  hasRunningTerminal: (row: Row) => boolean
 }
 
 /** Exempt the main checkout from sleeping sweeps, including detached/offline mains that may be a project’s only entry point (#8873). */
@@ -107,6 +113,10 @@ function buildWorkspaceRowPredicate<Row>(
       if (hostId === null || !hostIds.has(hostId)) {
         return false
       }
+    }
+    // Before the folder exit: Active only hides idle folders and the main checkout too.
+    if (filters.showOnlyRunningTerminals && !read.hasRunningTerminal(row)) {
+      return false
     }
     if (read.isFolderWorkspace(row)) {
       return true
@@ -159,8 +169,11 @@ function comparableFilterValue(
   filters: WorkspaceRowFilters,
   key: keyof WorkspaceRowFilters
 ): WorkspaceRowFilters[keyof WorkspaceRowFilters] {
-  return key === 'alwaysShowDefaultBranchWorkspace'
-    ? filters.alwaysShowDefaultBranchWorkspace !== false
+  if (key === 'alwaysShowDefaultBranchWorkspace') {
+    return filters.alwaysShowDefaultBranchWorkspace !== false
+  }
+  return key === 'showOnlyRunningTerminals'
+    ? filters.showOnlyRunningTerminals === true
     : filters[key]
 }
 

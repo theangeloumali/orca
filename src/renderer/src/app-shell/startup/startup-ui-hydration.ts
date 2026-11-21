@@ -56,6 +56,7 @@ export function getStartupErrorFallbackUI(uiHydrated: boolean): PersistedUIState
     hideCliCreatedWorkspaces: false,
     hideDetachedHeadWorkspaces: false,
     alwaysShowDefaultBranchWorkspace: true,
+    showOnlyRunningTerminals: false,
     hideAutomationGeneratedWorkspaces: false,
     filterRepoIds: [],
     collapsedGroups: [],
