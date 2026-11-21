@@ -35,7 +35,7 @@ export type VisibleWorktreeOptions = {
   hideWorkspacesFromOtherDevices: boolean
   pairedDeviceIdsByEnvironment: ReadonlyMap<string, string>
   alwaysShowDefaultBranchWorkspace?: boolean
-  showOnlyRunningTerminals?: boolean
+  showOnlyRunningTerminals: boolean
   repoMap: Map<string, Repo>
   hiddenProjects: HiddenProjects
   workspaceHostScope: ExecutionHostScope

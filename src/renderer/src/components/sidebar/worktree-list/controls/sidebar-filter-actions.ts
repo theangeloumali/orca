@@ -20,7 +20,7 @@ export type SidebarFilterState = {
   hideWorkspacesFromOtherDevices: boolean
   /** Keeps each project's main workspace out of the "Hide sleeping" sweep; absent means on. */
   alwaysShowDefaultBranchWorkspace?: boolean
-  showOnlyRunningTerminals?: boolean
+  showOnlyRunningTerminals: boolean
   visibleWorkspaceHostIds?: readonly ExecutionHostId[] | null
   workspaceHostScope?: ExecutionHostScope
 }
@@ -34,7 +34,7 @@ export function sidebarWorkspaceRowFilters(state: SidebarFilterState): Workspace
     hideCliCreatedWorkspaces: state.hideCliCreatedWorkspaces,
     hideDetachedHeadWorkspaces: state.hideDetachedHeadWorkspaces,
     hideWorkspacesFromOtherDevices: state.hideWorkspacesFromOtherDevices,
-    showOnlyRunningTerminals: state.showOnlyRunningTerminals === true,
+    showOnlyRunningTerminals: state.showOnlyRunningTerminals,
     filterRepoIds: state.filterRepoIds,
     visibleHostIds: resolveVisibleWorkspaceHostIds(
       state.visibleWorkspaceHostIds,

@@ -1,4 +1,8 @@
 import { useMemo } from 'react'
+import { useAppStore } from '@/store/index'
+import { folderWorkspaceKey } from '../../../../../../shared/workspace/identity/workspace-scope'
+import { filterFolderWorkspacesForActiveOnly } from '../../../../../../shared/workspace-view/workspace-row-filters'
+import { worktreeHasRunningTerminal } from './desktop-workspace-row-facts'
 import type { FolderWorkspace } from '../../../../../../shared/folder-workspaces/folder-workspace-types'
 import type { ProjectGroup } from '../../../../../../shared/project/groups/project-group-types'
 import type { Repo } from '../../../../../../shared/repository/repo-types'
@@ -27,8 +31,27 @@ export function useSidebarHostVisibleScope(args: {
   botListedWorktreeIdentities?: ReadonlySet<string>
 }) {
   const { filterState, defaultHostId, repos, projectGroups, folderWorkspaces } = args
-  const { visibleWorkspaceHostIds, workspaceHostScope, hideWorkspacesFromOtherDevices } =
-    filterState
+  const {
+    visibleWorkspaceHostIds,
+    workspaceHostScope,
+    hideWorkspacesFromOtherDevices,
+    showOnlyRunningTerminals
+  } = filterState
+  // A folder's tabs live under its folder: worktree id. A joined string keeps the selection stable.
+  const runningFolderIdList = useAppStore((s) =>
+    showOnlyRunningTerminals
+      ? folderWorkspaces
+          .filter((folder) =>
+            worktreeHasRunningTerminal(
+              s.tabsByWorktree,
+              s.ptyIdsByTabId,
+              folderWorkspaceKey(folder.id)
+            )
+          )
+          .map((folder) => folder.id)
+          .join('\n')
+      : ''
+  )
   const visibleHostIdSet = useMemo(
     () => getVisibleSidebarHostIdSet(visibleWorkspaceHostIds, workspaceHostScope),
     [visibleWorkspaceHostIds, workspaceHostScope]
@@ -54,12 +77,17 @@ export function useSidebarHostVisibleScope(args: {
       visibleHostIdSet,
       defaultHostId
     )
-    if (!hideWorkspacesFromOtherDevices) {
-      return hostVisibleWorkspaces
-    }
-    return filterFolderWorkspacesFromOtherDevices(
-      hostVisibleWorkspaces,
-      args.pairedDeviceIdsByEnvironment
+    const deviceVisibleWorkspaces = hideWorkspacesFromOtherDevices
+      ? filterFolderWorkspacesFromOtherDevices(
+          hostVisibleWorkspaces,
+          args.pairedDeviceIdsByEnvironment
+        )
+      : hostVisibleWorkspaces
+    const runningFolderIds = new Set(runningFolderIdList.split('\n'))
+    return filterFolderWorkspacesForActiveOnly(
+      deviceVisibleWorkspaces,
+      { showOnlyRunningTerminals },
+      (folder) => runningFolderIds.has(folder.id)
     )
   }, [
     args.botListedWorktreeIdentities,
@@ -68,6 +96,8 @@ export function useSidebarHostVisibleScope(args: {
     folderWorkspaces,
     hideWorkspacesFromOtherDevices,
     projectGroups,
+    runningFolderIdList,
+    showOnlyRunningTerminals,
     visibleHostIdSet
   ])
 

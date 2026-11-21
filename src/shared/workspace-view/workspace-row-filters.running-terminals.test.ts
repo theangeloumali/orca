@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import {
   activeWorkspaceRowFilterKeys,
+  filterFolderWorkspacesForActiveOnly,
   filterWorkspaceRows,
   NO_WORKSPACE_ROW_FILTERS,
   type WorkspaceRowFactReader
 } from './workspace-row-filters'
 import { filterWorktrees } from '../../../mobile/src/worktree/workspace-list/workspace-row-filtering'
 import type { Worktree as PhoneWorktree } from '../../../mobile/src/worktree/workspace-list/workspace-list-types'
+import { activityHasRunningTerminal } from '../sidebar-list/feed-facts/workspace-activity-facts'
 
 type Row = { id: string; running: boolean; main?: boolean; folder?: boolean }
 
@@ -58,8 +60,8 @@ describe('showOnlyRunningTerminals', () => {
     expect(activeWorkspaceRowFilterKeys(activeOnly)).toEqual(['showOnlyRunningTerminals'])
   })
 
-  it('keeps phone rows, whose host stamps no running-terminal fact', () => {
-    const row: PhoneWorktree = {
+  it('drops a phone row whose host counts no live terminal and keeps one that counts some', () => {
+    const idle: PhoneWorktree = {
       worktreeId: 'wt-1',
       repoId: 'repo-1',
       repo: 'repo',
@@ -72,6 +74,46 @@ describe('showOnlyRunningTerminals', () => {
       isPinned: false,
       linkedPR: null
     }
-    expect(filterWorktrees([row], activeOnly, '').map((w) => w.worktreeId)).toEqual(['wt-1'])
+    const running = { ...idle, worktreeId: 'wt-2', liveTerminalCount: 2 }
+    expect(filterWorktrees([idle, running], activeOnly, '').map((w) => w.worktreeId)).toEqual([
+      'wt-2'
+    ])
+  })
+})
+
+describe('filterFolderWorkspacesForActiveOnly', () => {
+  const folders = [
+    { id: 'idle', running: false },
+    { id: 'live', running: true }
+  ]
+  const isRunning = (folder: { running: boolean }): boolean => folder.running
+
+  it('keeps only folder workspaces with a running terminal while on', () => {
+    expect(ids([...filterFolderWorkspacesForActiveOnly(folders, activeOnly, isRunning)])).toEqual([
+      'live'
+    ])
+  })
+
+  it('keeps every folder workspace while off', () => {
+    expect(filterFolderWorkspacesForActiveOnly(folders, NO_WORKSPACE_ROW_FILTERS, isRunning)).toBe(
+      folders
+    )
+  })
+})
+
+describe('activityHasRunningTerminal', () => {
+  const idle = { terminal: null, browser: false, structuredChat: false, agent: null }
+
+  it('reads a live terminal as running', () => {
+    expect(activityHasRunningTerminal({ ...idle, terminal: 'live' })).toBe(true)
+  })
+
+  it('keeps a lost-contact terminal it cannot judge', () => {
+    expect(activityHasRunningTerminal({ ...idle, terminal: 'unverifiable' })).toBe(true)
+  })
+
+  it('reads no terminal, or no listed activity, as not running', () => {
+    expect(activityHasRunningTerminal(idle)).toBe(false)
+    expect(activityHasRunningTerminal(undefined)).toBe(false)
   })
 })

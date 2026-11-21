@@ -61,6 +61,11 @@ export function isIdleWorkspaceActivity(facts: WorkspaceActivityFacts): boolean 
   return facts.terminal === null && !facts.browser && !facts.structuredChat && facts.agent === null
 }
 
+/** Lost contact keeps the row; an unlisted id has no activity, so nothing runs there. */
+export function activityHasRunningTerminal(facts: WorkspaceActivityFacts | undefined): boolean {
+  return facts?.terminal === 'live' || facts?.terminal === 'unverifiable'
+}
+
 export function workspaceActivityFactsEqual(
   a: WorkspaceActivityFacts,
   b: WorkspaceActivityFacts

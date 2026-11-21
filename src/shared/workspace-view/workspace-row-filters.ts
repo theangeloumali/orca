@@ -52,14 +52,14 @@ export const NO_WORKSPACE_ROW_FILTERS: WorkspaceRowFilters = {
   visibleHostIds: null
 }
 
-/** Desktop derives facts from worktrees/tabs; mobile reads host-stamped facts. Missing older-host facts read false to keep rows visible. */
+/** Desktop derives facts from worktrees/tabs; mobile reads host-stamped facts. Missing older-host facts read so the row stays visible. */
 export type WorkspaceRowFactReader<Row> = {
   isArchived: (row: Row) => boolean
   /** The row's own host copy of its project is hidden; not a filter, so Clear filters never lifts it. */
   isInHiddenProject: (row: Row) => boolean
   /** Every copy of the project is hidden; a filter naming it selects nothing visible, so it is ignored. */
   isProjectHidden: (repoId: string) => boolean
-  /** A folder workspace follows only the host and other-client filters (useSidebarHostVisibleScope). */
+  /** A folder workspace follows only the host, other-client and Active only filters (useSidebarHostVisibleScope). */
   isFolderWorkspace: (row: Row) => boolean
   repoId: (row: Row) => string
   /** Null when the row's host cannot be resolved; a host filter then hides it. */
@@ -71,7 +71,7 @@ export type WorkspaceRowFactReader<Row> = {
   isDetachedHead: (row: Row) => boolean
   isMainWorktree: (row: Row) => boolean
   isSleeping: (row: Row) => boolean
-  /** A surface that cannot see terminals reads true, so Active only never hides what it can't judge. */
+  /** A local live PTY or a host-counted live terminal; a row with no fact to judge reads true. */
   hasRunningTerminal: (row: Row) => boolean
 }
 
@@ -134,6 +134,15 @@ function buildWorkspaceRowPredicate<Row>(
       !read.isSleeping(row)
     )
   }
+}
+
+/** Folder workspaces skip the row filters, so Active only drops the idle ones here. */
+export function filterFolderWorkspacesForActiveOnly<Folder>(
+  folders: readonly Folder[],
+  filters: Pick<WorkspaceRowFilters, 'showOnlyRunningTerminals'>,
+  hasRunningTerminal: (folder: Folder) => boolean
+): readonly Folder[] {
+  return filters.showOnlyRunningTerminals ? folders.filter(hasRunningTerminal) : folders
 }
 
 /** The rows the Workspace options filters keep, in their given order. */

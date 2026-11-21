@@ -51,8 +51,10 @@ export function useVisibleWorkspaceKanbanWorktreeIds({
   const visibleWorkspaceHostIds = useAppStore((s) => s.visibleWorkspaceHostIds)
   const settings = useAppStore((s) => s.settings)
   const filterRepoIds = useAppStore((s) => s.filterRepoIds)
-  const tabsByWorktree = useAppStore((s) => (!showSleepingWorkspaces ? s.tabsByWorktree : null))
-  const ptyIdsByTabId = useAppStore((s) => (!showSleepingWorkspaces ? s.ptyIdsByTabId : null))
+  const showOnlyRunningTerminals = useAppStore((s) => s.showOnlyRunningTerminals)
+  const needsTerminalMaps = !showSleepingWorkspaces || showOnlyRunningTerminals
+  const tabsByWorktree = useAppStore((s) => (needsTerminalMaps ? s.tabsByWorktree : null))
+  const ptyIdsByTabId = useAppStore((s) => (needsTerminalMaps ? s.ptyIdsByTabId : null))
   const browserTabsByWorktree = useAppStore((s) =>
     !showSleepingWorkspaces ? s.browserTabsByWorktree : null
   )
@@ -96,6 +98,7 @@ export function useVisibleWorkspaceKanbanWorktreeIds({
           ? getPairedDeviceIdsByEnvironment(runtimeEnvironments, runtimeStatusByEnvironmentId)
           : EMPTY_PAIRED_DEVICE_IDS_BY_ENVIRONMENT,
         alwaysShowDefaultBranchWorkspace,
+        showOnlyRunningTerminals,
         repoMap,
         hiddenProjects: indexHiddenProjects(repos, defaultHostId),
         workspaceHostScope,
@@ -124,6 +127,7 @@ export function useVisibleWorkspaceKanbanWorktreeIds({
     repos,
     runtimeEnvironments,
     runtimeStatusByEnvironmentId,
+    showOnlyRunningTerminals,
     showSleepingWorkspaces,
     tabsByWorktree,
     worktreeIdsWithLiveAgent,

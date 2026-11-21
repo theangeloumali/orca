@@ -10,10 +10,7 @@ import { getLogicalRepoOrderRankById } from '../sections/project-section-order'
 import type { ProjectSectionModel } from '../sections/project-section-grouping'
 import type { Repo } from '../../repository/repo-types'
 import type { ProjectOrderBy } from '../../ui-chrome/ui-chrome-types'
-import {
-  filterFolderWorkspacesFromOtherDevices,
-  isWorkspaceOwnedBySomeoneElse
-} from '../../workspace-view/workspace-creator-visibility'
+import { isWorkspaceOwnedBySomeoneElse } from '../../workspace-view/workspace-creator-visibility'
 import type { WorkspaceRowFilters } from '../../workspace-view/workspace-row-filters'
 import { getWorktreeHostIdentity } from '../../worktree/host-qualified-identity'
 import { hiddenProjectRowFacts, indexHiddenProjects } from '../../project/catalog/hidden-projects'
@@ -31,7 +28,6 @@ import type { WorktreeLineage } from '../../worktree/lineage-types'
 import type { FolderWorkspace } from '../../folder-workspaces/folder-workspace-types'
 import { getEmptyProjectPlaceholderRepoIds } from '../catalog/empty-project-placeholder-repos'
 import {
-  filterFolderWorkspacesForVisibleHosts,
   filterProjectGroupsForVisibleHosts,
   filterReposForVisibleHosts,
   getVisibleSidebarHostIdSet
@@ -51,10 +47,13 @@ import type { FeedLineagePolicy } from './sidebar-feed-lineage-parents'
 import type { WorkspaceSortBy as SortBy } from '../../workspace-view/workspace-row-sort'
 import {
   selectVisibleSidebarWorktrees,
-  withoutBotListedFolderWorkspaces,
   withoutBotListedWorktrees
 } from '../selection/visible-worktrees'
-import { isIdleWorkspaceActivity } from '../feed-facts/workspace-activity-facts'
+import { selectVisibleFeedFolderWorkspaces } from './sidebar-feed-folder-workspaces'
+import {
+  activityHasRunningTerminal,
+  isIdleWorkspaceActivity
+} from '../feed-facts/workspace-activity-facts'
 import { prGroupOfReviewFact } from '../feed-facts/workspace-review-facts'
 
 /** The host's view settings a reader shows the list with; the host's own phone reads them off ui.get. */
@@ -164,8 +163,8 @@ export function planSidebarFeedRows(
       isCliCreated: (worktree) => factsOf(worktree)?.cliCreated === true,
       isDetachedHead: (worktree) => factsOf(worktree)?.detachedHead === true,
       isMainWorktree: (worktree) => worktree.isMainWorktree,
-      // The feed carries no PTY state; keeping rows matches mobile's read.
-      hasRunningTerminal: () => true,
+      hasRunningTerminal: (worktree) =>
+        activityHasRunningTerminal(domains.activity.get(getWorktreeHostIdentity(worktree))),
       isSleeping: (worktree) => {
         const identity = getWorktreeHostIdentity(worktree)
         const activity = domains.activity.get(identity)
@@ -184,18 +183,16 @@ export function planSidebarFeedRows(
     view.workspaceHostScope
   )
   const visibleRepos = filterReposForVisibleHosts(repos, visibleHostIdSet, defaultHostId)
-  const hostVisibleFolderWorkspaces = filterFolderWorkspacesForVisibleHosts(
-    withoutBotListedFolderWorkspaces(folderWorkspaces, extras.botListedWorktreeIdentities),
+  const visibleFolderWorkspaces = selectVisibleFeedFolderWorkspaces({
+    domains,
+    folderWorkspaces,
     projectGroups,
+    filters: view.filters,
     visibleHostIdSet,
-    defaultHostId
-  )
-  const visibleFolderWorkspaces = view.filters.hideWorkspacesFromOtherDevices
-    ? filterFolderWorkspacesFromOtherDevices(
-        hostVisibleFolderWorkspaces,
-        pairedDeviceIdsByEnvironment
-      )
-    : hostVisibleFolderWorkspaces
+    defaultHostId,
+    pairedDeviceIdsByEnvironment,
+    botListedIdentities: extras.botListedWorktreeIdentities
+  })
   const visibleProjectGroups = filterProjectGroupsForVisibleHosts(
     projectGroups,
     visibleHostIdSet,

@@ -23,7 +23,8 @@ const unfiltered = {
   hideAutomationGeneratedWorkspaces: false,
   hideCliCreatedWorkspaces: false,
   hideDetachedHeadWorkspaces: false,
-  hideWorkspacesFromOtherDevices: false
+  hideWorkspacesFromOtherDevices: false,
+  showOnlyRunningTerminals: false
 }
 
 describe('clearSidebarFilters', () => {

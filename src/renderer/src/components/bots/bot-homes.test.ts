@@ -141,6 +141,7 @@ describe('getBotListedWorktreeIdentities', () => {
         hideDetachedHeadWorkspaces: false,
         hideWorkspacesFromOtherDevices: false,
         pairedDeviceIdsByEnvironment: new Map(),
+        showOnlyRunningTerminals: false,
         repoMap: new Map(),
         workspaceHostScope: 'all',
         defaultHostId: LOCAL_EXECUTION_HOST_ID,
