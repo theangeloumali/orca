@@ -45,7 +45,7 @@ export function getSidebarOrderedRepoHeaderIdsByBucket(
 }
 
 export function getProjectGroupOrderForSidebarDrop(args: {
-  siblings: readonly Repo[]
+  siblings: readonly Pick<Repo, 'id' | 'projectGroupOrder'>[]
   dropIndex: number
   repoOrderRankById?: ReadonlyMap<string, number>
 }): number {
@@ -53,7 +53,10 @@ export function getProjectGroupOrderForSidebarDrop(args: {
   if (ordered.length === 0) {
     return 0
   }
-  const getEffectiveOrder = (repo: Repo | undefined, fallbackIndex: number): number | undefined => {
+  const getEffectiveOrder = (
+    repo: Pick<Repo, 'id' | 'projectGroupOrder'> | undefined,
+    fallbackIndex: number
+  ): number | undefined => {
     if (!repo) {
       return undefined
     }
