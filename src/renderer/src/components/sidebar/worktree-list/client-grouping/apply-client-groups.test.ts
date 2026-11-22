@@ -58,6 +58,25 @@ describe('applyClientGroups', () => {
     expect(result).toEqual({ filedCount: 1, createdCount: 0, failedGroups: [] })
   })
 
+  it('keeps the counts of groups filed before a store call throws', async () => {
+    const deps = store()
+    const boom = new Error('offline')
+    deps.createProjectGroup.mockRejectedValueOnce(boom)
+    const result = await applyClientGroups(
+      [
+        {
+          clientName: 'Acme',
+          existingGroupId: 'g-acme',
+          hostId: 'local',
+          projects: [project('a')]
+        },
+        { clientName: 'ZKidz', existingGroupId: null, hostId: 'local', projects: [project('b')] }
+      ],
+      deps
+    )
+    expect(result).toEqual({ filedCount: 1, createdCount: 0, failedGroups: [], error: boom })
+  })
+
   it('reports a group whose creation or moves failed', async () => {
     const noGroup = store({ created: null })
     expect(

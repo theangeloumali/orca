@@ -21,6 +21,7 @@ import {
 import { selectWorktreeListReviewCacheInputs } from './review-cache-inputs'
 import type { VirtualizedScrollAnchor } from '@/lib/list-interaction/virtualized-scrolling/useVirtualizedScrollAnchor'
 import { SidebarWorktreeListDialogs } from '../rows/ProjectGroupDialogs'
+import { useClientGroupingHintRows } from '../client-grouping/use-client-suggestions'
 import { SidebarWorktreeListEmptyState } from './EmptyState'
 import { VirtualizedWorktreeViewport } from '../viewport/VirtualizedWorktreeViewport'
 import { markSidebarWorktreeActiveImmediately } from '../rows/option-dom'
@@ -250,6 +251,7 @@ const WorktreeList = React.memo(function WorktreeList({
     },
     [announceProjectCollapse, toggleGroup]
   )
+  const viewportRows = useClientGroupingHintRows(rowModel.sectionRows)
   // Clear Filters must outrank empty project headers when filtering hides every workspace.
   if (rowModel.rows.length === 0 || filtersHideAllRows) {
     return <SidebarWorktreeListEmptyState hasFilters={hasFilters} onClearFilters={clearFilters} />
@@ -292,7 +294,7 @@ const WorktreeList = React.memo(function WorktreeList({
         <VirtualizedWorktreeViewport
           // Wake moves status headers; preserve viewport identity across those changes.
           key={`group:${groupBy}:host:${filterState.visibleWorkspaceHostIds?.join(',') ?? 'all'}:lineage`}
-          rows={rowModel.sectionRows}
+          rows={viewportRows}
           hostOptions={rowModel.hostOptions}
           occurrencePlan={rowModel.occurrencePlan}
           visibleProjectRepoIdsBySection={visibleProjectRepoIdsBySection}

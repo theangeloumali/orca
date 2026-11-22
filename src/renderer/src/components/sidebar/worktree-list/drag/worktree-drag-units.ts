@@ -14,6 +14,7 @@ export type WorktreeDragUnitGroup = WorktreeDragGroup & {
 
 type WorktreeDragUnitRow =
   | { type: 'host-header' }
+  | { type: 'client-grouping-hint' }
   | { type: 'header'; key: string }
   | {
       type: 'item'
@@ -51,6 +52,7 @@ export function getWorktreeDragUnitGroups(
     }
     if (
       row.type === 'host-header' ||
+      row.type === 'client-grouping-hint' ||
       row.type === 'imported-worktrees-card' ||
       row.type === 'new-external-worktrees-inbox' ||
       row.type === 'pending-creation' ||

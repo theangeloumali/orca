@@ -43,6 +43,19 @@ describe('getClientName', () => {
     expect(getClientName(project('orca', '/Users/me/Work/orca'))).toBeNull()
   })
 
+  it('matches Work in any case, and uses the first Work folder', () => {
+    expect(getClientName(project('a', '/home/me/work/Acme/site'))).toBe('Acme')
+    expect(getClientName(project('a', '/Users/me/Work/ZKidz/orca/work/tmp'))).toBe('ZKidz')
+  })
+
+  it('reads Windows and WSL paths', () => {
+    expect(getClientName(project('a', 'D:\\work\\Acme\\site'))).toBe('Acme')
+    expect(getClientName(project('a', '\\\\wsl$\\Ubuntu\\home\\me\\Work\\ZKidz\\orca'))).toBe(
+      'ZKidz'
+    )
+    expect(getClientName(project('a', '/mnt/c/Users/me/Work/ZKidz/orca'))).toBe('ZKidz')
+  })
+
   it('falls back to the GitHub owner, and skips projects with neither', () => {
     expect(getClientName(owned('site', 'acme'))).toBe('acme')
     expect(getClientName(project('loose', '/tmp/loose'))).toBeNull()
@@ -72,6 +85,42 @@ describe('suggestClientGroups', () => {
     expect(sections[0].suggestions).toEqual([
       expect.objectContaining({ clientName: 'acme', existingGroupId: 'g-acme' }),
       expect.objectContaining({ clientName: 'ZKidz', existingGroupId: 'g-zkidz' })
+    ])
+  })
+
+  it('names the client by its folder spelling whichever project comes first', () => {
+    const fromPath = project('orca', '/Users/me/Work/ZKidz/orca')
+    for (const repos of [
+      [owned('site', 'zkidz'), fromPath],
+      [fromPath, owned('site', 'zkidz')]
+    ]) {
+      const [section] = suggestClientGroups({ repos, projectGroups: [] })
+      expect(section.suggestions[0].clientName).toBe('ZKidz')
+    }
+  })
+
+  it('matches only top-level groups, never a same-named subgroup', () => {
+    const repos = [project('a', '/Users/me/Work/Acme/a'), project('b', '/Users/me/Work/Acme/b')]
+    const archived = group('g-archived', 'Acme', { parentGroupId: 'g-archive' })
+    const [nestedOnly] = suggestClientGroups({ repos, projectGroups: [archived] })
+    expect(nestedOnly.suggestions[0].existingGroupId).toBeNull()
+    const [both] = suggestClientGroups({
+      repos,
+      projectGroups: [archived, group('g-top', 'acme')]
+    })
+    expect(both.suggestions[0]).toMatchObject({ clientName: 'acme', existingGroupId: 'g-top' })
+  })
+
+  it("keeps a paired server's nested-SSH twins as separate projects", () => {
+    const runtime = { executionHostId: 'runtime:env' } as const
+    const repos = [
+      project('a', '/home/me/Work/ZKidz/a', { ...runtime, connectionId: 'one' }),
+      project('a', '/home/me/Work/ZKidz/a', { ...runtime, connectionId: 'two' })
+    ]
+    const [section] = suggestClientGroups({ repos, projectGroups: [] })
+    expect(section.suggestions[0].projects.map((entry) => entry.connectionId)).toEqual([
+      'one',
+      'two'
     ])
   })
 

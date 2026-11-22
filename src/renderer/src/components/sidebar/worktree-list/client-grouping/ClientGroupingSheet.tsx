@@ -68,32 +68,31 @@ export function ClientGroupingSheet(): React.JSX.Element {
 
   const apply = async (): Promise<void> => {
     setApplying(true)
-    try {
-      const { createProjectGroup, moveProjectToGroup } = useAppStore.getState()
-      const result = await applyClientGroups(plans, { createProjectGroup, moveProjectToGroup })
-      if (result.filedCount > 0) {
-        toast.success(
-          t(
-            'auto.components.sidebar.ClientGroupingSheet.filed',
-            'Filed {{count}} projects by client',
-            {
-              count: result.filedCount,
-              defaultValue_one: 'Filed {{count}} project by client'
-            }
-          )
+    const { createProjectGroup, moveProjectToGroup } = useAppStore.getState()
+    const result = await applyClientGroups(plans, { createProjectGroup, moveProjectToGroup })
+    if (result.filedCount > 0) {
+      toast.success(
+        t(
+          'auto.components.sidebar.ClientGroupingSheet.filed',
+          'Filed {{count}} projects by client',
+          {
+            count: result.filedCount,
+            defaultValue_one: 'Filed {{count}} project by client'
+          }
         )
-      }
-      for (const clientName of result.failedGroups) {
-        toast.error(
-          t(
-            'auto.components.sidebar.ClientGroupingSheet.groupFailed',
-            'Could not file every project into {{name}}',
-            { name: clientName }
-          )
+      )
+    }
+    for (const clientName of result.failedGroups) {
+      toast.error(
+        t(
+          'auto.components.sidebar.ClientGroupingSheet.groupFailed',
+          'Could not file every project into {{name}}',
+          { name: clientName }
         )
-      }
-    } catch (error) {
-      console.error('Failed to apply client groups:', error)
+      )
+    }
+    if (result.error !== undefined) {
+      console.error('Failed to apply client groups:', result.error)
       toast.error(
         t(
           'auto.components.sidebar.ClientGroupingSheet.applyFailed',
@@ -101,7 +100,6 @@ export function ClientGroupingSheet(): React.JSX.Element {
         )
       )
     }
-    // The catch never rethrows, so this runs on every path (no finally: the React compiler bails on it).
     setApplying(false)
     setOpen(false)
   }

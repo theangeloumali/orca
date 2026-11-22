@@ -14,6 +14,7 @@ import type { RuntimeCompatVerdict } from '../../remote-runtime/protocol/protoco
 import type { RuntimeHostBlockedReason } from '../../remote-runtime/host-status/runtime-host-status'
 import type { SshConnectionStatus } from '../../remote-runtime/ssh/ssh-types'
 import type { Row } from '../row-types'
+import type { ClientGroupingHintRow } from './client-grouping-hint-row'
 import { getFolderWorkspaceHostId } from './folder-workspace-host-id'
 import { countWorkspaceRows } from './host-section-workspace-count'
 import { getFallbackHost } from './host-section-fallback-host'
@@ -46,7 +47,8 @@ export type HostHeaderRow = {
   defaultHostId: ExecutionHostId
 }
 
-export type HostSectionRow = Row | HostHeaderRow
+export type { ClientGroupingHintRow }
+export type HostSectionRow = Row | HostHeaderRow | ClientGroupingHintRow
 
 export type HostSectionOption = {
   id: ExecutionHostId

@@ -19,6 +19,8 @@ export type ClientGroupsResult = {
   filedCount: number
   createdCount: number
   failedGroups: string[]
+  /** Set when a store call threw; the counts still cover what was done before it. */
+  error?: unknown
 }
 
 /** Creates each new group on its machine, then files its projects; one group at a time, in order. */
@@ -27,6 +29,20 @@ export async function applyClientGroups(
   store: ClientGroupStore
 ): Promise<ClientGroupsResult> {
   const result: ClientGroupsResult = { filedCount: 0, createdCount: 0, failedGroups: [] }
+  try {
+    await applyPlans(plans, store, result)
+  } catch (error) {
+    // Why: groups already filed stay filed, so the caller must still report them.
+    result.error = error
+  }
+  return result
+}
+
+async function applyPlans(
+  plans: readonly ClientGroupPlan[],
+  store: ClientGroupStore,
+  result: ClientGroupsResult
+): Promise<void> {
   for (const plan of plans) {
     if (plan.projects.length === 0) {
       continue
@@ -53,5 +69,4 @@ export async function applyClientGroups(
       result.failedGroups.push(plan.clientName)
     }
   }
-  return result
 }

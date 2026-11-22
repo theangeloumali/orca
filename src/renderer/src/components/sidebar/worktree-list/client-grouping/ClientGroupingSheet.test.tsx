@@ -22,7 +22,7 @@ function project(id: string, client = 'ZKidz'): Repo {
 }
 
 const calls: string[] = []
-const createProjectGroup = vi.fn(async (name: string): Promise<ProjectGroup> => {
+async function createGroup(name: string): Promise<ProjectGroup> {
   calls.push(`create:${name}`)
   return {
     id: `g-${name}`,
@@ -36,7 +36,8 @@ const createProjectGroup = vi.fn(async (name: string): Promise<ProjectGroup> => 
     createdAt: 0,
     updatedAt: 0
   }
-})
+}
+const createProjectGroup = vi.fn(createGroup)
 const moveProjectToGroup = vi.fn(async (entry: RepoHostTarget, groupId: string | null) => {
   calls.push(`move:${entry.id}->${groupId}`)
   return true
@@ -89,6 +90,37 @@ describe('ClientGroupingSheet', () => {
     expect(calls).toEqual(['create:ZKidz', 'move:orca->g-ZKidz', 'move:web->g-ZKidz'])
     expect(toast.success).toHaveBeenCalledTimes(1)
     expect(useAppStore.getState().clientGroupingSheetOpen).toBe(false)
+  })
+
+  it('toasts the projects already filed, then the error, when apply throws partway', async () => {
+    const order: string[] = []
+    vi.mocked(toast.success).mockImplementation((message) => {
+      order.push(`success:${String(message)}`)
+      return 1
+    })
+    vi.mocked(toast.error).mockImplementation((message) => {
+      order.push(`error:${String(message)}`)
+      return 1
+    })
+    createProjectGroup
+      .mockImplementationOnce(createGroup)
+      .mockRejectedValueOnce(new Error('offline'))
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    openSheet([project('orca'), project('aicc'), project('site', 'Acme'), project('app', 'Acme')])
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Apply 2 groups' }))
+    })
+    expect(order).toEqual([
+      'success:Filed 2 projects by client',
+      'error:Could not apply client groups'
+    ])
+    consoleError.mockRestore()
+  })
+
+  it("labels each client's project list as a group named after the client", () => {
+    openSheet([project('orca'), project('aicc')])
+    const list = screen.getByRole('group', { name: 'ZKidz' })
+    expect(list.querySelectorAll('li')).toHaveLength(2)
   })
 
   it('moves nothing and disables Apply when every project is unticked', () => {

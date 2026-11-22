@@ -139,6 +139,8 @@ export function serializeSidebarRow(
         field('depth', row.depth),
         field('groupDepth', row.groupDepth)
       ])
+    case 'client-grouping-hint':
+      return line('CLIENT_HINT', [field('key', row.key), field('projects', row.projectCount)])
   }
 }
 

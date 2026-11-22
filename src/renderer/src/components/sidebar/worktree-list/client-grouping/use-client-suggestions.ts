@@ -1,10 +1,14 @@
 import { useMemo } from 'react'
 import { useAppStore } from '@/store'
+import type { HostSectionRow } from '../../../../../../shared/sidebar-list/hosts/host-section-rows'
 import {
   suggestClientGroups,
   type MachineClientSuggestions
 } from '../../../../../../shared/project/groups/client-suggestions'
-import { getIdleProjectsKey } from '../../hidden-projects/archive-model'
+import {
+  getClientGroupingHintRows,
+  insertClientGroupingHintRows
+} from './client-grouping-hint-rows'
 
 export function useClientSuggestions(): MachineClientSuggestions[] {
   const repos = useAppStore((state) => state.repos)
@@ -12,7 +16,12 @@ export function useClientSuggestions(): MachineClientSuggestions[] {
   return useMemo(() => suggestClientGroups({ repos, projectGroups }), [repos, projectGroups])
 }
 
-/** The machine's suggested projects; a dismissal holds until one not in it is suggested. */
-export function getSuggestionsKey(section: MachineClientSuggestions): string {
-  return getIdleProjectsKey(section.suggestions.flatMap((suggestion) => suggestion.projects))
+export function useClientGroupingHintRows(rows: HostSectionRow[]): HostSectionRow[] {
+  const sections = useClientSuggestions()
+  const dismissedKey = useAppStore((state) => state.dismissedClientSuggestionsKey)
+  const hints = useMemo(
+    () => getClientGroupingHintRows(sections, dismissedKey),
+    [sections, dismissedKey]
+  )
+  return useMemo(() => insertClientGroupingHintRows(rows, hints), [rows, hints])
 }

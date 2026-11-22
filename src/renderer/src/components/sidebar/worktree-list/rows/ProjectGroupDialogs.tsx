@@ -8,7 +8,6 @@ import { ProjectGroupDeleteDialog } from './ProjectGroupDeleteDialog'
 import SuppressExternalWorktreeInboxDialog from '../listing/SuppressExternalWorktreeInboxDialog'
 import type { NewExternalWorktreesInboxActionState } from '../listing/new-external-worktrees-inbox-actions'
 import type { ProjectGroupDialogs } from './use-project-group-dialogs'
-import { ClientGroupingSheet } from '../client-grouping/ClientGroupingSheet'
 
 export function SidebarWorktreeListDialogs({
   dialogs,
@@ -141,7 +140,6 @@ export function SidebarWorktreeListDialogs({
         onConfirm={dialogs.handleConfirmDeleteProjectGroup}
         unsavedTargets={dialogs.deleteUnsavedTargets}
       />
-      <ClientGroupingSheet />
     </>
   )
 }

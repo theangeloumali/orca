@@ -71,7 +71,7 @@ export function ClientSuggestionCard({
           disabled={disabled}
           onCheckedChange={onToggleGroup}
         />
-        <Label htmlFor={groupId} className="min-w-0 flex-1">
+        <Label id={`${groupId}-label`} htmlFor={groupId} className="min-w-0 flex-1">
           <span className="truncate">{suggestion.clientName}</span>
         </Label>
         <Badge variant="secondary">
@@ -80,7 +80,11 @@ export function ClientSuggestionCard({
             : t('auto.components.sidebar.ClientGroupingSheet.newGroup', 'New group')}
         </Badge>
       </div>
-      <ul className="flex flex-col border-t border-border py-1">
+      <ul
+        role="group"
+        aria-labelledby={`${groupId}-label`}
+        className="flex flex-col border-t border-border py-1"
+      >
         {suggestion.projects.map((project) => (
           <SuggestedProjectRow
             key={getRepoRowIdentity(project)}

@@ -11,6 +11,8 @@ const SECONDARY_GROUP_HEADER_TOP_MARGIN = 4
 const IMPORTED_WORKTREES_LINE_ROW_HEIGHT = 36
 const PENDING_CREATION_ROW_HEIGHT = 56
 const FOLDER_WORKSPACE_ROW_HEIGHT = 64
+// Why: ClientGroupingHint is an h-7 (28px) line.
+export const CLIENT_GROUPING_HINT_ROW_HEIGHT = 28
 
 export function shouldUseHeaderTopSpacing(args: {
   rows: readonly RenderRow[]
@@ -61,6 +63,9 @@ export function estimateRenderRowSize(
   }
   if (row?.type === 'pending-creation') {
     return PENDING_CREATION_ROW_HEIGHT + 6
+  }
+  if (row?.type === 'client-grouping-hint') {
+    return CLIENT_GROUPING_HINT_ROW_HEIGHT + 6
   }
   if (row?.type === 'folder-workspace') {
     return FOLDER_WORKSPACE_ROW_HEIGHT

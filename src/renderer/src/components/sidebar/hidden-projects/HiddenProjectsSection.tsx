@@ -7,7 +7,7 @@ import { selectExecutionHostDisplayLabel } from '@/runtime/hosts/display/executi
 import { LOCAL_EXECUTION_HOST_ID } from '../../../../../shared/execution-host/execution-host'
 import {
   createLastActiveAtSelector,
-  getIdleProjectsKey,
+  getRepoRowIdentitiesKey,
   groupArchivedRepos,
   IDLE_AGE_TICK_MS,
   isIdleHintDismissed,
@@ -44,7 +44,7 @@ const HiddenProjectsSection = React.memo(function HiddenProjectsSection() {
     () => selectIdleListedRepos(repos, lastActiveAtByRow, now),
     [repos, lastActiveAtByRow, now]
   )
-  const idleKey = getIdleProjectsKey(idleListed)
+  const idleKey = getRepoRowIdentitiesKey(idleListed)
   const idleRepos = isIdleHintDismissed(idleKey, dismissedIdleKey) ? [] : idleListed
   // Name machines only when one is not this computer; a local-only Archive needs no machine name.
   const machineLabels = useAppStore(
