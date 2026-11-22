@@ -11,13 +11,13 @@ const sources = {
     { id: 'r-hidden', projectGroupId: 'nested', hiddenAt: 1 },
     { id: 'r-out', projectGroupId: 'other' }
   ],
-  worktreesByRepo: {
+  workspacesByRepoId: {
     'r-top': [{ id: 'wt-top', repoId: 'r-top' }],
     'r-nested': [{ id: 'wt-nested', repoId: 'r-nested' }],
     'r-hidden': [{ id: 'wt-hidden', repoId: 'r-hidden' }],
     'r-out': [{ id: 'wt-out', repoId: 'r-out' }]
   },
-  folderWorkspaces: [
+  folderEntries: [
     { id: 'fw-nested', projectGroupId: 'nested' },
     { id: 'fw-out', projectGroupId: 'other' }
   ]

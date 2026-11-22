@@ -6526,7 +6526,11 @@
           "hostServerReplaced": "伺服器不同：請先忘記，再連線",
           "collapseAllInGroup": "摺疊 {{value0}} 內的全部項目",
           "expandAllInGroup": "展開 {{value0}} 內的全部項目",
-          "clickKeyLabel": "點按"
+          "clickKeyLabel": "點按",
+          "groupSummaryProjects_other": "{{count}} 個專案",
+          "groupSummaryNeedsYou_other": "{{count}} 個需要你",
+          "groupSummaryLabel": "{{projects}}, {{needsYou}}",
+          "createFromReposDescription": "建立群組並將 {{count}} 個專案移入。"
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "取消",
@@ -7260,6 +7264,14 @@
           "statusWorkspaces": "顯示 {{total}} 個工作區中的 {{shown}} 個",
           "showAll": "全部顯示",
           "hiddenNeedsYou_other": "{{count}} 個已隱藏的工作區需要你"
+        },
+        "projectSelection": {
+          "count": "已選取 {{count}} 個",
+          "groupSelected": "將所選項目分組…",
+          "clear": "清除",
+          "newGroup": "新增群組…",
+          "groupCount": "將所選的 {{count}} 個分組…",
+          "stayPut_other": "其他機器上的 {{count}} 個保持不變"
         }
       },
       "shared": {

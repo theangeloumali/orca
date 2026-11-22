@@ -11991,7 +11991,15 @@
           "projectGroupRefreshSuccess_many": "Adicionados {{count}} projetos a {{group}}",
           "collapseAllInGroup": "Recolher tudo em {{value0}}",
           "expandAllInGroup": "Expandir tudo em {{value0}}",
-          "clickKeyLabel": "clique"
+          "clickKeyLabel": "clique",
+          "groupSummaryProjects_one": "{{count}} projeto",
+          "groupSummaryProjects_other": "{{count}} projetos",
+          "groupSummaryProjects_many": "{{count}} projetos",
+          "groupSummaryNeedsYou_one": "{{count}} precisa de você",
+          "groupSummaryNeedsYou_other": "{{count}} precisam de você",
+          "groupSummaryNeedsYou_many": "{{count}} precisam de você",
+          "groupSummaryLabel": "{{projects}}, {{needsYou}}",
+          "createFromReposDescription": "Criar um grupo e mover {{count}} projetos para ele."
         },
         "WorktreeCardMeta": {
           "3e65e11cc6": "Metadados do espaço de trabalho",
@@ -13334,6 +13342,16 @@
           "hiddenNeedsYou_one": "{{count}} oculto precisa de você",
           "hiddenNeedsYou_other": "{{count}} ocultos precisam de você",
           "hiddenNeedsYou_many": "{{count}} ocultos precisam de você"
+        },
+        "projectSelection": {
+          "count": "{{count}} selecionados",
+          "groupSelected": "Agrupar seleção…",
+          "clear": "Limpar",
+          "newGroup": "Novo grupo…",
+          "groupCount": "Agrupar {{count}} selecionados…",
+          "stayPut_one": "{{count}} em outra máquina fica",
+          "stayPut_other": "{{count}} em outra máquina ficam",
+          "stayPut_many": "{{count}} em outra máquina ficam"
         }
       },
       "editor": {

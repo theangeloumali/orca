@@ -30,10 +30,8 @@ import {
   getProjectGroupHeaderPaddingLeft,
   WORKTREE_SECTION_HEADER_PADDING_LEFT
 } from './indentation'
-import {
-  FolderPathStatusIndicator,
-  isFolderWorkspaceCreateDisabled
-} from './FolderPathStatusIndicator'
+import { isFolderWorkspaceCreateDisabled } from './FolderPathStatusIndicator'
+import { ProjectGroupTitleExtras } from './ProjectGroupTitleExtras'
 import { RepoScanUnavailableIndicator } from './RepoScanUnavailableIndicator'
 import {
   ProjectGroupCreateWorkspaceButton,
@@ -336,7 +334,10 @@ export function renderWorktreeSectionHeaderRow(
                 <div className="min-w-0 truncate text-[13px] font-semibold leading-4">{label}</div>
                 {hostContext ? <ProjectHeaderHostLabel context={hostContext} /> : null}
                 <RepoForkIndicator upstream={row.repo?.upstream} />
-                <FolderPathStatusIndicator status={projectGroupPathStatus} />
+                <ProjectGroupTitleExtras
+                  status={projectGroupPathStatus}
+                  groupId={projectGroupIdForHeader}
+                />
                 {isRepoHeader ? <RepoScanUnavailableIndicator repo={row.repo!} /> : null}
               </div>
             </div>

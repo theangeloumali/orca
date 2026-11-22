@@ -6848,7 +6848,11 @@
           "hostVmProvisioning": "正在预配…",
           "collapseAllInGroup": "折叠 {{value0}} 内的全部项目",
           "expandAllInGroup": "展开 {{value0}} 内的全部项目",
-          "clickKeyLabel": "点按"
+          "clickKeyLabel": "点按",
+          "groupSummaryProjects_other": "{{count}} 个项目",
+          "groupSummaryNeedsYou_other": "{{count}} 个需要你",
+          "groupSummaryLabel": "{{projects}}, {{needsYou}}",
+          "createFromReposDescription": "创建一个分组并将 {{count}} 个项目移入其中。"
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "取消",
@@ -7642,6 +7646,14 @@
           "statusWorkspaces": "显示 {{total}} 个工作区中的 {{shown}} 个",
           "showAll": "全部显示",
           "hiddenNeedsYou_other": "{{count}} 个已隐藏的工作区需要你"
+        },
+        "projectSelection": {
+          "count": "已选择 {{count}} 个",
+          "groupSelected": "将所选项分组…",
+          "clear": "清除",
+          "newGroup": "新建分组…",
+          "groupCount": "将所选的 {{count}} 个分组…",
+          "stayPut_other": "其他机器上的 {{count}} 个保持不变"
         }
       },
       "shared": {

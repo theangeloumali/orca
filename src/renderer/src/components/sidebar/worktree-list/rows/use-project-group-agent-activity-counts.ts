@@ -22,8 +22,8 @@ import { getDescendantGroupIds } from '../listing/project-group-subtree-collapse
 
 type ProjectGroupWorkspaceSources = {
   repos: readonly (Pick<Repo, 'id'> & Partial<Pick<Repo, 'projectGroupId' | 'hiddenAt'>>)[]
-  worktreesByRepo: Readonly<Record<string, readonly Pick<Worktree, 'id'>[]>>
-  folderWorkspaces: readonly Pick<FolderWorkspace, 'id' | 'projectGroupId'>[]
+  workspacesByRepoId: Readonly<Record<string, readonly Pick<Worktree, 'id'>[]>>
+  folderEntries: readonly Pick<FolderWorkspace, 'id' | 'projectGroupId'>[]
 }
 
 /** The group and every subgroup beneath it, as the sidebar draws them. */
@@ -43,10 +43,10 @@ export function collectProjectGroupWorkspaceIds(
   const ids: string[] = []
   for (const repo of sources.repos) {
     if (!isRepoHidden(repo) && repo.projectGroupId && subtreeGroupIds.has(repo.projectGroupId)) {
-      ids.push(...(sources.worktreesByRepo[repo.id] ?? []).map((worktree) => worktree.id))
+      ids.push(...(sources.workspacesByRepoId[repo.id] ?? []).map((worktree) => worktree.id))
     }
   }
-  for (const folderWorkspace of sources.folderWorkspaces) {
+  for (const folderWorkspace of sources.folderEntries) {
     if (subtreeGroupIds.has(folderWorkspace.projectGroupId)) {
       ids.push(folderWorkspaceKey(folderWorkspace.id))
     }
@@ -73,7 +73,11 @@ export function useProjectGroupAgentActivityCounts(
           clock: number
         ) =>
           countHostAgentActivity(
-            collectProjectGroupWorkspaceIds(groupIds, { repos, worktreesByRepo, folderWorkspaces }),
+            collectProjectGroupWorkspaceIds(groupIds, {
+              repos,
+              workspacesByRepoId: worktreesByRepo,
+              folderEntries: folderWorkspaces
+            }),
             getLiveAgentStatusByWorktreeId(state.agentStatusByPaneKey, tabsByWorktree, clock)
           )
       ),

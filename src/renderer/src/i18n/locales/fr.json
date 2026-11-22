@@ -6552,7 +6552,15 @@
           "hostServerReplaced": "Serveur différent : oubliez-le, puis connectez-vous",
           "collapseAllInGroup": "Tout réduire dans {{value0}}",
           "expandAllInGroup": "Tout développer dans {{value0}}",
-          "clickKeyLabel": "clic"
+          "clickKeyLabel": "clic",
+          "groupSummaryProjects_one": "{{count}} projet",
+          "groupSummaryProjects_other": "{{count}} projets",
+          "groupSummaryProjects_many": "{{count}} projets",
+          "groupSummaryNeedsYou_one": "{{count}} a besoin de vous",
+          "groupSummaryNeedsYou_other": "{{count}} ont besoin de vous",
+          "groupSummaryNeedsYou_many": "{{count}} ont besoin de vous",
+          "groupSummaryLabel": "{{projects}}, {{needsYou}}",
+          "createFromReposDescription": "Créer un groupe et y déplacer {{count}} projets."
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "Annuler",
@@ -7321,6 +7329,16 @@
           "hiddenNeedsYou_one": "{{count}} masqué a besoin de vous",
           "hiddenNeedsYou_other": "{{count}} masqués ont besoin de vous",
           "hiddenNeedsYou_many": "{{count}} masqués ont besoin de vous"
+        },
+        "projectSelection": {
+          "count": "{{count}} sélectionnés",
+          "groupSelected": "Grouper la sélection…",
+          "clear": "Effacer",
+          "newGroup": "Nouveau groupe…",
+          "groupCount": "Grouper {{count}} sélectionnés…",
+          "stayPut_one": "{{count}} sur une autre machine reste",
+          "stayPut_other": "{{count}} sur une autre machine restent",
+          "stayPut_many": "{{count}} sur une autre machine restent"
         }
       },
       "shared": {
