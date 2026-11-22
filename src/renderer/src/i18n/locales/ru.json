@@ -6980,7 +6980,21 @@
           "hostServerReplaced": "Другой сервер: забудьте его и подключитесь снова",
           "collapseAllInGroup": "Свернуть всё в {{value0}}",
           "expandAllInGroup": "Развернуть всё в {{value0}}",
-          "clickKeyLabel": "щелчок"
+          "clickKeyLabel": "щелчок",
+          "groupSummaryProjects_one": "{{count}} проект",
+          "groupSummaryProjects_few": "{{count}} проекта",
+          "groupSummaryProjects_many": "{{count}} проектов",
+          "groupSummaryProjects_other": "{{count}} проекта",
+          "groupSummaryNeedsYou_one": "{{count}} ждёт вас",
+          "groupSummaryNeedsYou_few": "{{count}} ждут вас",
+          "groupSummaryNeedsYou_many": "{{count}} ждут вас",
+          "groupSummaryNeedsYou_other": "{{count}} ждут вас",
+          "groupSummaryLabel": "{{projects}}, {{needsYou}}",
+          "createFromReposDescription": "Создать группу и переместить в неё проекты: {{count}}.",
+          "createFromReposDescription_one": "Создать группу и переместить в неё {{count}} проект.",
+          "createFromReposDescription_few": "Создать группу и переместить в неё {{count}} проекта.",
+          "createFromReposDescription_many": "Создать группу и переместить в неё {{count}} проектов.",
+          "createFromReposDescription_other": "Создать группу и переместить в неё {{count}} проекта."
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "Отмена",
@@ -7760,6 +7774,18 @@
           "hiddenNeedsYou_few": "{{count}} скрытых ждут вас",
           "hiddenNeedsYou_many": "{{count}} скрытых ждут вас",
           "hiddenNeedsYou_other": "{{count}} скрытых ждут вас"
+        },
+        "projectSelection": {
+          "count": "Выбрано: {{count}}",
+          "groupSelected": "Сгруппировать выбранное…",
+          "clear": "Очистить",
+          "newGroup": "Новая группа…",
+          "groupCount": "Сгруппировать выбранные ({{count}})…",
+          "selected": "Выбрано",
+          "stayPut_one": "{{count}} на другой машине останется",
+          "stayPut_few": "{{count}} на другой машине останутся",
+          "stayPut_many": "{{count}} на другой машине останутся",
+          "stayPut_other": "{{count}} на другой машине останутся"
         }
       },
       "shared": {

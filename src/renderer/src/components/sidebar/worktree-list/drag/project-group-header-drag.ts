@@ -7,7 +7,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 
 import {
   computeProjectGroupHeaderDropPreview,
-  measureProjectGroupHeaderDragRects
+  measureProjectGroupHeaderDragRects,
+  measureProjectGroupNestRects
 } from './project-group-header-drop'
 import { commitProjectGroupHeaderDragDrop } from './project-group-header-drag-commit'
 import {
@@ -77,7 +78,7 @@ export function useProjectGroupHeaderDrag({
         }))
       : measureProjectGroupHeaderDragRects(container, session.bucketKey)
     session.headerRects = rects
-    session.nestRects = measureProjectGroupHeaderDragRects(container)
+    session.nestRects = measureProjectGroupNestRects(container)
     return rects
   }, [])
 

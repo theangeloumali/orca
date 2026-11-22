@@ -11,10 +11,13 @@ export function measureSidebarHeaderDragRect(
   element: HTMLElement,
   container: HTMLElement,
   containerRect: DOMRect,
-  sectionEndAttribute: string
+  sectionEndAttribute: string,
+  /** 'drawn' follows sticky pinning, for hit tests; 'layout' is the row's slot, for reordering. */
+  position: 'layout' | 'drawn' = 'layout'
 ): { top: number; bottom: number; sectionBottom: number | undefined } {
   const rect = element.getBoundingClientRect()
-  const virtualRow = element.closest<HTMLElement>('[data-worktree-virtual-row]')
+  const virtualRow =
+    position === 'layout' ? element.closest<HTMLElement>('[data-worktree-virtual-row]') : null
   const virtualRowStart = virtualRow
     ? getHeaderDragNumberAttribute(virtualRow, 'data-worktree-virtual-row-start')
     : undefined

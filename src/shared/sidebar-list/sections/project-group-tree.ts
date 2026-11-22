@@ -1,7 +1,13 @@
 // The sidebar's project-group tree: which groups and projects show, in what order and depth.
 // The desktop sidebar and the paired phone both list through this walk.
 import type { ProjectGroup } from '../../project/groups/project-group-types'
-import type { ProjectSectionEntry, ProjectSectionRepo } from './project-section-grouping'
+import {
+  buildProjectGroupingIndex,
+  getProjectGroupingForRepo,
+  type ProjectSectionEntry,
+  type ProjectSectionModel,
+  type ProjectSectionRepo
+} from './project-section-grouping'
 import type { Repo } from '../../repository/repo-types'
 import type { ProjectOrderBy } from '../../ui-chrome/ui-chrome-types'
 import {
@@ -16,6 +22,7 @@ import {
 } from './project-section-order'
 import { compareRootProjectEntries } from './root-project-order'
 import { compareCodePoints, compareSidebarText } from '../sorting/text-order'
+import { isRepoHidden } from '../../project/catalog/hidden-projects'
 
 type GroupedProjectEntry = ProjectSectionEntry<
   ActivityItem,
@@ -151,4 +158,23 @@ export function walkProjectGroupTree<V extends GroupedProjectEntry>(
       visit.projects([entry.repoEntry], 0)
     }
   }
+}
+
+/** Header keys of projects filed anywhere in a group's subtree; hidden ones never list. */
+// Keyed as the sidebar draws headers: machine copies and a project's repos collapse into one.
+export function getProjectGroupSubtreeProjectKeys(
+  subtreeGroupIds: ReadonlySet<string>,
+  repos: readonly (Pick<Repo, 'id' | 'displayName'> &
+    Partial<Pick<Repo, 'projectGroupId' | 'hiddenAt'>>)[],
+  projectGrouping: ProjectSectionModel
+): Set<string> {
+  const repoMap = new Map(repos.map((repo) => [repo.id, repo]))
+  const projectIndex = buildProjectGroupingIndex(projectGrouping)
+  const keys = new Set<string>()
+  for (const repo of repos) {
+    if (!isRepoHidden(repo) && repo.projectGroupId && subtreeGroupIds.has(repo.projectGroupId)) {
+      keys.add(getProjectGroupingForRepo(repo.id, repoMap, projectIndex).key)
+    }
+  }
+  return keys
 }

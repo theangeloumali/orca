@@ -3,7 +3,6 @@ import { useCallback, useEffect, useMemo } from 'react'
 import type React from 'react'
 import { useAppStore } from '@/store'
 import '@/store/project-groups/project-group-owner-routing'
-import { getRepoExecutionHostId } from '../../../../../../shared/execution-host/execution-host'
 import type { ProjectGroup } from '../../../../../../shared/project/groups/project-group-types'
 import type { ProjectOrderBy } from '../../../../../../shared/ui-chrome/ui-chrome-types'
 import type { Repo } from '../../../../../../shared/repository/repo-types'
@@ -31,7 +30,10 @@ import {
 import { toast } from 'sonner'
 import { moveProjectGroupToParent } from '@/store/project-groups/move-project-group'
 import { useProjectGroupNestDrop } from './use-project-group-nest-drop'
-import { hasSameHostGroupPair } from './project-group-header-nest-drop'
+import {
+  getProjectGroupOwnerHostIdByGroupId,
+  hasSameHostGroupPair
+} from './project-group-header-nest-drop'
 import { translate } from '@/i18n/i18n'
 
 const readLiveRepos = (): readonly Repo[] => useAppStore.getState().repos
@@ -113,16 +115,10 @@ export function useWorktreeSidebarHeaderDrag(args: {
     () => getRootProjectHeaderCountByOccurrenceKey(rootProjectHeaderKeys),
     [rootProjectHeaderKeys]
   )
-  // Why: an id shared by two hosts has no single owner, so leave it unrouted rather than guess.
-  const projectGroupOwnerHostIdByGroupId = useMemo(() => {
-    const byGroupId = new Map<string, ExecutionHostId | null>()
-    for (const group of projectGroups) {
-      const hostId = getRepoExecutionHostId(group)
-      const existing = byGroupId.get(group.id)
-      byGroupId.set(group.id, existing === undefined || existing === hostId ? hostId : null)
-    }
-    return byGroupId
-  }, [projectGroups])
+  const projectGroupOwnerHostIdByGroupId = useMemo(
+    () => getProjectGroupOwnerHostIdByGroupId(projectGroups),
+    [projectGroups]
+  )
 
   const commitRepoReorder = useCallback(
     (orderedIds: string[]) => {
@@ -249,6 +245,7 @@ export function useWorktreeSidebarHeaderDrag(args: {
     onCommitProjectGroupOrder: commitProjectGroupOrder,
     rootProjectHeaderKeys,
     onCommitRootProjectOrder: commitRootProjectOrder,
+    projectGroupOwnerHostIdByGroupId,
     getScrollContainer: () => scrollRef.current
   })
   const projectGroupNestDrop = useProjectGroupNestDrop({
@@ -294,6 +291,7 @@ export function useWorktreeSidebarHeaderDrag(args: {
     rootProjectHeaderCountByOccurrenceKey,
     rootProjectHeaderSectionEndByKey,
     canReorderRepoHeaders,
+    projectGroupOwnerHostIdByGroupId,
     canReorderProjectGroupHeaders,
     canNestProjectGroupHeaders,
     rootProjectHeaderKeys,

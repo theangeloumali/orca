@@ -21,7 +21,16 @@ import { PROJECT_GROUP_PARENT_UPDATE_RUNTIME_CAPABILITY } from '../../../../../.
 import { REPO_HEADER_ACTION_BUTTON_CLASS } from './repo-header-action-button-class'
 import { SectionCollapseAllButton } from '../controls/SectionCollapseAllButton'
 import { getShortcutPlatform } from '@/lib/keyboard/shortcut-platform'
-import { useProjectGroupSubtreeCollapse } from './use-project-group-subtree-collapse'
+import {
+  useProjectGroupSubtreeCollapse,
+  useVisibleProjectGroupSubtreeProjectCount
+} from './use-project-group-subtree-collapse'
+import {
+  useProjectGroupAgentActivityCounts,
+  useProjectGroupSubtreeIds
+} from './use-project-group-agent-activity-counts'
+import { useAppStore } from '@/store/index'
+import { getProjectGroupHeaderKey } from '../../../../../../shared/sidebar-list/sections/group-keys'
 import {
   handleRepoHeaderActionPointerDown,
   stopRepoHeaderKeyboardToggle,
@@ -129,6 +138,63 @@ export function ProjectGroupHeaderMenu({
         </DropdownMenuContent>
       </DropdownMenu>
     </>
+  )
+}
+
+/** "7 projects · 1 needs you" on a folded group header; gone once the group is open. */
+export function ProjectGroupFoldedSummary({
+  groupId
+}: {
+  groupId: string
+}): React.JSX.Element | null {
+  const isCollapsed = useAppStore((state) =>
+    state.collapsedGroups.has(getProjectGroupHeaderKey(groupId))
+  )
+  // Why split: an open group mounts no counting subscriptions at all.
+  return isCollapsed ? <FoldedGroupCounts groupId={groupId} /> : null
+}
+
+function FoldedGroupCounts({ groupId }: { groupId: string }): React.JSX.Element {
+  const t = useTranslate()
+  const subtreeGroupIds = useProjectGroupSubtreeIds(groupId)
+  const projectCount = useVisibleProjectGroupSubtreeProjectCount(subtreeGroupIds)
+  const { needsYou } = useProjectGroupAgentActivityCounts(subtreeGroupIds)
+  const projectsText = t(
+    'auto.components.sidebar.WorktreeList.groupSummaryProjects',
+    '{{count}} projects',
+    {
+      count: projectCount,
+      defaultValue_one: '{{count}} project'
+    }
+  )
+  const needsYouText = t(
+    'auto.components.sidebar.WorktreeList.groupSummaryNeedsYou',
+    '{{count}} need you',
+    {
+      count: needsYou,
+      defaultValue_one: '{{count}} needs you'
+    }
+  )
+  const summaryClassName =
+    'min-w-0 truncate text-[11px] font-normal leading-4 text-muted-foreground tabular-nums'
+  if (needsYou === 0) {
+    return <span className={summaryClassName}>{projectsText}</span>
+  }
+  // The visual "·" separator is hidden; screen readers get one comma-joined phrase.
+  return (
+    <span className={summaryClassName}>
+      <span className="sr-only">
+        {t('auto.components.sidebar.WorktreeList.groupSummaryLabel', '{{projects}}, {{needsYou}}', {
+          projects: projectsText,
+          needsYou: needsYouText
+        })}
+      </span>
+      <span aria-hidden>
+        {projectsText}
+        {' · '}
+        <span className="text-agent-question">{needsYouText}</span>
+      </span>
+    </span>
   )
 }
 

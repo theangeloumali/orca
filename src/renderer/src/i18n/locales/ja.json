@@ -6567,7 +6567,12 @@
           "hostVmProvisioning": "プロビジョニング中…",
           "collapseAllInGroup": "{{value0}} 内をすべて折りたたむ",
           "expandAllInGroup": "{{value0}} 内をすべて展開",
-          "clickKeyLabel": "クリック"
+          "clickKeyLabel": "クリック",
+          "groupSummaryProjects_other": "{{count}} 件のプロジェクト",
+          "groupSummaryNeedsYou_other": "{{count}} 件が対応待ち",
+          "groupSummaryLabel": "{{projects}}, {{needsYou}}",
+          "createFromReposDescription": "グループを作成し、{{count}} 件のプロジェクトを移動します。",
+          "createFromReposDescription_other": "グループを作成し、{{count}} 件のプロジェクトを移動します。"
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "キャンセル",
@@ -7356,6 +7361,15 @@
           "statusWorkspaces": "{{total}} 件中 {{shown}} 件のワークスペースを表示",
           "showAll": "すべて表示",
           "hiddenNeedsYou_other": "非表示のうち {{count}} 件が対応待ち"
+        },
+        "projectSelection": {
+          "count": "{{count}} 件を選択中",
+          "groupSelected": "選択項目をグループ化…",
+          "clear": "クリア",
+          "newGroup": "新しいグループ…",
+          "groupCount": "選択した {{count}} 件をグループ化…",
+          "selected": "選択済み",
+          "stayPut_other": "別のマシンの {{count}} 件はそのまま"
         }
       },
       "shared": {

@@ -2,18 +2,26 @@ import type { RootProjectHeaderDrag } from './root-project-header-drop'
 import type { PointerEvent } from 'react'
 
 import type { ProjectHeaderDragBucketKey, ProjectHeaderDragRect } from './project-header-drop'
+import type { ProjectGroupHeaderDragRect } from './project-group-header-drop'
+import type { ProjectGroupNestTarget } from './project-group-header-nest-drop'
 import type { Repo } from '../../../../../../shared/repository/repo-types'
 
 export type RepoDragState = {
   draggingRepoId: string | null
   dropIndex: number | null
   dropIndicatorY: number | null
+  /** The group the project would be filed into; set instead of a reorder slot. */
+  nestTarget: ProjectGroupNestTarget | null
 }
+
+/** One pointer position's outcome: a reorder slot or a group to file into. */
+export type RepoDrop = Omit<RepoDragState, 'draggingRepoId'>
 
 export const INITIAL_REPO_DRAG_STATE: RepoDragState = {
   draggingRepoId: null,
   dropIndex: null,
-  dropIndicatorY: null
+  dropIndicatorY: null,
+  nestTarget: null
 }
 
 export type UseRepoHeaderDragArgs = RootProjectHeaderDrag & {
@@ -24,23 +32,30 @@ export type UseRepoHeaderDragArgs = RootProjectHeaderDrag & {
   usesProjectGroupOrdering: boolean
   onCommitRepoOrder: (orderedIds: string[]) => void
   onCommitProjectGroupOrder: (project: Repo, projectGroupId: string | null, order: number) => void
+  /** Owner machine per group id; null when two machines share an id. */
+  projectGroupOwnerHostIdByGroupId: ReadonlyMap<string, string | null>
   getScrollContainer: () => HTMLElement | null
 }
 
 export type RepoHeaderDragController = {
   state: RepoDragState
-  onHandlePointerDown: (event: PointerEvent<HTMLElement>, repo: Repo) => void
+  /** repo anchors the reorder; registration is the clicked row's own copy, which a nest files. */
+  onHandlePointerDown: (event: PointerEvent<HTMLElement>, repo: Repo, registration: Repo) => void
 }
 
 export type ProjectHeaderDragSession = {
   // Why the row, not its id: a twin on another host shares the id.
   repo: Repo
+  // Why apart from repo: a cross-host header's anchor may be another machine's copy.
+  registration: Repo
   bucketKey: ProjectHeaderDragBucketKey
   sidebarRepoHeaderIds: readonly string[]
   rootProjectHeaderKeys?: readonly string[]
   rootProjectHeaderHostId?: string
   pointerId: number
   headerRects: ProjectHeaderDragRect[]
+  /** Every group header, so the project can be filed into any visible group. */
+  nestRects: ProjectGroupHeaderDragRect[]
   handleEl: HTMLElement
   startX: number
   startY: number

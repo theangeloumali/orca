@@ -17,9 +17,11 @@ import {
   selectDetectedWorktreesByRepo,
   selectWorktreesByRepo
 } from '@/store/workspaces/catalog/workspace-record-fields'
+import { createGroupFromRepos } from './project-group-batch'
 
 export type ProjectGroupNameDialogState =
   | { type: 'create-from-repo'; repo: Repo }
+  | { type: 'create-from-repos'; repos: readonly Repo[] }
   | { type: 'create-subgroup'; parentGroupId: string; parentName: string; hostId?: ExecutionHostId }
   // hostId is the group row's owner host, so the mutation is not routed to whichever host has focus.
   | {
@@ -184,6 +186,13 @@ export function useProjectGroupDialogs(args: {
             )
           )
         }
+        return
+      }
+      if (nameDialog.type === 'create-from-repos') {
+        await createGroupFromRepos(name, nameDialog.repos, {
+          createProjectGroup,
+          moveProjectToGroup
+        })
         return
       }
       if (nameDialog.type === 'create-from-repo') {

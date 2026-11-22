@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import React from 'react'
+import React, { use, useState } from 'react'
 import { useRepoSshGate } from '@/lib/workspace/catalog/use-repo-ssh-gate'
 import {
   CircleX,
@@ -43,6 +43,8 @@ import {
   isLegacyRepoForExternalWorktreeVisibility
 } from '../../../../../../shared/worktree/visibility/external-worktree-visibility'
 import { REPO_HEADER_ACTION_BUTTON_CLASS } from './repo-header-action-button-class'
+import { GroupSelectedMenuItems } from './GroupSelectedMenuItems'
+import { ProjectHeaderSelectionActionsContext } from './project-header-selection-context'
 import { ProjectGroupTargetsByDevice } from './ProjectGroupTargetsByDevice'
 import { setProjectHidden } from '../../hidden-projects/set-project-hidden'
 import { getRepoHeaderCreateState } from './repo-header-create-state'
@@ -103,8 +105,16 @@ export const RepoHeaderProjectActionsMenu = React.memo(function RepoHeaderProjec
   const t = useTranslate()
   // Memoized: subscribe so a language change still repaints its labels.
   useTranslation()
+  const selectionActions = use(ProjectHeaderSelectionActionsContext)
+  // Snapshot on open: clicking into the portaled menu clears the live selection.
+  const [menuSelection, setMenuSelection] = useState<readonly Repo[] | null>(null)
   return (
-    <DropdownMenu modal={false}>
+    <DropdownMenu
+      modal={false}
+      onOpenChange={(open) =>
+        setMenuSelection(open ? (selectionActions?.getMenuSelection(repo) ?? null) : null)
+      }
+    >
       <Tooltip>
         <TooltipTrigger asChild>
           <DropdownMenuTrigger asChild>
@@ -164,6 +174,23 @@ export const RepoHeaderProjectActionsMenu = React.memo(function RepoHeaderProjec
           <FolderTree className="size-3.5" />
           {t('auto.components.sidebar.WorktreeList.cbfd565f83', 'New group from project')}
         </DropdownMenuItem>
+        {menuSelection ? (
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <FolderTree className="size-3.5" />
+              {t(
+                'auto.components.sidebar.projectSelection.groupCount',
+                'Group {{count}} selected…',
+                {
+                  count: menuSelection.length
+                }
+              )}
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              <GroupSelectedMenuItems repos={menuSelection} projectGroups={projectGroups} />
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+        ) : null}
         {projectGroups.length > 0 ? (
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>

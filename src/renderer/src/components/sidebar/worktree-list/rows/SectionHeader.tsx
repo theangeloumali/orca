@@ -2,9 +2,11 @@ import {
   getRootProjectHeaderKey,
   getRootProjectHeaderOccurrenceKey
 } from '../drag/root-project-header-drop'
+import { canDragProjectHeader } from '../drag/project-header-drag-start'
 import React from 'react'
 import { ChevronDown } from 'lucide-react'
-import { ProjectHeaderHostLabel, ProjectHeaderHostTooltip } from './ProjectHeaderHostLabel'
+import { ProjectHeaderHostLabel } from './ProjectHeaderHostLabel'
+import { SelectableProjectHeader } from './project-header-selection'
 import type { VirtualItem } from '@tanstack/react-virtual'
 import { cn } from '@/lib/class-names'
 import { RepoIconGlyph } from '@/components/repo/repo-icon'
@@ -29,10 +31,8 @@ import {
   getProjectGroupHeaderPaddingLeft,
   WORKTREE_SECTION_HEADER_PADDING_LEFT
 } from './indentation'
-import {
-  FolderPathStatusIndicator,
-  isFolderWorkspaceCreateDisabled
-} from './FolderPathStatusIndicator'
+import { isFolderWorkspaceCreateDisabled } from './FolderPathStatusIndicator'
+import { ProjectGroupTitleExtras } from './ProjectGroupTitleExtras'
 import { RepoScanUnavailableIndicator } from './RepoScanUnavailableIndicator'
 import {
   ProjectGroupCreateWorkspaceButton,
@@ -107,14 +107,12 @@ export function renderWorktreeSectionHeaderRow(
         getRootProjectHeaderOccurrenceKey(rootProjectHeaderKey)
       ))
     : undefined
-  const isDraggableRepoHeader = Boolean(
-    headerDrag.canReorderRepoHeaders &&
-    projectIdForHeader &&
-    repoHeaderBucketKey &&
-    (rootProjectHeaderCount !== undefined
-      ? rootProjectHeaderCount > 1
-      : (headerDrag.sidebarRepoHeaderIdsByBucket.get(repoHeaderBucketKey)?.length ?? 0) > 1)
-  )
+  const isDraggableRepoHeader = canDragProjectHeader({
+    headerDrag,
+    project: headerRepo,
+    bucketKey: repoHeaderBucketKey,
+    rootProjectHeaderCount
+  })
   const isDraggableProjectGroupHeader = Boolean(
     headerDrag.canReorderProjectGroupHeaders &&
     projectGroupDragIdForHeader &&
@@ -195,7 +193,7 @@ export function renderWorktreeSectionHeaderRow(
       )}
       style={isActiveStickyHeader ? undefined : { transform: getVirtualRowTransform(vItem.start) }}
     >
-      <ProjectHeaderHostTooltip label={label} context={hostContext}>
+      <SelectableProjectHeader row={row} label={label} context={hostContext}>
         <div
           id={getWorktreeOptionId(row.key)}
           role="button"
@@ -277,7 +275,8 @@ export function renderWorktreeSectionHeaderRow(
           }
           onPointerDown={
             isDraggableRepoHeader && headerRepo
-              ? (event) => headerDrag.repoDrag.onHandlePointerDown(event, headerRepo)
+              ? (event) =>
+                  headerDrag.repoDrag.onHandlePointerDown(event, headerRepo, row.repo ?? headerRepo)
               : isDraggableProjectGroupHeader && projectGroupDragIdForHeader
                 ? (event) =>
                     headerDrag.projectGroupDrag.onHandlePointerDown(
@@ -335,7 +334,10 @@ export function renderWorktreeSectionHeaderRow(
                 <div className="min-w-0 truncate text-[13px] font-semibold leading-4">{label}</div>
                 {hostContext ? <ProjectHeaderHostLabel context={hostContext} /> : null}
                 <RepoForkIndicator upstream={row.repo?.upstream} />
-                <FolderPathStatusIndicator status={projectGroupPathStatus} />
+                <ProjectGroupTitleExtras
+                  status={projectGroupPathStatus}
+                  groupId={projectGroupIdForHeader}
+                />
                 {isRepoHeader ? <RepoScanUnavailableIndicator repo={row.repo!} /> : null}
               </div>
             </div>
@@ -406,7 +408,7 @@ export function renderWorktreeSectionHeaderRow(
             ) : null}
           </ProjectHeaderActions>
         </div>
-      </ProjectHeaderHostTooltip>
+      </SelectableProjectHeader>
     </div>
   )
 }

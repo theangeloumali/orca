@@ -28,6 +28,12 @@ export function renderWorktreeSidebarDropIndicators(args: {
           bottom={headerDrag.projectGroupDrag.state.nestTarget.bottom}
         />
       ) : null}
+      {headerDrag.repoDrag.state.nestTarget ? (
+        <ProjectGroupNestIndicator
+          top={headerDrag.repoDrag.state.nestTarget.top}
+          bottom={headerDrag.repoDrag.state.nestTarget.bottom}
+        />
+      ) : null}
       {headerDrag.hostDrag.state.draggingHostId !== null &&
       headerDrag.hostDrag.state.dropIndicatorY !== null ? (
         <WorktreeSidebarDropIndicator

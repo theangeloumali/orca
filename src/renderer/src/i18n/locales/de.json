@@ -6687,7 +6687,15 @@
           "hostServerReplaced": "Anderer Server: entfernen und dann verbinden",
           "collapseAllInGroup": "Alles in {{value0}} einklappen",
           "expandAllInGroup": "Alles in {{value0}} ausklappen",
-          "clickKeyLabel": "Klick"
+          "clickKeyLabel": "Klick",
+          "groupSummaryProjects_one": "{{count}} Projekt",
+          "groupSummaryProjects_other": "{{count}} Projekte",
+          "groupSummaryNeedsYou_one": "{{count}} braucht dich",
+          "groupSummaryNeedsYou_other": "{{count}} brauchen dich",
+          "groupSummaryLabel": "{{projects}}, {{needsYou}}",
+          "createFromReposDescription": "Eine Gruppe erstellen und {{count}} Projekte hineinverschieben.",
+          "createFromReposDescription_one": "Eine Gruppe erstellen und {{count}} Projekt hineinverschieben.",
+          "createFromReposDescription_other": "Eine Gruppe erstellen und {{count}} Projekte hineinverschieben."
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "Abbrechen",
@@ -7431,6 +7439,16 @@
           "showAll": "Alle anzeigen",
           "hiddenNeedsYou_one": "{{count}} ausgeblendetes braucht dich",
           "hiddenNeedsYou_other": "{{count}} ausgeblendete brauchen dich"
+        },
+        "projectSelection": {
+          "count": "{{count}} ausgewählt",
+          "groupSelected": "Auswahl gruppieren…",
+          "clear": "Leeren",
+          "newGroup": "Neue Gruppe…",
+          "groupCount": "{{count}} ausgewählte gruppieren…",
+          "selected": "Ausgewählt",
+          "stayPut_one": "{{count}} auf einem anderen Gerät bleibt",
+          "stayPut_other": "{{count}} auf einem anderen Gerät bleiben"
         }
       },
       "shared": {

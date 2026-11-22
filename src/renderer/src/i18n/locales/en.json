@@ -7810,7 +7810,15 @@
           "groupMoveNeedsUpdate": "Update this machine's Orca to nest groups",
           "collapseAllInGroup": "Collapse all in {{value0}}",
           "expandAllInGroup": "Expand all in {{value0}}",
-          "clickKeyLabel": "Click"
+          "clickKeyLabel": "Click",
+          "createFromReposDescription": "Create a group and move {{count}} projects into it.",
+          "groupSummaryProjects_one": "{{count}} project",
+          "groupSummaryProjects_other": "{{count}} projects",
+          "groupSummaryNeedsYou_one": "{{count}} needs you",
+          "groupSummaryNeedsYou_other": "{{count}} need you",
+          "groupSummaryLabel": "{{projects}}, {{needsYou}}",
+          "createFromReposDescription_one": "Create a group and move {{count}} project into it.",
+          "createFromReposDescription_other": "Create a group and move {{count}} projects into it."
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "Cancel",
@@ -8583,6 +8591,16 @@
           "filterAria": "Show only workspaces with a running terminal",
           "hiddenNeedsYou_one": "{{count}} hidden needs you",
           "hiddenNeedsYou_other": "{{count}} hidden need you"
+        },
+        "projectSelection": {
+          "count": "{{count}} selected",
+          "stayPut_one": "{{count}} on another machine stays put",
+          "stayPut_other": "{{count}} on another machine stay put",
+          "groupSelected": "Group selected…",
+          "clear": "Clear",
+          "newGroup": "New group…",
+          "groupCount": "Group {{count}} selected…",
+          "selected": "Selected"
         }
       },
       "shared": {
