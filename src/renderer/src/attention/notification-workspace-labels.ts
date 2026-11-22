@@ -18,6 +18,7 @@ import {
 import '../lib/workspace/ownership/workspace-catalog-owner-index'
 import {
   getRepoExecutionHostId,
+  getWorktreeExecutionHostId,
   type ExecutionHostId
 } from '../../../shared/execution-host/execution-host'
 import type { Repo } from '../../../shared/repository/repo-types'
@@ -115,10 +116,16 @@ export function getNotificationWorkspaceLabels(
   const repo = worktree
     ? findNotificationRepo(state, worktreeId, worktree.repoId, hostId)
     : undefined
+  // A repo id can have copies on several machines; the worktree's stamp names where it runs.
   return {
-    repoLabel: repo
-      ? withNotificationDeviceLabel(state, repo.displayName, hostId ?? getRepoExecutionHostId(repo))
-      : undefined,
+    repoLabel:
+      repo && worktree
+        ? withNotificationDeviceLabel(
+            state,
+            repo.displayName,
+            hostId ?? getWorktreeExecutionHostId(worktree, repo)
+          )
+        : undefined,
     worktreeLabel: worktree?.displayName || worktree?.branch || fallback
   }
 }

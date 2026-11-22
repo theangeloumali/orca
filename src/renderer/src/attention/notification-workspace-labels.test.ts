@@ -67,6 +67,35 @@ describe('getNotificationWorkspaceLabels device prefix', () => {
     expect(labels(folderWorkspaceKey(m1Folder.id)).repoLabel).toBe('M1 Max · Clients')
   })
 
+  it('names a workspace by the machine it runs on when its repo id has copies on several machines', () => {
+    const m1Repo = { ...repo, executionHostId: M1 }
+    useAppStore.setState({
+      settings,
+      repos: [repo, m1Repo],
+      worktreesByRepo: { [repo.id]: [{ ...worktree, hostId: M1 }] }
+    })
+    expect(labels(worktree.id).repoLabel).toBe('M1 Max · orca')
+  })
+
+  it("names this computer's workspace without a machine when an M1 twin of its repo exists", () => {
+    const m1Repo = { ...repo, executionHostId: M1 }
+    useAppStore.setState({
+      settings,
+      repos: [m1Repo, repo],
+      worktreesByRepo: { [repo.id]: [{ ...worktree, hostId: 'local' }] }
+    })
+    expect(labels(worktree.id).repoLabel).toBe('orca')
+  })
+
+  it("names a workspace by its own stamped machine, not its repo row's", () => {
+    useAppStore.setState({
+      settings,
+      repos: [repo],
+      worktreesByRepo: { [repo.id]: [{ ...worktree, hostId: M1 }] }
+    })
+    expect(labels(worktree.id).repoLabel).toBe('M1 Max · orca')
+  })
+
   it('adds no machine name when there is no repo label to prefix', () => {
     useAppStore.setState({
       settings,

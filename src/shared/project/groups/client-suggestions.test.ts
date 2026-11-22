@@ -48,6 +48,14 @@ describe('getClientName', () => {
     expect(getClientName(project('a', '/Users/me/Work/ZKidz/orca/work/tmp'))).toBe('ZKidz')
   })
 
+  it('does not read a home directory named work as the Work folder', () => {
+    expect(getClientName(project('a', '/home/work/projects/a'))).toBeNull()
+    expect(getClientName(project('a', '/Users/work/projects/a'))).toBeNull()
+    expect(getClientName(project('a', 'C:\\Users\\work\\projects\\a'))).toBeNull()
+    expect(getClientName(project('a', '/home/work/Work/Acme/site'))).toBe('Acme')
+    expect(getClientName(project('x', '/home/me/work/Acme/x'))).toBe('Acme')
+  })
+
   it('reads Windows and WSL paths', () => {
     expect(getClientName(project('a', 'D:\\work\\Acme\\site'))).toBe('Acme')
     expect(getClientName(project('a', '\\\\wsl$\\Ubuntu\\home\\me\\Work\\ZKidz\\orca'))).toBe(
@@ -63,6 +71,19 @@ describe('getClientName', () => {
 })
 
 describe('suggestClientGroups', () => {
+  it('suggests no "projects" client for projects in a home directory named work', () => {
+    const repos = [
+      project('a', '/home/work/projects/a'),
+      project('b', '/home/work/projects/b'),
+      project('x', '/home/me/work/Acme/x'),
+      project('y', '/home/me/work/Acme/y')
+    ]
+    const names = suggestClientGroups({ repos, projectGroups: [] }).flatMap((section) =>
+      section.suggestions.map((suggestion) => suggestion.clientName)
+    )
+    expect(names).toEqual(['Acme'])
+  })
+
   it('suggests a new group for two or more projects of one client', () => {
     const repos = [
       project('orca', '/Users/me/Work/ZKidz/orca'),

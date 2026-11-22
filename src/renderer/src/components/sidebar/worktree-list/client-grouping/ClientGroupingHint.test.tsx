@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useAppStore } from '@/store'
 import type { ExecutionHostId } from '../../../../../../shared/execution-host/execution-host'
@@ -22,11 +22,12 @@ function hintRow(
 }
 
 const uiSet = vi.fn(async () => undefined)
+const uiGet = vi.fn(async () => ({ dismissedClientSuggestionsKey: null }))
 
 describe('ClientGroupingHint', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    Object.assign(window, { api: { ui: { set: uiSet } } })
+    Object.assign(window, { api: { ui: { get: uiGet, set: uiSet } } })
     useAppStore.setState({ dismissedClientSuggestionsKey: null, clientGroupingSheetOpen: false })
   })
   afterEach(cleanup)
@@ -37,7 +38,7 @@ describe('ClientGroupingHint', () => {
     expect(useAppStore.getState().clientGroupingSheetOpen).toBe(true)
   })
 
-  it("merges a dismissal on one machine with another machine's, so both stay dismissed", () => {
+  it("merges a dismissal on one machine with another machine's, so both stay dismissed", async () => {
     render(<ClientGroupingHint row={hintRow('local', 'local-b\nlocal-a')} />)
     render(<ClientGroupingHint row={hintRow('ssh:box', 'box-a')} />)
     const [local, box] = screen.getAllByRole('button', {
@@ -47,6 +48,8 @@ describe('ClientGroupingHint', () => {
     fireEvent.click(box)
     const merged = 'box-a\nlocal-a\nlocal-b'
     expect(useAppStore.getState().dismissedClientSuggestionsKey).toBe(merged)
-    expect(uiSet).toHaveBeenLastCalledWith({ dismissedClientSuggestionsKey: merged })
+    await waitFor(() =>
+      expect(uiSet).toHaveBeenLastCalledWith({ dismissedClientSuggestionsKey: merged })
+    )
   })
 })

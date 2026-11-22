@@ -20,6 +20,8 @@ export type ClientSuggestion = {
 export type MachineClientSuggestions = { hostId: ExecutionHostId; suggestions: ClientSuggestion[] }
 
 const WORK_FOLDER = 'work'
+// A user named "work" (/home/work, C:\Users\work) is a home dir, not a client container.
+const HOME_ROOT_FOLDERS = new Set(['home', 'users'])
 const MIN_NEW_GROUP_SIZE = 2
 
 type ClientSource = { name: string; fromPath: boolean }
@@ -27,7 +29,11 @@ type ClientSource = { name: string; fromPath: boolean }
 function getClientSource(repo: Pick<Repo, 'path' | 'gitRemoteIdentity'>): ClientSource | null {
   const segments = repo.path.split(/[\\/]+/).filter(Boolean)
   // Why: the first Work folder names the client; a nested "work" dir belongs to the project.
-  const workIndex = segments.findIndex((segment) => segment.toLowerCase() === WORK_FOLDER)
+  const workIndex = segments.findIndex(
+    (segment, index) =>
+      segment.toLowerCase() === WORK_FOLDER &&
+      !HOME_ROOT_FOLDERS.has(segments[index - 1]?.toLowerCase() ?? '')
+  )
   // The last segment is the project itself, so it cannot be its own client.
   if (workIndex !== -1 && workIndex + 1 < segments.length - 1) {
     return { name: segments[workIndex + 1], fromPath: true }

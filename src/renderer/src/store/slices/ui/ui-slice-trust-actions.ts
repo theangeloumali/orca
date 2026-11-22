@@ -5,7 +5,23 @@ import {
   withOrcaHookScriptConfirmed
 } from '../../../../../shared/workspace-setup/hooks/orca-hook-trust-entries'
 
-export function createUiTrustActions(set: UISliceSet, _get: UISliceGet): Partial<UISlice> {
+function unionDismissalKeys(...keys: (string | null | undefined)[]): string {
+  const identities = keys.flatMap((key) => key?.split('\n') ?? [])
+  return [...new Set(identities)].sort().join('\n')
+}
+
+// Why: every window writes the same persisted set, so union with its latest value or a peer's dismissal is lost.
+async function persistClientSuggestionDismissal(set: UISliceSet, get: UISliceGet): Promise<void> {
+  const persisted = await window.api.ui.get()
+  const merged = unionDismissalKeys(
+    persisted.dismissedClientSuggestionsKey,
+    get().dismissedClientSuggestionsKey
+  )
+  set({ dismissedClientSuggestionsKey: merged })
+  await window.api.ui.set({ dismissedClientSuggestionsKey: merged })
+}
+
+export function createUiTrustActions(set: UISliceSet, get: UISliceGet): Partial<UISlice> {
   return {
     trustedOrcaHooks: {},
     markOrcaHookScriptConfirmed: (repoId, kind, contentHash) =>
@@ -145,13 +161,15 @@ export function createUiTrustActions(set: UISliceSet, _get: UISliceGet): Partial
       window.api.ui.set({ dismissedIdleProjectsKey: idleProjectsKey }).catch(console.error)
     },
     dismissedClientSuggestionsKey: null,
-    dismissClientSuggestions: (suggestionsKey) =>
-      set((s) => {
-        const previous = s.dismissedClientSuggestionsKey?.split('\n') ?? []
-        const merged = [...new Set([...previous, ...suggestionsKey.split('\n')])].sort().join('\n')
-        window.api.ui.set({ dismissedClientSuggestionsKey: merged }).catch(console.error)
-        return { dismissedClientSuggestionsKey: merged }
-      }),
+    dismissClientSuggestions: (suggestionsKey) => {
+      set((s) => ({
+        dismissedClientSuggestionsKey: unionDismissalKeys(
+          s.dismissedClientSuggestionsKey,
+          suggestionsKey
+        )
+      }))
+      persistClientSuggestionDismissal(set, get).catch(console.error)
+    },
     clientGroupingSheetOpen: false,
     setClientGroupingSheetOpen: (open) => set({ clientGroupingSheetOpen: open }),
     usageEmptyStateDismissed: false,
