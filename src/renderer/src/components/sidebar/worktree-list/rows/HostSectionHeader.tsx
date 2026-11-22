@@ -10,6 +10,7 @@ import { useHostAgentActivityCounts } from './use-host-agent-activity-counts'
 import { stopRepoHeaderMenuEvent } from './header-event-guards'
 import { getHostHeaderDetail } from './host-header-detail'
 import { getVmStateLabel, VmStateIcon } from '../../workspace-card/surface/WorktreeCardVmStateBadge'
+import { ClientGroupingHint } from '../client-grouping/ClientGroupingHint'
 
 function SectionMetricsBadge({ count }: { count: number }): React.JSX.Element {
   const t = useTranslate()
@@ -228,6 +229,7 @@ export function HostSectionHeader({
           <HostSectionHeaderMenu row={row} />
         </span>
       </div>
+      {row.collapsed ? null : <ClientGroupingHint hostId={row.hostId} />}
     </div>
   )
 }

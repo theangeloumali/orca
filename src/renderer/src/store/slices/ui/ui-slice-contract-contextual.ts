@@ -137,6 +137,11 @@ export type UISliceContextual = {
   dismissPluginsAlphaNotice: () => void
   dismissedIdleProjectsKey: string | null
   dismissIdleProjects: (idleProjectsKey: string) => void
+  dismissedClientSuggestionsKey: string | null
+  /** Adds these project identities to the dismissed set, so one machine's dismissal keeps the others'. */
+  dismissClientSuggestions: (suggestionsKey: string) => void
+  clientGroupingSheetOpen: boolean
+  setClientGroupingSheetOpen: (open: boolean) => void
   codexTerminalServerIsolationNoticeSeen: boolean
   markCodexTerminalServerIsolationNoticeSeen: () => void
   codexSharedSettingsNoticeSeen: boolean

@@ -158,6 +158,7 @@ export const UI_STATE_GLOBAL_FIELDS = [
   'usageEmptyStateDismissed',
   'pluginsAlphaNoticeDismissed',
   'dismissedIdleProjectsKey',
+  'dismissedClientSuggestionsKey',
   'codexTerminalServerIsolationNoticeSeen',
   'codexSharedSettingsNoticeSeen',
   'worktreeCardsUpdateNoticeSeen',

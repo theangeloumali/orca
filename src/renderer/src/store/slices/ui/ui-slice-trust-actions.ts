@@ -144,6 +144,16 @@ export function createUiTrustActions(set: UISliceSet, _get: UISliceGet): Partial
       set({ dismissedIdleProjectsKey: idleProjectsKey })
       window.api.ui.set({ dismissedIdleProjectsKey: idleProjectsKey }).catch(console.error)
     },
+    dismissedClientSuggestionsKey: null,
+    dismissClientSuggestions: (suggestionsKey) =>
+      set((s) => {
+        const previous = s.dismissedClientSuggestionsKey?.split('\n') ?? []
+        const merged = [...new Set([...previous, ...suggestionsKey.split('\n')])].sort().join('\n')
+        window.api.ui.set({ dismissedClientSuggestionsKey: merged }).catch(console.error)
+        return { dismissedClientSuggestionsKey: merged }
+      }),
+    clientGroupingSheetOpen: false,
+    setClientGroupingSheetOpen: (open) => set({ clientGroupingSheetOpen: open }),
     usageEmptyStateDismissed: false,
     dismissUsageEmptyState: () =>
       set((s) => {

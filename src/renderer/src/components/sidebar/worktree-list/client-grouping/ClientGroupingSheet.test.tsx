@@ -1,0 +1,106 @@
+// @vitest-environment happy-dom
+
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { toast } from 'sonner'
+import { useAppStore } from '@/store'
+import type { ProjectGroup } from '../../../../../../shared/project/groups/project-group-types'
+import type { RepoHostTarget } from '../../../../../../shared/repository/repo-host-identity'
+import type { Repo } from '../../../../../../shared/repository/repo-types'
+import { ClientGroupingSheet } from './ClientGroupingSheet'
+
+vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() } }))
+
+function project(id: string, client = 'ZKidz'): Repo {
+  return {
+    id,
+    path: `/Users/me/Work/${client}/${id}`,
+    displayName: id,
+    badgeColor: '#000',
+    addedAt: 0
+  }
+}
+
+const calls: string[] = []
+const createProjectGroup = vi.fn(async (name: string): Promise<ProjectGroup> => {
+  calls.push(`create:${name}`)
+  return {
+    id: `g-${name}`,
+    name,
+    parentPath: null,
+    parentGroupId: null,
+    createdFrom: 'manual',
+    tabOrder: 0,
+    isCollapsed: false,
+    color: null,
+    createdAt: 0,
+    updatedAt: 0
+  }
+})
+const moveProjectToGroup = vi.fn(async (entry: RepoHostTarget, groupId: string | null) => {
+  calls.push(`move:${entry.id}->${groupId}`)
+  return true
+})
+
+function openSheet(repos: Repo[]): void {
+  useAppStore.setState({
+    repos,
+    projectGroups: [],
+    clientGroupingSheetOpen: true,
+    createProjectGroup,
+    moveProjectToGroup
+  })
+  render(<ClientGroupingSheet />)
+}
+
+describe('ClientGroupingSheet', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    calls.length = 0
+  })
+  afterEach(cleanup)
+
+  it('starts with every suggestion ticked and names the apply count', () => {
+    openSheet([project('orca'), project('aicc'), project('site', 'Acme'), project('app', 'Acme')])
+    expect(screen.getByRole('checkbox', { name: /ZKidz/ }).getAttribute('aria-checked')).toBe(
+      'true'
+    )
+    expect(screen.getByText('4 projects will be filed')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Apply 2 groups' })).toBeTruthy()
+  })
+
+  it('marks a group indeterminate when only some of its projects are ticked', () => {
+    openSheet([project('orca'), project('aicc'), project('web')])
+    fireEvent.click(screen.getByRole('checkbox', { name: /aicc/ }))
+    expect(screen.getByRole('checkbox', { name: /ZKidz/ }).getAttribute('aria-checked')).toBe(
+      'mixed'
+    )
+    // A mixed group ticks everything back on.
+    fireEvent.click(screen.getByRole('checkbox', { name: /ZKidz/ }))
+    expect(screen.getByText('3 projects will be filed')).toBeTruthy()
+  })
+
+  it('creates the group, then moves only the ticked projects into it', async () => {
+    openSheet([project('orca'), project('aicc'), project('web')])
+    fireEvent.click(screen.getByRole('checkbox', { name: /aicc/ }))
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Apply 1 group' }))
+    })
+    expect(calls).toEqual(['create:ZKidz', 'move:orca->g-ZKidz', 'move:web->g-ZKidz'])
+    expect(toast.success).toHaveBeenCalledTimes(1)
+    expect(useAppStore.getState().clientGroupingSheetOpen).toBe(false)
+  })
+
+  it('moves nothing and disables Apply when every project is unticked', () => {
+    openSheet([project('orca'), project('aicc')])
+    fireEvent.click(screen.getByRole('checkbox', { name: /ZKidz/ }))
+    const apply = screen.getByRole('button', { name: 'Apply 0 groups' })
+    expect(apply.hasAttribute('disabled')).toBe(true)
+    expect(createProjectGroup).not.toHaveBeenCalled()
+  })
+
+  it('says so when there is nothing to suggest', () => {
+    openSheet([project('solo')])
+    expect(screen.getByText('Nothing to suggest: every project is already grouped.')).toBeTruthy()
+  })
+})

@@ -293,6 +293,7 @@ export const UiUpdateFields = z
     usageEmptyStateDismissed: z.boolean().optional(),
     pluginsAlphaNoticeDismissed: z.boolean().optional(),
     dismissedIdleProjectsKey: z.string().nullable().optional(),
+    dismissedClientSuggestionsKey: z.string().nullable().optional(),
     codexTerminalServerIsolationNoticeSeen: z.boolean().optional(),
     codexSharedSettingsNoticeSeen: z.boolean().optional(),
     worktreeCardsUpdateNoticeSeen: z.boolean().optional(),
