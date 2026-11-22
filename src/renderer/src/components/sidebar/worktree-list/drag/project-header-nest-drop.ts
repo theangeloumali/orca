@@ -43,7 +43,7 @@ export function computeProjectHeaderDrop(args: {
   }
   session: Pick<
     ProjectHeaderDragSession,
-    'repo' | 'nestRects' | 'headerRects' | 'sidebarRepoHeaderIds'
+    'registration' | 'nestRects' | 'headerRects' | 'sidebarRepoHeaderIds'
   >
   ownerHostIdById: ReadonlyMap<string, string | null>
 }): RepoDrop | null {
@@ -52,7 +52,7 @@ export function computeProjectHeaderDrop(args: {
   const nestTarget = findProjectHeaderNestTarget({
     pointerContentY: args.pointerY - containerTop + container.scrollTop,
     rects: session.nestRects,
-    project: session.repo,
+    project: session.registration,
     ownerHostIdById: args.ownerHostIdById
   })
   if (nestTarget) {

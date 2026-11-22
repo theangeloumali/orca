@@ -1,4 +1,5 @@
 import React, { use } from 'react'
+import * as Slot from 'radix-ui/slot'
 import { cn } from '@/lib/class-names'
 import { getRepoRowIdentity } from '@/store/repos/repo-host-identity'
 import type { Repo } from '../../../../../../shared/repository/repo-types'
@@ -21,12 +22,22 @@ export function ProjectHeaderSelectionScope({ children, ...args }: ScopeProps): 
       <ProjectHeaderSelectionStateContext value={state}>
         {/* contents: the list keeps its layout; the element only bounds "click outside clears". */}
         <div ref={scopeRef} className="contents">
-          <ProjectSelectionBar />
+          {/* Zero-height anchor: the bar overlays the list top instead of pushing rows down. */}
+          <div className="relative z-30 h-0 shrink-0">
+            <ProjectSelectionBar />
+          </div>
           {children}
         </div>
       </ProjectHeaderSelectionStateContext>
     </ProjectHeaderSelectionActionsContext>
   )
+}
+
+/** Whether the header is selected, or undefined while it cannot be selected at all. */
+function useProjectHeaderSelected(repo: Repo | undefined): boolean | undefined {
+  const actions = use(ProjectHeaderSelectionActionsContext)
+  const { selectedKeys, selectable } = use(ProjectHeaderSelectionStateContext)
+  return repo && actions && selectable ? selectedKeys.has(getRepoRowIdentity(repo)) : undefined
 }
 
 export function ProjectHeaderSelectionTarget({
@@ -37,11 +48,10 @@ export function ProjectHeaderSelectionTarget({
   children: React.ReactNode
 }): React.JSX.Element {
   const actions = use(ProjectHeaderSelectionActionsContext)
-  const { selectedKeys } = use(ProjectHeaderSelectionStateContext)
-  if (!repo || !actions) {
+  const selected = useProjectHeaderSelected(repo)
+  if (!repo || !actions || selected === undefined) {
     return <>{children}</>
   }
-  const selected = selectedKeys.has(getRepoRowIdentity(repo))
   return (
     <div
       data-project-header-selected={selected ? '' : undefined}
@@ -50,14 +60,15 @@ export function ProjectHeaderSelectionTarget({
         // Mirrors the selected workspace card so both lists read as one selection language.
         selected && 'bg-worktree-sidebar-accent/70 ring-1 ring-worktree-sidebar-ring/35'
       )}
-      onClickCapture={(event) => actions.handleHeaderClickCapture(event, repo)}
+      onClickCapture={(event) => actions.handleHeaderGestureCapture(event, repo)}
+      onKeyDownCapture={(event) => actions.handleHeaderGestureCapture(event, repo)}
     >
       {children}
     </div>
   )
 }
 
-/** A section header row: project headers outside a group join the selection, others render as before. */
+/** A section header row: every project header, inside a group or not, joins the selection; group headers do not. */
 export function SelectableProjectHeader({
   row,
   children,
@@ -65,9 +76,13 @@ export function SelectableProjectHeader({
 }: React.ComponentProps<typeof ProjectHeaderHostTooltip> & {
   row: GroupHeaderRow
 }): React.JSX.Element {
+  const repo = row.projectGroup ? undefined : row.repo
+  const pressed = useProjectHeaderSelected(repo)
   return (
-    <ProjectHeaderSelectionTarget repo={row.projectGroup ? undefined : row.repo}>
-      <ProjectHeaderHostTooltip {...tooltip}>{children}</ProjectHeaderHostTooltip>
+    <ProjectHeaderSelectionTarget repo={repo}>
+      <ProjectHeaderHostTooltip {...tooltip}>
+        <Slot.Root aria-pressed={pressed}>{children}</Slot.Root>
+      </ProjectHeaderHostTooltip>
     </ProjectHeaderSelectionTarget>
   )
 }

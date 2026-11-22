@@ -6530,7 +6530,8 @@
           "groupSummaryProjects_other": "{{count}} 個專案",
           "groupSummaryNeedsYou_other": "{{count}} 個需要你",
           "groupSummaryLabel": "{{projects}}, {{needsYou}}",
-          "createFromReposDescription": "建立群組並將 {{count}} 個專案移入。"
+          "createFromReposDescription": "建立群組並將 {{count}} 個專案移入。",
+          "createFromReposDescription_other": "建立群組並將 {{count}} 個專案移入。"
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "取消",

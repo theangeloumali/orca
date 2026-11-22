@@ -32,6 +32,23 @@ describe('collectProjectGroupWorkspaceIds', () => {
     ])
   })
 
+  it('counts each registration only for workspaces on its own host', () => {
+    const twinSources = {
+      repos: [
+        { id: 'r-twin', projectGroupId: 'client' },
+        { id: 'r-twin', projectGroupId: 'other', connectionId: 'gpu-vm' }
+      ],
+      workspacesByRepoId: {
+        'r-twin': [
+          { id: 'wt-local', hostId: 'local' as const },
+          { id: 'wt-remote', hostId: 'ssh:gpu-vm' as const }
+        ]
+      },
+      folderEntries: []
+    }
+    expect(collectProjectGroupWorkspaceIds(subtree, twinSources)).toEqual(['wt-local'])
+  })
+
   it('counts needs-you from live agent status inside the subtree only', () => {
     const live = new Map([
       ['wt-nested', 'permission' as const],

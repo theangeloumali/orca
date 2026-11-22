@@ -57,7 +57,10 @@ export function SidebarWorktreeListDialogs({
                 ? t(
                     'auto.components.sidebar.WorktreeList.createFromReposDescription',
                     'Create a group and move {{count}} projects into it.',
-                    { count: nameDialog.repos.length }
+                    {
+                      count: nameDialog.repos.length,
+                      defaultValue_one: 'Create a group and move {{count}} project into it.'
+                    }
                   )
                 : t(
                     'auto.components.sidebar.WorktreeList.d880ea0744',

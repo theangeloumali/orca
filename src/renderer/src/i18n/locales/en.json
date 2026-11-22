@@ -7816,7 +7816,9 @@
           "groupSummaryProjects_other": "{{count}} projects",
           "groupSummaryNeedsYou_one": "{{count}} needs you",
           "groupSummaryNeedsYou_other": "{{count}} need you",
-          "groupSummaryLabel": "{{projects}}, {{needsYou}}"
+          "groupSummaryLabel": "{{projects}}, {{needsYou}}",
+          "createFromReposDescription_one": "Create a group and move {{count}} project into it.",
+          "createFromReposDescription_other": "Create a group and move {{count}} projects into it."
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "Cancel",

@@ -2,6 +2,7 @@ import {
   getRootProjectHeaderKey,
   getRootProjectHeaderOccurrenceKey
 } from '../drag/root-project-header-drop'
+import { canDragProjectHeader } from '../drag/project-header-drag-start'
 import React from 'react'
 import { ChevronDown } from 'lucide-react'
 import { ProjectHeaderHostLabel } from './ProjectHeaderHostLabel'
@@ -107,12 +108,8 @@ export function renderWorktreeSectionHeaderRow(
       ))
     : undefined
   const isDraggableRepoHeader = Boolean(
-    headerDrag.canReorderRepoHeaders &&
     projectIdForHeader &&
-    repoHeaderBucketKey &&
-    (rootProjectHeaderCount !== undefined
-      ? rootProjectHeaderCount > 1
-      : (headerDrag.sidebarRepoHeaderIdsByBucket.get(repoHeaderBucketKey)?.length ?? 0) > 1)
+    canDragProjectHeader({ headerDrag, bucketKey: repoHeaderBucketKey, rootProjectHeaderCount })
   )
   const isDraggableProjectGroupHeader = Boolean(
     headerDrag.canReorderProjectGroupHeaders &&
@@ -276,7 +273,8 @@ export function renderWorktreeSectionHeaderRow(
           }
           onPointerDown={
             isDraggableRepoHeader && headerRepo
-              ? (event) => headerDrag.repoDrag.onHandlePointerDown(event, headerRepo)
+              ? (event) =>
+                  headerDrag.repoDrag.onHandlePointerDown(event, headerRepo, row.repo ?? headerRepo)
               : isDraggableProjectGroupHeader && projectGroupDragIdForHeader
                 ? (event) =>
                     headerDrag.projectGroupDrag.onHandlePointerDown(

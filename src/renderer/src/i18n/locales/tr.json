@@ -6777,7 +6777,9 @@
           "groupSummaryNeedsYou_one": "{{count}} sizi bekliyor",
           "groupSummaryNeedsYou_other": "{{count}} sizi bekliyor",
           "groupSummaryLabel": "{{projects}}, {{needsYou}}",
-          "createFromReposDescription": "Bir grup oluştur ve {{count}} projeyi içine taşı."
+          "createFromReposDescription": "Bir grup oluştur ve {{count}} projeyi içine taşı.",
+          "createFromReposDescription_one": "Bir grup oluştur ve {{count}} projeyi içine taşı.",
+          "createFromReposDescription_other": "Bir grup oluştur ve {{count}} projeyi içine taşı."
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "İptal",

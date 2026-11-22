@@ -39,12 +39,15 @@ export type UseRepoHeaderDragArgs = RootProjectHeaderDrag & {
 
 export type RepoHeaderDragController = {
   state: RepoDragState
-  onHandlePointerDown: (event: PointerEvent<HTMLElement>, repo: Repo) => void
+  /** repo anchors the reorder; registration is the clicked row's own copy, which a nest files. */
+  onHandlePointerDown: (event: PointerEvent<HTMLElement>, repo: Repo, registration: Repo) => void
 }
 
 export type ProjectHeaderDragSession = {
   // Why the row, not its id: a twin on another host shares the id.
   repo: Repo
+  // Why apart from repo: a cross-host header's anchor may be another machine's copy.
+  registration: Repo
   bucketKey: ProjectHeaderDragBucketKey
   sidebarRepoHeaderIds: readonly string[]
   rootProjectHeaderKeys?: readonly string[]

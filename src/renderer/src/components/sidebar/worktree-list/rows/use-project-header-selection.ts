@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import type React from 'react'
 import { useListMultiSelection } from '@/lib/list-interaction/use-list-multi-selection'
+import { getSelectionIntent } from '@/lib/list-interaction/list-multi-selection'
 import { getRepoRowIdentity } from '@/store/repos/repo-host-identity'
 import { useAppStore } from '@/store'
 import type { HostSectionRow } from '../../../../../../shared/sidebar-list/hosts/host-section-rows'
@@ -16,7 +17,7 @@ import type { ProjectGroupNameDialogState } from './use-project-group-dialogs'
 
 const NO_REPOS: Repo[] = []
 
-// Project headers outside any group, in render order, so Shift-click ranges follow the list.
+// Every project header, inside a group or not, in render order so Shift-click ranges follow the list.
 function collectSelectableHeaderRepos(rows: readonly HostSectionRow[]): Repo[] {
   return rows.flatMap((row) =>
     row.type === 'header' && row.repo && !row.projectGroup ? [row.repo] : []
@@ -53,7 +54,11 @@ export function useProjectHeaderSelection(args: {
       }),
     [getItemForKey, selectedKeys]
   )
-  const state = useMemo(() => ({ selectedKeys, selectedRepos }), [selectedKeys, selectedRepos])
+  const selectable = items.length > 0
+  const state = useMemo(
+    () => ({ selectedKeys, selectedRepos, selectable }),
+    [selectable, selectedKeys, selectedRepos]
+  )
 
   // Read through a ref so the actions context stays stable across selection and row changes.
   const latestRef = useRef({ selection, selectedRepos, setNameDialog })
@@ -79,7 +84,10 @@ export function useProjectHeaderSelection(args: {
     const clearSelection = (): void => latestRef.current.selection.setAllSelected(false)
     return {
       clearSelection,
-      handleHeaderClickCapture: (event, repo) => {
+      handleHeaderGestureCapture: (event, repo) => {
+        if ('key' in event && event.key !== 'Enter' && event.key !== ' ') {
+          return
+        }
         const { target, currentTarget } = event
         // Portaled menus bubble through the header in React; only clicks on the header itself count.
         if (
@@ -93,12 +101,16 @@ export function useProjectHeaderSelection(args: {
         if (!selection.getItemForKey(getRepoRowIdentity(repo))) {
           return
         }
-        if (selection.updateSelectionForGesture(event, repo)) {
-          event.preventDefault()
-          event.stopPropagation()
+        // A plain gesture only clears; with nothing selected it must not churn a new Set.
+        if (getSelectionIntent(event, navigator.userAgent.includes('Mac')) === 'replace') {
+          if (selection.selectedKeys.size > 0) {
+            clearSelection()
+          }
           return
         }
-        clearSelection()
+        selection.updateSelectionForGesture(event, repo)
+        event.preventDefault()
+        event.stopPropagation()
       },
       getMenuSelection: (repo) => {
         const latest = latestRef.current

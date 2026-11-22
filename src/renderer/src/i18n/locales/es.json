@@ -6269,7 +6269,10 @@
           "groupSummaryNeedsYou_other": "{{count}} te necesitan",
           "groupSummaryNeedsYou_many": "{{count}} te necesitan",
           "groupSummaryLabel": "{{projects}}, {{needsYou}}",
-          "createFromReposDescription": "Crear un grupo y mover {{count}} proyectos a él."
+          "createFromReposDescription": "Crear un grupo y mover {{count}} proyectos a él.",
+          "createFromReposDescription_one": "Crear un grupo y mover {{count}} proyecto a él.",
+          "createFromReposDescription_other": "Crear un grupo y mover {{count}} proyectos a él.",
+          "createFromReposDescription_many": "Crear un grupo y mover {{count}} proyectos a él."
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "Cancelar",

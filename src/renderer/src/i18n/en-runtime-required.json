@@ -985,6 +985,9 @@
         "WorktreeList": {
           "childCount_one": "{{count}} child",
           "childCount_other": "{{count}} children",
+          "createFromReposDescription": "Create a group and move {{count}} projects into it.",
+          "createFromReposDescription_one": "Create a group and move {{count}} project into it.",
+          "createFromReposDescription_other": "Create a group and move {{count}} projects into it.",
           "groupProjectsRemained_one": "{{remaining}} of {{count}} contained project remained after deleting the group.",
           "groupProjectsRemained_other": "{{remaining}} of {{count}} contained projects remained after deleting the group.",
           "groupSummaryNeedsYou_one": "{{count}} needs you",

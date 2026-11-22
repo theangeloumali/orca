@@ -1,9 +1,11 @@
 // @vitest-environment happy-dom
 
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import React from 'react'
+import React, { use } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useAppStore } from '@/store'
+import { TooltipProvider } from '@/components/ui/tooltip'
+import { ConfirmationDialogProvider } from '@/components/dismiss/confirmation/confirmation-dialog'
 import type { HostSectionRow } from '../../../../../../shared/sidebar-list/hosts/host-section-rows'
 import type { Repo } from '../../../../../../shared/repository/repo-types'
 import type { ProjectGroup } from '../../../../../../shared/project/groups/project-group-types'
@@ -11,10 +13,12 @@ import type {
   GroupHeaderRow,
   WorktreeGroupBy
 } from '../../../../../../shared/sidebar-list/row-types'
+import { ProjectHeaderSelectionScope, SelectableProjectHeader } from './project-header-selection'
+import { ProjectHeaderSelectionStateContext } from './project-header-selection-context'
 import {
-  ProjectHeaderSelectionScope,
-  ProjectHeaderSelectionTarget
-} from './project-header-selection'
+  RepoHeaderProjectActionsMenu,
+  type RepoHeaderProjectActions
+} from './repo-header-project-actions'
 
 const project = (id: string, connectionId?: string): Repo => ({
   id,
@@ -49,28 +53,84 @@ const localGroup: ProjectGroup = {
   updatedAt: 0
 }
 
+const noopMenuActions: RepoHeaderProjectActions = {
+  getWorktreeVisibilityDefaults: () => undefined,
+  onOpenRepoSettings: vi.fn(),
+  onOpenWorktreeVisibility: vi.fn(),
+  onCreateGroupFromRepo: vi.fn(),
+  onMoveProjectToGroup: vi.fn(),
+  onRemoveProjectFromGroup: vi.fn(),
+  onRemoveProject: vi.fn(),
+  onCreateForRepo: vi.fn()
+}
+
+function SelectionProbe({
+  onRender
+}: {
+  onRender: (keys: ReadonlySet<string>) => void
+}): React.JSX.Element | null {
+  onRender(use(ProjectHeaderSelectionStateContext).selectedKeys)
+  return null
+}
+
 function Harness({
   projects,
   onToggle,
   groupBy = 'repo',
-  setNameDialog = vi.fn()
+  setNameDialog = vi.fn(),
+  menuFor,
+  onSelectionRender
 }: {
   projects: Repo[]
   onToggle: (id: string) => void
   groupBy?: WorktreeGroupBy
   setNameDialog?: React.ComponentProps<typeof ProjectHeaderSelectionScope>['setNameDialog']
+  menuFor?: Repo
+  onSelectionRender?: (keys: ReadonlySet<string>) => void
 }): React.JSX.Element {
   const rows: HostSectionRow[] = projects.map(header)
   return (
-    <ProjectHeaderSelectionScope sectionRows={rows} groupBy={groupBy} setNameDialog={setNameDialog}>
-      {projects.map((repo) => (
-        <ProjectHeaderSelectionTarget key={repo.id} repo={repo}>
-          <div role="button" tabIndex={0} onClick={() => onToggle(repo.id)}>
-            {repo.displayName}
-          </div>
-        </ProjectHeaderSelectionTarget>
-      ))}
-    </ProjectHeaderSelectionScope>
+    <ConfirmationDialogProvider>
+      <TooltipProvider>
+        <ProjectHeaderSelectionScope
+          sectionRows={rows}
+          groupBy={groupBy}
+          setNameDialog={setNameDialog}
+        >
+          {projects.map((repo) => (
+            <SelectableProjectHeader
+              key={repo.id}
+              row={header(repo)}
+              label={repo.displayName}
+              context={undefined}
+            >
+              {/* Mirrors SectionHeader: Enter and Space collapse like a click. */}
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => onToggle(repo.id)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    onToggle(repo.id)
+                  }
+                }}
+              >
+                {repo.displayName}
+              </div>
+            </SelectableProjectHeader>
+          ))}
+          {menuFor ? (
+            <RepoHeaderProjectActionsMenu
+              repo={menuFor}
+              label={menuFor.displayName}
+              projectGroups={useAppStore.getState().projectGroups}
+              actions={noopMenuActions}
+            />
+          ) : null}
+          {onSelectionRender ? <SelectionProbe onRender={onSelectionRender} /> : null}
+        </ProjectHeaderSelectionScope>
+      </TooltipProvider>
+    </ConfirmationDialogProvider>
   )
 }
 
@@ -170,6 +230,87 @@ describe('project header multi-select', () => {
       ['alpha', 'infra']
     ])
     expect(isSelected('beta')).toBe(false)
+  })
+
+  it('marks each header pressed or not while project headers can be selected', () => {
+    render(<Harness projects={[alpha, beta]} onToggle={vi.fn()} />)
+    expect(headerFor('alpha').getAttribute('aria-pressed')).toBe('false')
+    fireEvent.click(headerFor('alpha'), { metaKey: true })
+    expect(headerFor('alpha').getAttribute('aria-pressed')).toBe('true')
+    cleanup()
+    render(<Harness projects={[alpha]} onToggle={vi.fn()} groupBy="workspace-status" />)
+    expect(headerFor('alpha').hasAttribute('aria-pressed')).toBe(false)
+  })
+
+  it('toggles with Cmd+Enter and extends with Shift+Space, without collapsing', () => {
+    const onToggle = vi.fn()
+    render(<Harness projects={[alpha, beta, gamma]} onToggle={onToggle} />)
+    fireEvent.keyDown(headerFor('alpha'), { key: 'Enter', metaKey: true })
+    fireEvent.keyDown(headerFor('gamma'), { key: ' ', shiftKey: true })
+    expect([isSelected('alpha'), isSelected('beta'), isSelected('gamma')]).toEqual([
+      true,
+      true,
+      true
+    ])
+    expect(onToggle).not.toHaveBeenCalled()
+    fireEvent.keyDown(headerFor('beta'), { key: 'Enter' })
+    expect(onToggle).toHaveBeenCalledWith('beta')
+    expect(isSelected('alpha')).toBe(false)
+  })
+
+  it('leaves an empty selection untouched on a plain click', () => {
+    const seen: ReadonlySet<string>[] = []
+    render(
+      <Harness
+        projects={[alpha]}
+        onToggle={vi.fn()}
+        onSelectionRender={(keys) => seen.push(keys)}
+      />
+    )
+    const before = seen.at(-1)
+    fireEvent.click(headerFor('alpha'))
+    expect(seen.at(-1)).toBe(before)
+  })
+
+  it('overlays the bar instead of pushing the list down when it appears', () => {
+    render(<Harness projects={[alpha, beta]} onToggle={vi.fn()} />)
+    const firstHeader = headerFor('alpha').closest('.rounded-md')
+    const anchorBefore = firstHeader?.previousElementSibling
+    fireEvent.click(headerFor('alpha'), { metaKey: true })
+    fireEvent.click(headerFor('beta'), { metaKey: true })
+    expect(firstHeader?.previousElementSibling).toBe(anchorBefore)
+    expect(anchorBefore?.classList.contains('h-0')).toBe(true)
+    expect(anchorBefore?.contains(screen.getByText('2 selected'))).toBe(true)
+  })
+
+  it("groups the whole selection from a header's menu after the outside click clears it", async () => {
+    const moveProjectToGroup = vi.fn().mockResolvedValue(true)
+    useAppStore.setState({ projectGroups: [localGroup], moveProjectToGroup })
+    render(<Harness projects={[alpha, beta]} onToggle={vi.fn()} menuFor={alpha} />)
+    fireEvent.click(headerFor('alpha'), { metaKey: true })
+    fireEvent.click(headerFor('beta'), { metaKey: true })
+    openMenu(screen.getByRole('button', { name: 'Project actions for alpha' }))
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Group 2 selected…' }))
+    const infra = await screen.findByRole('menuitemradio', { name: 'Infra' })
+    fireEvent.pointerDown(infra, { button: 0, pointerType: 'mouse' })
+    expect(isSelected('alpha')).toBe(false)
+    fireEvent.click(infra)
+    await vi.waitFor(() => expect(moveProjectToGroup).toHaveBeenCalledTimes(2))
+    expect(moveProjectToGroup.mock.calls.map(([repo]) => repo.id)).toEqual(['alpha', 'beta'])
+  })
+
+  it("keeps the bar's snapshot when pressing into its menu clears the selection", async () => {
+    const moveProjectToGroup = vi.fn().mockResolvedValue(true)
+    useAppStore.setState({ projectGroups: [localGroup], moveProjectToGroup })
+    render(<Harness projects={[alpha, beta]} onToggle={vi.fn()} />)
+    fireEvent.click(headerFor('alpha'), { metaKey: true })
+    fireEvent.click(headerFor('beta'), { metaKey: true })
+    openMenu(screen.getByRole('button', { name: 'Group selected…' }))
+    const infra = await screen.findByRole('menuitemradio', { name: 'Infra' })
+    fireEvent.pointerDown(infra, { button: 0, pointerType: 'mouse' })
+    expect(isSelected('alpha')).toBe(false)
+    fireEvent.click(infra)
+    await vi.waitFor(() => expect(moveProjectToGroup).toHaveBeenCalledTimes(2))
   })
 
   it('opens the new-group dialog with the groupable projects', async () => {

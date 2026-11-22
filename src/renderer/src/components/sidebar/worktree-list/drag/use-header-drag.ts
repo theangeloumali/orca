@@ -291,6 +291,7 @@ export function useWorktreeSidebarHeaderDrag(args: {
     rootProjectHeaderCountByOccurrenceKey,
     rootProjectHeaderSectionEndByKey,
     canReorderRepoHeaders,
+    hasProjectGroups,
     canReorderProjectGroupHeaders,
     canNestProjectGroupHeaders,
     rootProjectHeaderKeys,

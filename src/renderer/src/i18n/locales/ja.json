@@ -6571,7 +6571,8 @@
           "groupSummaryProjects_other": "{{count}} 件のプロジェクト",
           "groupSummaryNeedsYou_other": "{{count}} 件が対応待ち",
           "groupSummaryLabel": "{{projects}}, {{needsYou}}",
-          "createFromReposDescription": "グループを作成し、{{count}} 件のプロジェクトを移動します。"
+          "createFromReposDescription": "グループを作成し、{{count}} 件のプロジェクトを移動します。",
+          "createFromReposDescription_other": "グループを作成し、{{count}} 件のプロジェクトを移動します。"
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "キャンセル",

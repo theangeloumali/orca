@@ -28,7 +28,6 @@ import {
   computeProjectHeaderDrop,
   isSameNestTarget
 } from './project-header-nest-drop'
-import type { Repo } from '../../../../../../shared/repository/repo-types'
 
 // Virtualized rows can unmount during drag; pointer events and cached header geometry avoid stale drop targets.
 
@@ -159,7 +158,7 @@ export function useRepoHeaderDrag({
       setSessionArmed(false)
       if (nestTarget) {
         commitProjectHeaderNestDrop({
-          project: session.repo,
+          project: session.registration,
           groupId: nestTarget.groupId,
           liveRepos: getLiveReposRef.current(),
           orderedRepoIds: orderedIdsRef.current,
@@ -239,11 +238,9 @@ export function useRepoHeaderDrag({
       }
       session.latestPointerY = e.clientY
       if (!session.promoted) {
-        const dx = e.clientX - session.startX
-        const dy = e.clientY - session.startY
         if (
-          dx * dx + dy * dy <
-          PROJECT_HEADER_DRAG_THRESHOLD_PX * PROJECT_HEADER_DRAG_THRESHOLD_PX
+          Math.hypot(e.clientX - session.startX, e.clientY - session.startY) <
+          PROJECT_HEADER_DRAG_THRESHOLD_PX
         ) {
           return
         }
@@ -254,7 +251,6 @@ export function useRepoHeaderDrag({
             session.handleEl.setPointerCapture(session.pointerId)
           } catch {}
         }
-        refreshHeaderRects()
         setState({ ...INITIAL_REPO_DRAG_STATE, draggingRepoId: session.repo.id })
       }
       refreshHeaderRects()
@@ -303,21 +299,25 @@ export function useRepoHeaderDrag({
 
   useHeaderDragBodyCursor(state.draggingRepoId !== null)
 
-  const onHandlePointerDown = useCallback((event: React.PointerEvent<HTMLElement>, repo: Repo) => {
-    const session = createProjectHeaderDragSession({
-      event,
-      repo,
-      rootProjectHeaderKeys: rootDragRef.current.rootProjectHeaderKeys,
-      sidebarRepoHeaderIdsByBucket: sidebarRepoHeaderIdsByBucketRef.current,
-      allowLoneProject: usesProjectGroupOrderingRef.current,
-      getScrollContainer: getContainerRef.current
-    })
-    if (!session) {
-      return
-    }
-    dragSessionRef.current = session
-    setSessionArmed(true)
-  }, [])
+  const onHandlePointerDown = useCallback<RepoHeaderDragController['onHandlePointerDown']>(
+    (event, repo, registration) => {
+      const session = createProjectHeaderDragSession({
+        event,
+        repo,
+        registration,
+        rootProjectHeaderKeys: rootDragRef.current.rootProjectHeaderKeys,
+        sidebarRepoHeaderIdsByBucket: sidebarRepoHeaderIdsByBucketRef.current,
+        allowLoneProject: usesProjectGroupOrderingRef.current,
+        getScrollContainer: getContainerRef.current
+      })
+      if (!session) {
+        return
+      }
+      dragSessionRef.current = session
+      setSessionArmed(true)
+    },
+    []
+  )
 
   return { state, onHandlePointerDown }
 }

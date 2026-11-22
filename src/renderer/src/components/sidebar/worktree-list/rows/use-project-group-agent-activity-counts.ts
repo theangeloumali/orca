@@ -19,10 +19,13 @@ import {
   type HostAgentActivityCounts
 } from '../../../../../../shared/sidebar-list/hosts/host-agent-activity'
 import { getDescendantGroupIds } from '../listing/project-group-subtree-collapse'
+import { worktreeBelongsToHost } from '@/store/repos/repo-host-identity'
+import { getRepoExecutionHostId } from '../../../../../../shared/execution-host/execution-host'
 
 type ProjectGroupWorkspaceSources = {
-  repos: readonly (Pick<Repo, 'id'> & Partial<Pick<Repo, 'projectGroupId' | 'hiddenAt'>>)[]
-  workspacesByRepoId: Readonly<Record<string, readonly Pick<Worktree, 'id'>[]>>
+  repos: readonly (Pick<Repo, 'id'> &
+    Partial<Pick<Repo, 'projectGroupId' | 'hiddenAt' | 'connectionId' | 'executionHostId'>>)[]
+  workspacesByRepoId: Readonly<Record<string, readonly Pick<Worktree, 'id' | 'hostId'>[]>>
   folderEntries: readonly Pick<FolderWorkspace, 'id' | 'projectGroupId'>[]
 }
 
@@ -43,7 +46,13 @@ export function collectProjectGroupWorkspaceIds(
   const ids: string[] = []
   for (const repo of sources.repos) {
     if (!isRepoHidden(repo) && repo.projectGroupId && subtreeGroupIds.has(repo.projectGroupId)) {
-      ids.push(...(sources.workspacesByRepoId[repo.id] ?? []).map((worktree) => worktree.id))
+      // Why per host: another machine's copy of this repo shares the id and the catalog bucket.
+      const hostId = getRepoExecutionHostId(repo)
+      for (const worktree of sources.workspacesByRepoId[repo.id] ?? []) {
+        if (worktreeBelongsToHost(worktree, hostId)) {
+          ids.push(worktree.id)
+        }
+      }
     }
   }
   for (const folderWorkspace of sources.folderEntries) {

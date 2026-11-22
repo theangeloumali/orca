@@ -6990,7 +6990,11 @@
           "groupSummaryNeedsYou_many": "{{count}} ждут вас",
           "groupSummaryNeedsYou_other": "{{count}} ждут вас",
           "groupSummaryLabel": "{{projects}}, {{needsYou}}",
-          "createFromReposDescription": "Создать группу и переместить в неё проекты: {{count}}."
+          "createFromReposDescription": "Создать группу и переместить в неё проекты: {{count}}.",
+          "createFromReposDescription_one": "Создать группу и переместить в неё {{count}} проект.",
+          "createFromReposDescription_few": "Создать группу и переместить в неё {{count}} проекта.",
+          "createFromReposDescription_many": "Создать группу и переместить в неё {{count}} проектов.",
+          "createFromReposDescription_other": "Создать группу и переместить в неё {{count}} проекта."
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "Отмена",

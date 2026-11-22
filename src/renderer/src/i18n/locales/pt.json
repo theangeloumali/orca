@@ -11999,7 +11999,10 @@
           "groupSummaryNeedsYou_other": "{{count}} precisam de você",
           "groupSummaryNeedsYou_many": "{{count}} precisam de você",
           "groupSummaryLabel": "{{projects}}, {{needsYou}}",
-          "createFromReposDescription": "Criar um grupo e mover {{count}} projetos para ele."
+          "createFromReposDescription": "Criar um grupo e mover {{count}} projetos para ele.",
+          "createFromReposDescription_one": "Criar um grupo e mover {{count}} projeto para ele.",
+          "createFromReposDescription_other": "Criar um grupo e mover {{count}} projetos para ele.",
+          "createFromReposDescription_many": "Criar um grupo e mover {{count}} projetos para ele."
         },
         "WorktreeCardMeta": {
           "3e65e11cc6": "Metadados do espaço de trabalho",

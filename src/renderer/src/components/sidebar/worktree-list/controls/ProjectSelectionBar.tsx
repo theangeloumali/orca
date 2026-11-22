@@ -30,7 +30,7 @@ export function ProjectSelectionBar(): React.JSX.Element | null {
     return null
   }
   return (
-    <div className="flex shrink-0 flex-wrap items-center gap-x-1 px-3 pb-1 text-[11px] tabular-nums text-muted-foreground">
+    <div className="absolute inset-x-0 top-0 flex flex-wrap items-center gap-x-1 border-b border-worktree-sidebar-border bg-worktree-sidebar px-3 py-1 text-[11px] tabular-nums text-muted-foreground">
       <span role="status" className="text-foreground">
         {t('auto.components.sidebar.projectSelection.count', '{{count}} selected', {
           count: repos.length

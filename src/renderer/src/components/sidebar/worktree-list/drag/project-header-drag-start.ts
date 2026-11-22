@@ -16,9 +16,31 @@ import {
 } from './project-header-drag-contract'
 import type { Repo } from '../../../../../../shared/repository/repo-types'
 
+/** Whether a project header arms a drag: it needs a sibling to pass, or a group to be filed into. */
+export function canDragProjectHeader(args: {
+  headerDrag: {
+    canReorderRepoHeaders: boolean
+    hasProjectGroups: boolean
+    sidebarRepoHeaderIdsByBucket: ReadonlyMap<ProjectHeaderDragBucketKey, readonly string[]>
+  }
+  bucketKey: ProjectHeaderDragBucketKey | undefined
+  rootProjectHeaderCount: number | undefined
+}): boolean {
+  const { headerDrag, bucketKey } = args
+  if (!headerDrag.canReorderRepoHeaders || !bucketKey) {
+    return false
+  }
+  const siblingCount =
+    args.rootProjectHeaderCount ??
+    headerDrag.sidebarRepoHeaderIdsByBucket.get(bucketKey)?.length ??
+    0
+  return siblingCount > 1 || headerDrag.hasProjectGroups
+}
+
 export function createProjectHeaderDragSession(args: {
   event: PointerEvent<HTMLElement>
   repo: Repo
+  registration: Repo
   sidebarRepoHeaderIdsByBucket: ReadonlyMap<ProjectHeaderDragBucketKey, readonly string[]>
   rootProjectHeaderKeys?: readonly string[]
   /** With groups to file into, a project alone in its bucket still has somewhere to go. */
@@ -57,6 +79,7 @@ export function createProjectHeaderDragSession(args: {
   // Delay pointer capture until promotion so ordinary clicks can still toggle collapse.
   return {
     repo: args.repo,
+    registration: args.registration,
     bucketKey,
     sidebarRepoHeaderIds,
     pointerId: args.event.pointerId,

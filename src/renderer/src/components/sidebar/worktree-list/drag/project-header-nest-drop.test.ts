@@ -62,7 +62,7 @@ describe('findProjectHeaderNestTarget', () => {
 describe('computeProjectHeaderDrop', () => {
   const container = { getBoundingClientRect: () => ({ top: 0 }), scrollTop: 0, scrollHeight: 400 }
   const session = {
-    repo: localRepo('orca'),
+    registration: localRepo('orca'),
     nestRects: groupRects.map((rect, headerIndex) => ({ ...rect, bucketKey: 'root', headerIndex })),
     headerRects: [
       { repoId: 'orca', bucketKey: 'ungrouped', headerIndex: 0, top: 200, bottom: 230 },

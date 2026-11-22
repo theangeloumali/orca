@@ -6852,7 +6852,8 @@
           "groupSummaryProjects_other": "{{count}} 个项目",
           "groupSummaryNeedsYou_other": "{{count}} 个需要你",
           "groupSummaryLabel": "{{projects}}, {{needsYou}}",
-          "createFromReposDescription": "创建一个分组并将 {{count}} 个项目移入其中。"
+          "createFromReposDescription": "创建一个分组并将 {{count}} 个项目移入其中。",
+          "createFromReposDescription_other": "创建一个分组并将 {{count}} 个项目移入其中。"
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "取消",
