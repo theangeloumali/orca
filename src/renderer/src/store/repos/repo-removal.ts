@@ -8,7 +8,8 @@ import {
   getWorktreeVisitKey
 } from '@/lib/workspace/activation/worktree-visit-recency'
 import { omitSparsePresetsForRepos } from '../slices/worktrees/create/sparse-presets'
-import { repoMatchesHostIdentity, worktreeBelongsToHost } from './repo-host-identity'
+import { repoMatchesHostIdentity } from './repo-host-identity'
+import { createRepoWorktreeHostMatcher, getKnownRepoWorktreeIds } from './repo-worktree-ownership'
 import { callRuntimeRpc } from '../../runtime/rpc/calls/runtime-rpc-call'
 import { hasRuntimeRpcErrorCode } from '../../../../shared/remote-runtime/rpc/runtime-rpc-error-code'
 import { ipcOrRuntimeTargetForHostId } from '../../runtime/rpc/targets/runtime-client-target'
@@ -37,53 +38,8 @@ import { toastProjectRemovalFailure } from './repo-removal-failure-toast'
 import { replayPendingRuntimeRepoRemovalsIfReady } from './pending-runtime-repo-removal-replay'
 import { isRuntimeEnvironmentRegistered } from './runtime-environment-registration'
 
-type HostScopedWorktreeRef = { id: string; hostId?: string }
-
-type RepoWorktreeCatalog = {
-  worktreesByRepo: Readonly<Record<string, readonly HostScopedWorktreeRef[] | undefined>>
-  detectedWorktreesByRepo: Readonly<
-    Record<string, { worktrees: readonly HostScopedWorktreeRef[] } | undefined>
-  >
-}
-
-export function getKnownRepoWorktreeIds(
-  state: RepoWorktreeCatalog,
-  projectId: string,
-  hostId?: string
-): string[] {
-  const ids = new Set<string>()
-  for (const worktree of state.worktreesByRepo[projectId] ?? []) {
-    if (!hostId || worktreeBelongsToHost(worktree, hostId)) {
-      ids.add(worktree.id)
-    }
-  }
-  for (const worktree of state.detectedWorktreesByRepo[projectId]?.worktrees ?? []) {
-    if (!hostId || worktreeBelongsToHost(worktree, hostId)) {
-      ids.add(worktree.id)
-    }
-  }
-  return [...ids]
-}
-
-/** Terminal tabs that removing this project's host row will close. */
-export function countOpenRepoTerminalTabs(
-  state: RepoWorktreeCatalog & {
-    tabsByWorktree: Readonly<Record<string, readonly { id: string }[] | undefined>>
-    ptyIdsByTabId: Readonly<Record<string, readonly string[] | undefined>>
-  },
-  projectId: string,
-  hostId: string
-): number {
-  let count = 0
-  for (const worktreeId of getKnownRepoWorktreeIds(state, projectId, hostId)) {
-    for (const tab of state.tabsByWorktree[worktreeId] ?? []) {
-      if ((state.ptyIdsByTabId[tab.id]?.length ?? 0) > 0) {
-        count += 1
-      }
-    }
-  }
-  return count
-}
+// Re-exported: dialogs and settings import these alongside removeProject.
+export { countOpenRepoTerminalTabs, getKnownRepoWorktreeIds } from './repo-worktree-ownership'
 
 export function createRepoRemovalActions(
   set: Parameters<StateCreator<AppState>>[0],
@@ -196,12 +152,14 @@ export function createRepoRemovalActions(
         // Why rechecked: a concurrent removal of the other copy leaves no survivor to share with.
         const twins = collectRemovedHostTwins(get(), worktreeIds, ownerHostId)
         const exclusiveWorktreeIds = worktreeIds.filter((id) => !twins.twinHostIds.has(id))
+        // Built before the set so the removed row still files its unstamped worktrees.
+        const ownsWorktree = createRepoWorktreeHostMatcher(get().repos, projectId, ownerHostId)
         const localAgentContextProjectIds =
           ownerHostId === LOCAL_EXECUTION_HOST_ID
             ? [
                 projectId,
                 ...(get().worktreesByRepo[projectId] ?? [])
-                  .filter((worktree) => worktreeBelongsToHost(worktree, ownerHostId))
+                  .filter(ownsWorktree)
                   .flatMap((worktree) => (worktree.projectId ? [worktree.projectId] : []))
               ]
             : []
@@ -234,7 +192,7 @@ export function createRepoRemovalActions(
         set((s) => {
           const nextWorktrees = { ...s.worktreesByRepo }
           const remainingWorktrees = (nextWorktrees[projectId] ?? []).filter(
-            (worktree) => !worktreeBelongsToHost(worktree, ownerHostId)
+            (worktree) => !ownsWorktree(worktree)
           )
           if (remainingWorktrees.length > 0) {
             nextWorktrees[projectId] = remainingWorktrees
@@ -245,7 +203,7 @@ export function createRepoRemovalActions(
           const detected = nextDetectedWorktrees[projectId]
           if (detected) {
             const remainingDetected = detected.worktrees.filter(
-              (worktree) => !worktreeBelongsToHost(worktree, ownerHostId)
+              (worktree) => !ownsWorktree(worktree)
             )
             if (remainingDetected.length > 0) {
               nextDetectedWorktrees[projectId] = { ...detected, worktrees: remainingDetected }
