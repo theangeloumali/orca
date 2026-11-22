@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { buildSidebarHostOptions } from '@/components/sidebar/worktree-list/controls/sidebar-host-options'
-import { getProjectGroupExecutionHostIdForRows } from '../../../../../shared/sidebar-list/hosts/host-filtering'
 import { buildPaletteFilterModel } from '@/components/cmd-j/palette-filter-options'
+import { countPaletteMachines } from '@/components/cmd-j/palette-machine-count'
 import {
   buildPaletteFilterPredicate,
   isPaletteFilterActive
@@ -9,7 +9,10 @@ import {
 import { getRepoHostIdentity } from '../../../../../shared/repository/repo-host-identity'
 import { getPaletteWorktreeExecutionHostId } from '@/lib/workspace/search/palette-repo-resolution'
 import { getHostDisplayLabelOverrides } from '../../../../../shared/execution-host/host-setting-overrides'
-import { getSettingsFocusedExecutionHostId } from '../../../../../shared/execution-host/execution-host'
+import {
+  getRepoExecutionHostId,
+  getSettingsFocusedExecutionHostId
+} from '../../../../../shared/execution-host/execution-host'
 import type { WorktreeJumpPaletteLocalState } from '../state/use-worktree-jump-palette-local-state'
 import type { WorktreeJumpPaletteStoreState } from '../state/use-worktree-jump-palette-store-state'
 
@@ -25,7 +28,6 @@ type WorktreeJumpPaletteFilterInput = Pick<
   | 'projects'
   | 'projectHostSetups'
   | 'showMachineSections'
-  | 'projectGroups'
 > &
   Pick<WorktreeJumpPaletteLocalState, 'filter'>
 
@@ -40,7 +42,6 @@ export function useWorktreeJumpPaletteFilter({
   projects,
   projectHostSetups,
   showMachineSections,
-  projectGroups,
   filter
 }: WorktreeJumpPaletteFilterInput) {
   const repoMap = useMemo(() => new Map(repos.map((repo) => [repo.id, repo])), [repos])
@@ -105,16 +106,14 @@ export function useWorktreeJumpPaletteFilter({
     () => buildPaletteFilterPredicate(filter, filterModel),
     [filter, filterModel]
   )
-  const groupHostIdByGroupId = useMemo(
-    () =>
-      new Map(
-        projectGroups.map((group) => [
-          group.id,
-          getProjectGroupExecutionHostIdForRows(group, defaultHostId)
-        ])
-      ),
-    [defaultHostId, projectGroups]
-  )
+  const hostBadgeContext = useMemo(() => {
+    const projectHostIds = [
+      ...repos.map(getRepoExecutionHostId),
+      ...workspaces.flatMap((workspace) => getPaletteWorktreeExecutionHostId(workspace) ?? [])
+    ]
+    const machineCount = countPaletteMachines(hostOptions, projectHostIds)
+    return { hostOptions, hostFilterActive, machineCount }
+  }, [hostFilterActive, hostOptions, repos, workspaces])
 
   return {
     repoMap,
@@ -124,9 +123,8 @@ export function useWorktreeJumpPaletteFilter({
     defaultHostId,
     filterModel,
     filterActive,
-    hostFilterActive,
-    filterPredicate,
-    groupHostIdByGroupId
+    hostBadgeContext,
+    filterPredicate
   }
 }
 

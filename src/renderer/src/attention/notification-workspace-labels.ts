@@ -21,6 +21,8 @@ import {
   type ExecutionHostId
 } from '../../../shared/execution-host/execution-host'
 import type { Repo } from '../../../shared/repository/repo-types'
+import { withDeviceLabel } from '../../../shared/sidebar-list/hosts/device-sections'
+import { selectExecutionHostDisplayLabel } from '../runtime/hosts/display/execution-host-display-label'
 import type { Worktree } from '../../../shared/worktree/types'
 import { parseWorkspaceKey } from '../../../shared/workspace/identity/workspace-scope'
 import {
@@ -68,6 +70,19 @@ function findNotificationRepo(
   return findIndexedRepoOwnerForHost(state.repos, repoId, owningHost) ?? undefined
 }
 
+// Remote workspaces read "M1 Max · repo", the sidebar's device-chip rule; local labels stay bare.
+function withNotificationDeviceLabel(
+  state: StoreSnapshot,
+  label: string | undefined,
+  hostId: ExecutionHostId
+): string | undefined {
+  if (!label) {
+    return undefined
+  }
+  const hostLabel = selectExecutionHostDisplayLabel(state, hostId)
+  return withDeviceLabel(label, hostId, new Map([[hostId, hostLabel]]))
+}
+
 export function getNotificationWorkspaceLabels(
   state: StoreSnapshot,
   workspaceId: string,
@@ -80,15 +95,20 @@ export function getNotificationWorkspaceLabels(
       selectFolderWorkspaces(state),
       scope.folderWorkspaceId
     )
+    if (!folder) {
+      return { worktreeLabel: fallback }
+    }
     // The group ID is only unique per host, so qualify it with the folder's own host.
-    const group =
-      folder &&
-      findIndexedProjectGroupOwner(
-        state.projectGroups,
-        folder.projectGroupId,
-        getRepoExecutionHostId(folder)
-      )
-    return { repoLabel: group?.name, worktreeLabel: folder?.name || fallback }
+    const folderHostId = getRepoExecutionHostId(folder)
+    const group = findIndexedProjectGroupOwner(
+      state.projectGroups,
+      folder.projectGroupId,
+      folderHostId
+    )
+    return {
+      repoLabel: withNotificationDeviceLabel(state, group?.name, folderHostId),
+      worktreeLabel: folder.name || fallback
+    }
   }
   const worktreeId = scope?.type === 'worktree' ? scope.worktreeId : workspaceId
   const { worktree, hostId } = findWorktreeRowOnItsOwnHost(state, worktreeId)
@@ -96,7 +116,9 @@ export function getNotificationWorkspaceLabels(
     ? findNotificationRepo(state, worktreeId, worktree.repoId, hostId)
     : undefined
   return {
-    repoLabel: repo?.displayName,
+    repoLabel: repo
+      ? withNotificationDeviceLabel(state, repo.displayName, hostId ?? getRepoExecutionHostId(repo))
+      : undefined,
     worktreeLabel: worktree?.displayName || worktree?.branch || fallback
   }
 }
