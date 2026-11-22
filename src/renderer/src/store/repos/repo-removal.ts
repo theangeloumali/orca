@@ -8,12 +8,13 @@ import {
   getWorktreeVisitKey
 } from '@/lib/workspace/activation/worktree-visit-recency'
 import { omitSparsePresetsForRepos } from '../slices/worktrees/create/sparse-presets'
-import { repoMatchesHostIdentity, worktreeBelongsToHost } from './repo-host-identity'
+import { repoMatchesHostIdentity } from './repo-host-identity'
+import { createRepoWorktreeHostMatcher, getOwnedRepoWorktreeIds } from './repo-worktree-ownership'
 import { callRuntimeRpc } from '../../runtime/rpc/calls/runtime-rpc-call'
 import { hasRuntimeRpcErrorCode } from '../../../../shared/remote-runtime/rpc/runtime-rpc-error-code'
 import { ipcOrRuntimeTargetForHostId } from '../../runtime/rpc/targets/runtime-client-target'
 // oxfmt-ignore
-import { getRepoExecutionHostId, LOCAL_EXECUTION_HOST_ID } from '../../../../shared/execution-host/execution-host'
+import { getRepoExecutionHostId, LOCAL_EXECUTION_HOST_ID, normalizeExecutionHostId } from '../../../../shared/execution-host/execution-host'
 import { destroyRecipeVmBeforeProjectRemoval } from './recipe-vm-project-removal'
 import { stopRuntimeProjectTerminalsBeforeRemoval } from './runtime-project-terminal-stop'
 import type { RepoSlice } from './repo-state'
@@ -37,53 +38,8 @@ import { toastProjectRemovalFailure } from './repo-removal-failure-toast'
 import { replayPendingRuntimeRepoRemovalsIfReady } from './pending-runtime-repo-removal-replay'
 import { isRuntimeEnvironmentRegistered } from './runtime-environment-registration'
 
-type HostScopedWorktreeRef = { id: string; hostId?: string }
-
-type RepoWorktreeCatalog = {
-  worktreesByRepo: Readonly<Record<string, readonly HostScopedWorktreeRef[] | undefined>>
-  detectedWorktreesByRepo: Readonly<
-    Record<string, { worktrees: readonly HostScopedWorktreeRef[] } | undefined>
-  >
-}
-
-export function getKnownRepoWorktreeIds(
-  state: RepoWorktreeCatalog,
-  projectId: string,
-  hostId?: string
-): string[] {
-  const ids = new Set<string>()
-  for (const worktree of state.worktreesByRepo[projectId] ?? []) {
-    if (!hostId || worktreeBelongsToHost(worktree, hostId)) {
-      ids.add(worktree.id)
-    }
-  }
-  for (const worktree of state.detectedWorktreesByRepo[projectId]?.worktrees ?? []) {
-    if (!hostId || worktreeBelongsToHost(worktree, hostId)) {
-      ids.add(worktree.id)
-    }
-  }
-  return [...ids]
-}
-
-/** Terminal tabs that removing this project's host row will close. */
-export function countOpenRepoTerminalTabs(
-  state: RepoWorktreeCatalog & {
-    tabsByWorktree: Readonly<Record<string, readonly { id: string }[] | undefined>>
-    ptyIdsByTabId: Readonly<Record<string, readonly string[] | undefined>>
-  },
-  projectId: string,
-  hostId: string
-): number {
-  let count = 0
-  for (const worktreeId of getKnownRepoWorktreeIds(state, projectId, hostId)) {
-    for (const tab of state.tabsByWorktree[worktreeId] ?? []) {
-      if ((state.ptyIdsByTabId[tab.id]?.length ?? 0) > 0) {
-        count += 1
-      }
-    }
-  }
-  return count
-}
+// Re-exported: dialogs and settings import these alongside removeProject.
+export { countOpenRepoTerminalTabs, getKnownRepoWorktreeIds } from './repo-worktree-ownership'
 
 export function createRepoRemovalActions(
   set: Parameters<StateCreator<AppState>>[0],
@@ -101,12 +57,16 @@ export function createRepoRemovalActions(
           return
         }
         const ownerHostId = getRepoExecutionHostId(ownerRepo)
+        // Why snapshot: a repos:changed refetch during the awaits below can drop this row first.
+        const ownsWorktree = createRepoWorktreeHostMatcher(get().repos, projectId, ownerHostId)
+        const ownedWorktreeIds = (): string[] =>
+          getOwnedRepoWorktreeIds(get(), projectId, ownsWorktree)
         // Why only awaited for a VM: concurrent removals of one row must reach the host together.
         const vmDestroy = destroyRecipeVmBeforeProjectRemoval(
           get(),
           ownerRepo,
           ownerHostId,
-          getKnownRepoWorktreeIds(get(), projectId, ownerHostId)
+          ownedWorktreeIds()
         )
         const vmServerDestroyed = vmDestroy !== false && (await vmDestroy)
         // Why: derive the target from the owner row's host so an SSH host removal never routes repo.rm to the focused runtime.
@@ -114,7 +74,7 @@ export function createRepoRemovalActions(
         if (!target) {
           throw new Error('The project host is unresolved. Refresh and retry.')
         }
-        const knownWorktreeIds = getKnownRepoWorktreeIds(get(), projectId, ownerHostId)
+        const knownWorktreeIds = ownedWorktreeIds()
         // Why before the host call: its announcement can start a listing refresh that drops these tabs.
         const preCallTwins = collectRemovedHostTwins(get(), knownWorktreeIds, ownerHostId)
         const removedTwinEntityIds = new Set(
@@ -145,7 +105,7 @@ export function createRepoRemovalActions(
             target.environmentId,
             projectId,
             // Why re-read: the registration await can let a listing refresh add worktrees.
-            getKnownRepoWorktreeIds(get(), projectId, ownerHostId)
+            ownedWorktreeIds()
           )
         }
         try {
@@ -187,10 +147,16 @@ export function createRepoRemovalActions(
           await import('../../lib/workspace/catalog/repo-slug-index')
         clearRepoSlugCacheEntry(projectId)
 
+        // Live, no await until the set: with no other row left, unstamped leftovers have no owner.
+        const isLastRow = !get().repos.some(
+          (repo) => repo.id === projectId && !repoMatchesHostIdentity(repo, projectId, ownerHostId)
+        )
+        const removesWorktree = (worktree: { hostId?: string }): boolean =>
+          ownsWorktree(worktree) || (isLastRow && !normalizeExecutionHostId(worktree.hostId))
         const worktreeIds = [
           ...new Set([
             ...knownWorktreeIds,
-            ...getKnownRepoWorktreeIds(get(), projectId, ownerHostId)
+            ...getOwnedRepoWorktreeIds(get(), projectId, removesWorktree)
           ])
         ]
         // Why rechecked: a concurrent removal of the other copy leaves no survivor to share with.
@@ -201,7 +167,7 @@ export function createRepoRemovalActions(
             ? [
                 projectId,
                 ...(get().worktreesByRepo[projectId] ?? [])
-                  .filter((worktree) => worktreeBelongsToHost(worktree, ownerHostId))
+                  .filter(removesWorktree)
                   .flatMap((worktree) => (worktree.projectId ? [worktree.projectId] : []))
               ]
             : []
@@ -234,7 +200,7 @@ export function createRepoRemovalActions(
         set((s) => {
           const nextWorktrees = { ...s.worktreesByRepo }
           const remainingWorktrees = (nextWorktrees[projectId] ?? []).filter(
-            (worktree) => !worktreeBelongsToHost(worktree, ownerHostId)
+            (worktree) => !removesWorktree(worktree)
           )
           if (remainingWorktrees.length > 0) {
             nextWorktrees[projectId] = remainingWorktrees
@@ -245,7 +211,7 @@ export function createRepoRemovalActions(
           const detected = nextDetectedWorktrees[projectId]
           if (detected) {
             const remainingDetected = detected.worktrees.filter(
-              (worktree) => !worktreeBelongsToHost(worktree, ownerHostId)
+              (worktree) => !removesWorktree(worktree)
             )
             if (remainingDetected.length > 0) {
               nextDetectedWorktrees[projectId] = { ...detected, worktrees: remainingDetected }

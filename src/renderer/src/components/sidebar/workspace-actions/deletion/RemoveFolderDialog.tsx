@@ -17,7 +17,7 @@ import {
   normalizeExecutionHostId
 } from '../../../../../../shared/execution-host/execution-host'
 import { countOpenRepoTerminalTabs } from '@/store/repos/repo-removal'
-import { worktreeBelongsToHost } from '@/store/repos/repo-host-identity'
+import { countLinkedRepoWorkspaces } from '@/store/repos/repo-worktree-ownership'
 import { getRecipeVmSshTargetForHost } from '@/runtime/ephemeral-vm/recipe-vm-managed-host'
 import { RemovalUnsavedFilesNotice } from './RemovalUnsavedFilesNotice'
 import { confirmUnsavedDiscard } from '@/store/slices/worktrees/teardown/removed-workspace-unsaved-files'
@@ -71,26 +71,21 @@ const RemoveFolderDialog = React.memo(function RemoveFolderDialog() {
       )
   )
 
+  const repos = useAppStore((s) => s.repos)
   const worktreesByRepo = useAppStore((s) => selectWorktreesByRepo(s))
   const detectedWorktreesByRepo = useAppStore((s) => selectDetectedWorktreesByRepo(s))
   const unsavedTargets = useMemo(
     () =>
       projectRemovalTargets(
-        { worktreesByRepo, detectedWorktreesByRepo },
+        { repos, worktreesByRepo, detectedWorktreesByRepo },
         repoId ? [{ repoId, hostId }] : []
       ),
-    [detectedWorktreesByRepo, hostId, repoId, worktreesByRepo]
+    [detectedWorktreesByRepo, hostId, repoId, repos, worktreesByRepo]
   )
 
-  // The main checkout is the project itself; every other row on this host leaves Orca with it (#17645).
   const linkedWorkspaceCount = useMemo(
-    () =>
-      hostId
-        ? (worktreesByRepo[repoId] ?? []).filter(
-            (worktree) => !worktree.isMainWorktree && worktreeBelongsToHost(worktree, hostId)
-          ).length
-        : 0,
-    [hostId, repoId, worktreesByRepo]
+    () => (hostId ? countLinkedRepoWorkspaces({ repos, worktreesByRepo }, repoId, hostId) : 0),
+    [hostId, repoId, repos, worktreesByRepo]
   )
   const linkedWorkspaceWarning =
     linkedWorkspaceCount === 0

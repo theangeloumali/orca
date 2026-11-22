@@ -48,7 +48,8 @@ export function moreUnsavedFilesLabel(count: number, t: Translate = translate): 
 
 /** The workspace ids project teardown purges (listed and detected rows), on the removed host. */
 export function projectRemovalTargets(
-  state: Pick<AppState, 'worktreesByRepo' | 'detectedWorktreesByRepo'>,
+  // repos files unstamped worktrees under their row's host, as the sidebar does.
+  state: Pick<AppState, 'repos' | 'worktreesByRepo' | 'detectedWorktreesByRepo'>,
   projects: readonly { repoId: string; hostId: ExecutionHostId | null }[]
 ): WorktreePurgeTarget[] {
   return projects.flatMap(({ repoId, hostId }) =>
