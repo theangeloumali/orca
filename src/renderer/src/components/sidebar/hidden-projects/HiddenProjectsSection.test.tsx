@@ -10,9 +10,20 @@ import HiddenProjectsSection from './HiddenProjectsSection'
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() } }))
 
 const DAY_MS = 24 * 60 * 60 * 1000
+// Fixed clock so idle ages never depend on when the test runs.
+const NOW = Date.UTC(2026, 10, 22, 12)
+
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(NOW)
+})
+
+afterEach(() => {
+  vi.useRealTimers()
+})
 
 function project(id: string, extra: Partial<Repo> = {}): Repo {
-  return { ...repo, id, displayName: id, addedAt: Date.now() - 400 * DAY_MS, ...extra }
+  return { ...repo, id, displayName: id, addedAt: NOW - 400 * DAY_MS, ...extra }
 }
 
 function workspaceFor(repoId: string, idleDays: number): typeof worktree {
@@ -20,7 +31,7 @@ function workspaceFor(repoId: string, idleDays: number): typeof worktree {
     ...worktree,
     id: `${repoId}::main`,
     repoId,
-    lastActivityAt: Date.now() - idleDays * DAY_MS
+    lastActivityAt: NOW - idleDays * DAY_MS
   }
 }
 
@@ -85,12 +96,7 @@ describe('HiddenProjectsSection', () => {
 
   it('offers to archive exactly the projects idle 30+ days', async () => {
     setProjects(
-      [
-        project('busy'),
-        project('stale'),
-        project('empty'),
-        project('new', { addedAt: Date.now() })
-      ],
+      [project('busy'), project('stale'), project('empty'), project('new', { addedAt: NOW })],
       {
         busy: 2,
         stale: 31

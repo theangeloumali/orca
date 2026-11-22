@@ -24,7 +24,7 @@ const HiddenProjectsSection = React.memo(function HiddenProjectsSection() {
   const lastActiveAtByRow = useAppStore(
     useShallow((state) =>
       getLastActiveAtByRow(state.repos, {
-        worktreesByRepo: selectWorktreesByRepo(state),
+        workspacesByRepoId: selectWorktreesByRepo(state),
         visits: state.lastVisitedAtByWorktreeId
       })
     )

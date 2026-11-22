@@ -18,7 +18,7 @@ function project(id: string, extra: Partial<Repo> = {}): Repo {
 function activity(
   byRepo: Record<string, { id: string; lastActivityAt: number; hostId?: `ssh:${string}` }[]>
 ): ProjectActivityInputs {
-  return { worktreesByRepo: byRepo, visits: {} }
+  return { workspacesByRepoId: byRepo, visits: {} }
 }
 
 describe('groupArchivedRepos', () => {

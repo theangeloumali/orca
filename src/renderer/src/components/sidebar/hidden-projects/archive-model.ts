@@ -15,7 +15,7 @@ import { getWorktreeVisitTimestamp } from '@/lib/workspace/activation/worktree-v
 import { getRepoRowIdentity } from '@/store/repos/repo-host-identity'
 
 export type ProjectActivityInputs = {
-  worktreesByRepo: Readonly<
+  workspacesByRepoId: Readonly<
     Record<string, readonly Pick<Worktree, 'id' | 'hostId' | 'lastActivityAt'>[]>
   >
   visits: Readonly<Record<string, number>>
@@ -29,7 +29,7 @@ export type ArchiveGroup = { hostId: ExecutionHostId; repos: Repo[] }
 /** Last activity of this host copy: its own machine's workspaces only, so a busy twin elsewhere does not count. */
 export function getRepoLastActiveAt(repo: Repo, inputs: ProjectActivityInputs): number {
   const hostId = getRepoExecutionHostId(repo)
-  const workspaces = (inputs.worktreesByRepo[repo.id] ?? [])
+  const workspaces = (inputs.workspacesByRepoId[repo.id] ?? [])
     .filter((workspace) => getWorktreeExecutionHostId(workspace, repo) === hostId)
     .map((workspace) => ({
       lastActivityAt: workspace.lastActivityAt,
