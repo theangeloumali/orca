@@ -24,15 +24,18 @@ export type ProjectGroupDeviceTargets = {
   groupChoices: ProjectGroupMoveTarget[]
 }
 
-/** "Move to group" choices split by machine, each machine's groups as its sidebar tree. */
 // SSH hosts keep their groups in this computer's catalog; only a paired server has its own.
-function sharesGroupCatalog(hostId: ExecutionHostId, otherHostId: ExecutionHostId): boolean {
+export function sharesProjectGroupCatalog(
+  hostId: ExecutionHostId,
+  otherHostId: ExecutionHostId
+): boolean {
   const isRuntime = (id: ExecutionHostId) => parseExecutionHostId(id)?.kind === 'runtime'
   return isRuntime(hostId) || isRuntime(otherHostId)
     ? canonicalExecutionHostId(hostId) === canonicalExecutionHostId(otherHostId)
     : true
 }
 
+/** "Move to group" choices split by machine, each machine's groups as its sidebar tree. */
 export function getProjectGroupTargetsByDevice(args: {
   groups: readonly DeviceTargetGroup[]
   hostOrder: readonly ExecutionHostId[]
@@ -46,7 +49,7 @@ export function getProjectGroupTargetsByDevice(args: {
     anchorHostId: args.ownerHostId
   }).map((section) => ({
     hostId: section.hostId,
-    available: sharesGroupCatalog(section.hostId, args.ownerHostId),
+    available: sharesProjectGroupCatalog(section.hostId, args.ownerHostId),
     // No group is moving here, so nothing in the tree is blocked.
     groupChoices: getProjectGroupMoveTargets(section.items, '')
   }))

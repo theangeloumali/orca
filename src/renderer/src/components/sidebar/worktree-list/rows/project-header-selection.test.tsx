@@ -207,6 +207,14 @@ describe('project header multi-select', () => {
     expect(screen.getByText('1 on another machine stays put')).toBeTruthy()
   })
 
+  it('keeps the first-picked machine when a Shift-range pulls in other machines', () => {
+    render(<Harness projects={[alpha, beta, remoteDelta]} onToggle={vi.fn()} />)
+    fireEvent.click(headerFor('delta'), { metaKey: true })
+    fireEvent.click(headerFor('alpha'), { shiftKey: true })
+    expect(screen.getByText('3 selected')).toBeTruthy()
+    expect(screen.getByText('2 on another machine stay put')).toBeTruthy()
+  })
+
   it('ignores modifier clicks when project headers are not the grouping', () => {
     const onToggle = vi.fn()
     render(<Harness projects={[alpha]} onToggle={onToggle} groupBy="workspace-status" />)

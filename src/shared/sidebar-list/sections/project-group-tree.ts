@@ -155,11 +155,15 @@ export function walkProjectGroupTree<V extends GroupedProjectEntry>(
 }
 
 /** Projects filed anywhere in a group's subtree; folder workspaces are not projects, hidden ones never list. */
+// Counted by id: each machine's copy is its own registration, but the sidebar draws one header.
 export function countProjectGroupSubtreeProjects(
   subtreeGroupIds: ReadonlySet<string>,
-  repos: readonly Partial<Pick<Repo, 'projectGroupId' | 'hiddenAt'>>[]
+  repos: readonly (Pick<Repo, 'id'> & Partial<Pick<Repo, 'projectGroupId' | 'hiddenAt'>>)[]
 ): number {
-  return repos.filter(
-    (repo) => !isRepoHidden(repo) && repo.projectGroupId && subtreeGroupIds.has(repo.projectGroupId)
-  ).length
+  const filedIds = repos.flatMap((repo) =>
+    !isRepoHidden(repo) && repo.projectGroupId && subtreeGroupIds.has(repo.projectGroupId)
+      ? [repo.id]
+      : []
+  )
+  return new Set(filedIds).size
 }

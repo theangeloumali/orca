@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type React from 'react'
 import { useListMultiSelection } from '@/lib/list-interaction/use-list-multi-selection'
 import { getSelectionIntent } from '@/lib/list-interaction/list-multi-selection'
@@ -24,6 +24,16 @@ function collectSelectableHeaderRepos(rows: readonly HostSectionRow[]): Repo[] {
   )
 }
 
+// A Shift-range rebuilds the Set in list order; earlier picks stay first so the first machine holds.
+function keepPickOrder(
+  previousOrder: readonly string[],
+  selectedKeys: ReadonlySet<string>
+): string[] {
+  const kept = previousOrder.filter((key) => selectedKeys.has(key))
+  const keptKeys = new Set(kept)
+  return [...kept, ...[...selectedKeys].filter((key) => !keptKeys.has(key))]
+}
+
 function sameMachineOnly(repos: readonly Repo[]): Repo[] {
   return splitSelectionByMachine(repos)?.groupable ?? []
 }
@@ -46,13 +56,19 @@ export function useProjectHeaderSelection(args: {
   const getScope = useCallback(() => scopeRef.current, [])
   const selection = useListMultiSelection<Repo>({ items, getKey: getRepoRowIdentity, getScope })
   const { selectedKeys, getItemForKey } = selection
+  const [pickOrder, setPickOrder] = useState({ forKeys: selectedKeys, order: [...selectedKeys] })
+  let { order } = pickOrder
+  if (pickOrder.forKeys !== selectedKeys) {
+    order = keepPickOrder(pickOrder.order, selectedKeys)
+    setPickOrder({ forKeys: selectedKeys, order })
+  }
   const selectedRepos = useMemo(
     () =>
-      [...selectedKeys].flatMap((key) => {
+      order.flatMap((key) => {
         const repo = getItemForKey(key)
         return repo ? [repo] : []
       }),
-    [getItemForKey, selectedKeys]
+    [getItemForKey, order]
   )
   const selectable = items.length > 0
   const state = useMemo(

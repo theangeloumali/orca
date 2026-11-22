@@ -21,7 +21,7 @@ import { getWorktreeSidebarDragAutoscroll } from './worktree-sidebar-drag-autosc
 import { hasPointerBeenReleased } from './header-drag-pointer-release'
 import { swallowNextClickOnDragHandle } from './header-drag-click-swallow'
 import { useHeaderDragBodyCursor } from './header-drag-body-cursor'
-import { measureProjectGroupHeaderDragRects } from './project-group-header-drop'
+import { measureProjectGroupNestRects } from './project-group-header-drop'
 import type { ProjectGroupNestTarget } from './project-group-header-nest-drop'
 import {
   commitProjectHeaderNestDrop,
@@ -93,7 +93,7 @@ export function useRepoHeaderDrag({
         ).map((rect) => ({ ...rect, repoId: rect.key }))
       : measureProjectHeaderDragRects(container, session.bucketKey)
     session.headerRects = rects
-    session.nestRects = measureProjectGroupHeaderDragRects(container)
+    session.nestRects = measureProjectGroupNestRects(container)
     return rects
   }, [])
 

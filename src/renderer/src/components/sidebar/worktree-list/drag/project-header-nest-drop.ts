@@ -1,6 +1,10 @@
 import { getLogicalRepoOrderRankById } from '../../../../../../shared/sidebar-list/sections/project-section-order'
 import { getEffectiveProjectGroupManualRank } from '../../../../../../shared/project/groups/project-groups'
-import { getRepoExecutionHostId } from '../../../../../../shared/execution-host/execution-host'
+import {
+  canonicalExecutionHostId,
+  getRepoExecutionHostId
+} from '../../../../../../shared/execution-host/execution-host'
+import { sharesProjectGroupCatalog } from '../../../../../../shared/project/groups/project-group-device-targets'
 import { isSameRepoRow } from '@/store/repos/repo-host-identity'
 import { findHeaderInNestBand, type ProjectGroupNestTarget } from './project-group-header-nest-drop'
 import type { ProjectGroupHeaderDragRect } from './project-group-header-drop'
@@ -25,10 +29,12 @@ export function findProjectHeaderNestTarget(args: {
   ownerHostIdById: ReadonlyMap<string, string | null>
 }): ProjectGroupNestTarget | null {
   const rect = findHeaderInNestBand(args.pointerContentY, args.rects)
-  // A group lives on one machine; a project can only be filed into a group on its own.
+  const ownerHostId = rect && canonicalExecutionHostId(args.ownerHostIdById.get(rect.groupId))
+  // Same rule as "Move to group": the group must live in the project's own catalog.
   const valid =
     rect !== undefined &&
-    args.ownerHostIdById.get(rect.groupId) === getRepoExecutionHostId(args.project) &&
+    !!ownerHostId &&
+    sharesProjectGroupCatalog(ownerHostId, getRepoExecutionHostId(args.project)) &&
     (args.project.projectGroupId ?? null) !== rect.groupId
   return valid ? { groupId: rect.groupId, top: rect.top, bottom: rect.bottom } : null
 }

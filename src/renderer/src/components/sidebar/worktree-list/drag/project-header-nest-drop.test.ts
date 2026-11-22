@@ -54,6 +54,13 @@ describe('findProjectHeaderNestTarget', () => {
     ).toBeNull()
   })
 
+  it("files an SSH project into this computer's groups but not a paired server's", () => {
+    const sshProject: NestableProject = { id: 'api', projectGroupId: null, connectionId: 'box' }
+    expect(find(115, sshProject)).toEqual({ groupId: 'work', top: 100, bottom: 130 })
+    expect(find(155, sshProject)).toBeNull()
+    expect(find(155, { ...localProject, executionHostId: 'runtime:m2' })).toBeNull()
+  })
+
   it('refuses the group the project is already in', () => {
     expect(find(115, { ...localProject, projectGroupId: 'work' })).toBeNull()
   })

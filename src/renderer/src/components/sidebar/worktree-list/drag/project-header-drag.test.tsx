@@ -28,6 +28,8 @@ type HarnessProps = {
   liveRepos: readonly Repo[]
   usesProjectGroupOrdering?: boolean
   groupId?: string
+  /** Lays the group header's virtual row out here while it is drawn pinned at 100. */
+  pinnedRowStart?: number
   onCommitRepoOrder?: (ids: string[]) => void
   onCommitProjectGroupOrder?: (project: Repo, groupId: string | null, order: number) => void
   onToggle?: () => void
@@ -50,11 +52,17 @@ function DragHarness(props: HarnessProps): React.JSX.Element {
   return (
     <div ref={containerRef}>
       <div
-        data-testid="group-header"
-        data-project-group-header-id={props.groupId ?? 'work'}
-        data-project-group-header-bucket="root"
-        data-project-group-header-index="0"
-      />
+        data-testid="virtual-row"
+        data-worktree-virtual-row
+        data-worktree-virtual-row-start={props.pinnedRowStart ?? 100}
+      >
+        <div
+          data-testid="group-header"
+          data-project-group-header-id={props.groupId ?? 'work'}
+          data-project-group-header-bucket="root"
+          data-project-group-header-index="0"
+        />
+      </div>
       <div
         role="button"
         onPointerDown={(event) => drag.onHandlePointerDown(event, props.anchor, props.registration)}
@@ -71,6 +79,9 @@ function DragHarness(props: HarnessProps): React.JSX.Element {
 function renderHarness(props: HarnessProps): void {
   render(<DragHarness {...props} />)
   vi.spyOn(screen.getByTestId('group-header'), 'getBoundingClientRect').mockReturnValue(
+    new DOMRect(0, 100, 200, 30)
+  )
+  vi.spyOn(screen.getByTestId('virtual-row'), 'getBoundingClientRect').mockReturnValue(
     new DOMRect(0, 100, 200, 30)
   )
 }
@@ -147,6 +158,19 @@ describe('useRepoHeaderDrag session wiring', () => {
     dragHandleTo(115)
     expect(onCommitProjectGroupOrder).toHaveBeenCalledWith(localOrca, 'work', expect.any(Number))
     expect(onCommitRepoOrder).not.toHaveBeenCalled()
+  })
+
+  it('files into a pinned group header where it is drawn, not where its row is laid out', () => {
+    const onCommitProjectGroupOrder = vi.fn()
+    renderHarness({
+      anchor: localOrca,
+      registration: localOrca,
+      liveRepos: [localOrca],
+      pinnedRowStart: 600,
+      onCommitProjectGroupOrder
+    })
+    dragHandleTo(115)
+    expect(onCommitProjectGroupOrder).toHaveBeenCalledWith(localOrca, 'work', expect.any(Number))
   })
 
   it("files the clicked machine's copy, not the header's anchor copy", () => {

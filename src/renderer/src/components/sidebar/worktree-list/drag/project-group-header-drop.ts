@@ -131,6 +131,19 @@ export function measureProjectGroupHeaderDragRects(
   container: HTMLElement,
   bucketKey?: ProjectGroupHeaderDragBucketKey
 ): ProjectGroupHeaderDragRect[] {
+  return measureGroupHeaderRects(container, bucketKey, 'layout')
+}
+
+/** Group headers where they are drawn, so a nest drop lands on the header under the pointer. */
+export function measureProjectGroupNestRects(container: HTMLElement): ProjectGroupHeaderDragRect[] {
+  return measureGroupHeaderRects(container, undefined, 'drawn')
+}
+
+function measureGroupHeaderRects(
+  container: HTMLElement,
+  bucketKey: ProjectGroupHeaderDragBucketKey | undefined,
+  position: 'layout' | 'drawn'
+): ProjectGroupHeaderDragRect[] {
   const containerRect = container.getBoundingClientRect()
   const rects: ProjectGroupHeaderDragRect[] = []
   container.querySelectorAll<HTMLElement>('[data-project-group-header-id]').forEach((element) => {
@@ -152,7 +165,8 @@ export function measureProjectGroupHeaderDragRects(
         element,
         container,
         containerRect,
-        'data-project-group-header-section-end'
+        'data-project-group-header-section-end',
+        position
       )
     })
   })
