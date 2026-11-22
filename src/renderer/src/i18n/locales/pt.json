@@ -13352,6 +13352,7 @@
           "clear": "Limpar",
           "newGroup": "Novo grupo…",
           "groupCount": "Agrupar {{count}} selecionados…",
+          "selected": "Selecionado",
           "stayPut_one": "{{count}} em outra máquina fica",
           "stayPut_other": "{{count}} em outra máquina ficam",
           "stayPut_many": "{{count}} em outra máquina ficam"

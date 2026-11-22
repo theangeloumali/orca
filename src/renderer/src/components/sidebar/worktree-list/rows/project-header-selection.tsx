@@ -1,6 +1,7 @@
-import React, { use } from 'react'
+import React, { use, useId } from 'react'
 import * as Slot from 'radix-ui/slot'
 import { cn } from '@/lib/class-names'
+import { useTranslate } from '@/i18n/use-translate'
 import { getRepoRowIdentity } from '@/store/repos/repo-host-identity'
 import type { Repo } from '../../../../../../shared/repository/repo-types'
 import type { GroupHeaderRow } from '../../../../../../shared/sidebar-list/row-types'
@@ -22,10 +23,7 @@ export function ProjectHeaderSelectionScope({ children, ...args }: ScopeProps): 
       <ProjectHeaderSelectionStateContext value={state}>
         {/* contents: the list keeps its layout; the element only bounds "click outside clears". */}
         <div ref={scopeRef} className="contents">
-          {/* Zero-height anchor: the bar overlays the list top instead of pushing rows down. */}
-          <div className="relative z-30 h-0 shrink-0">
-            <ProjectSelectionBar />
-          </div>
+          <ProjectSelectionBar />
           {children}
         </div>
       </ProjectHeaderSelectionStateContext>
@@ -76,12 +74,22 @@ export function SelectableProjectHeader({
 }: React.ComponentProps<typeof ProjectHeaderHostTooltip> & {
   row: GroupHeaderRow
 }): React.JSX.Element {
+  const t = useTranslate()
+  const descriptionId = useId()
   const repo = row.projectGroup ? undefined : row.repo
-  const pressed = useProjectHeaderSelected(repo)
+  const selected = useProjectHeaderSelected(repo) === true
+  // Described, not pressed: the header already carries aria-expanded for collapse.
+  // Set only when selected so an unselected header keeps the tooltip's own description.
+  const describedBy = selected ? { 'aria-describedby': descriptionId } : {}
   return (
     <ProjectHeaderSelectionTarget repo={repo}>
+      {selected ? (
+        <span id={descriptionId} hidden>
+          {t('auto.components.sidebar.projectSelection.selected', 'Selected')}
+        </span>
+      ) : null}
       <ProjectHeaderHostTooltip {...tooltip}>
-        <Slot.Root aria-pressed={pressed}>{children}</Slot.Root>
+        <Slot.Root {...describedBy}>{children}</Slot.Root>
       </ProjectHeaderHostTooltip>
     </ProjectHeaderSelectionTarget>
   )

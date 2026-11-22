@@ -1,15 +1,29 @@
 // @vitest-environment happy-dom
 
-import { cleanup, render, screen } from '@testing-library/react'
+import { act, cleanup, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useAppStore } from '@/store'
 import { repo } from '../grouping/worktree-list-groups-test-fixtures'
 import { getProjectGroupHeaderKey } from '../../../../../../shared/sidebar-list/sections/group-keys'
 import type { ProjectGroup } from '../../../../../../shared/project/groups/project-group-types'
 import type * as ActivityCountsModule from './use-project-group-agent-activity-counts'
+import type * as SidebarGroupingModule from '../listing/sidebar-project-grouping'
 import { ProjectGroupFoldedSummary } from './project-group-header-actions'
 
 const activity = vi.hoisted(() => ({ working: 0, needsYou: 1 }))
+const grouping = vi.hoisted(() => ({ calls: 0 }))
+vi.mock('../listing/sidebar-project-grouping', async (importOriginal) => {
+  const actual = await importOriginal<typeof SidebarGroupingModule>()
+  return {
+    ...actual,
+    getSidebarProjectGrouping: (
+      ...args: Parameters<typeof actual.getSidebarProjectGrouping>
+    ): ReturnType<typeof actual.getSidebarProjectGrouping> => {
+      grouping.calls += 1
+      return actual.getSidebarProjectGrouping(...args)
+    }
+  }
+})
 vi.mock('./use-project-group-agent-activity-counts', async (importOriginal) => {
   const actual = await importOriginal<typeof ActivityCountsModule>()
   return { ...actual, useProjectGroupAgentActivityCounts: () => activity }
@@ -53,6 +67,15 @@ describe('ProjectGroupFoldedSummary', () => {
     expect(screen.getByText('2 projects, 1 needs you')).toBeTruthy()
     const needsYou = screen.getByText('1 needs you')
     expect(needsYou.className.split(' ')).toContain('text-agent-question')
+  })
+
+  it('does not recount when unrelated store state changes', () => {
+    render(<ProjectGroupFoldedSummary groupId="client" />)
+    const callsAfterMount = grouping.calls
+    act(() => {
+      useAppStore.setState({ runtimePaneTitlesByTabId: { 'tab-1': { 1: 'vim' } } })
+    })
+    expect(grouping.calls).toBe(callsAfterMount)
   })
 
   it('leaves the needs-you part out when nothing waits', () => {

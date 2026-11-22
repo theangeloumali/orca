@@ -7272,6 +7272,7 @@
           "clear": "清除",
           "newGroup": "新增群組…",
           "groupCount": "將所選的 {{count}} 個分組…",
+          "selected": "已選取",
           "stayPut_other": "其他機器上的 {{count}} 個保持不變"
         }
       },

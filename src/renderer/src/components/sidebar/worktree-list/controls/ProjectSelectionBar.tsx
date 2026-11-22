@@ -30,7 +30,8 @@ export function ProjectSelectionBar(): React.JSX.Element | null {
     return null
   }
   return (
-    <div className="absolute inset-x-0 top-0 flex flex-wrap items-center gap-x-1 border-b border-worktree-sidebar-border bg-worktree-sidebar px-3 py-1 text-[11px] tabular-nums text-muted-foreground">
+    // In flow, rendered with the selection itself: rows move in the same commit, and none sits under the bar.
+    <div className="relative z-30 flex shrink-0 flex-wrap items-center gap-x-1 border-b border-worktree-sidebar-border bg-worktree-sidebar px-3 py-1 text-[11px] tabular-nums text-muted-foreground">
       <span role="status" className="text-foreground">
         {t('auto.components.sidebar.projectSelection.count', '{{count}} selected', {
           count: repos.length

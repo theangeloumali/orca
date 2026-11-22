@@ -8598,7 +8598,8 @@
           "groupSelected": "Group selected…",
           "clear": "Clear",
           "newGroup": "New group…",
-          "groupCount": "Group {{count}} selected…"
+          "groupCount": "Group {{count}} selected…",
+          "selected": "Selected"
         }
       },
       "shared": {

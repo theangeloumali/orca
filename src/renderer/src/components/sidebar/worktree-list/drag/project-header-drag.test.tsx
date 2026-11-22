@@ -27,6 +27,7 @@ type HarnessProps = {
   registration: Repo
   liveRepos: readonly Repo[]
   usesProjectGroupOrdering?: boolean
+  ownerHostIdById?: ReadonlyMap<string, string | null>
   groupId?: string
   /** Lays the group header's virtual row out here while it is drawn pinned at 100. */
   pinnedRowStart?: number
@@ -46,7 +47,7 @@ function DragHarness(props: HarnessProps): React.JSX.Element {
     onCommitRepoOrder: props.onCommitRepoOrder ?? vi.fn(),
     onCommitProjectGroupOrder: props.onCommitProjectGroupOrder ?? vi.fn(),
     onCommitRootProjectOrder: vi.fn(),
-    projectGroupOwnerHostIdByGroupId: ownerHostIdById,
+    projectGroupOwnerHostIdByGroupId: props.ownerHostIdById ?? ownerHostIdById,
     getScrollContainer: () => containerRef.current
   })
   return (
@@ -93,16 +94,17 @@ function dragHandleTo(clientY: number): void {
 }
 
 describe('canDragProjectHeader', () => {
-  const headerDrag = (hasProjectGroups: boolean) => ({
+  const headerDrag = (groupOwners: [string, string | null][]) => ({
     canReorderRepoHeaders: true,
-    hasProjectGroups,
+    projectGroupOwnerHostIdByGroupId: new Map(groupOwners),
     sidebarRepoHeaderIdsByBucket: new Map([['group:work', ['orca']]])
   })
 
   it('lets a project alone in its group move while groups exist', () => {
     expect(
       canDragProjectHeader({
-        headerDrag: headerDrag(true),
+        headerDrag: headerDrag([['work', 'local']]),
+        project: localOrca,
         bucketKey: 'group:work',
         rootProjectHeaderCount: undefined
       })
@@ -112,7 +114,19 @@ describe('canDragProjectHeader', () => {
   it('keeps a lone project still when there are no groups to file it into', () => {
     expect(
       canDragProjectHeader({
-        headerDrag: headerDrag(false),
+        headerDrag: headerDrag([]),
+        project: localOrca,
+        bucketKey: 'group:work',
+        rootProjectHeaderCount: 1
+      })
+    ).toBe(false)
+  })
+
+  it("keeps a lone remote project still when only this computer's groups exist", () => {
+    expect(
+      canDragProjectHeader({
+        headerDrag: headerDrag([['work', 'local']]),
+        project: m1Orca,
         bucketKey: 'group:work',
         rootProjectHeaderCount: 1
       })
@@ -138,7 +152,20 @@ describe('useRepoHeaderDrag session wiring', () => {
       anchor: localOrca,
       registration: localOrca,
       liveRepos: [localOrca],
-      usesProjectGroupOrdering: false
+      usesProjectGroupOrdering: false,
+      ownerHostIdById: new Map()
+    })
+    fireEvent.pointerDown(screen.getByText('orca'), { button: 0, pointerId: 1, clientY: 0 })
+    fireEvent.pointerMove(window, { pointerId: 1, buttons: 1, clientY: 40 })
+    expect(screen.getByRole('status').textContent).toBe('idle')
+  })
+
+  it("does not arm a lone remote project when only this computer's groups exist", () => {
+    renderHarness({
+      anchor: m1Orca,
+      registration: m1Orca,
+      liveRepos: [m1Orca],
+      ownerHostIdById: new Map([['work', 'local']])
     })
     fireEvent.pointerDown(screen.getByText('orca'), { button: 0, pointerId: 1, clientY: 0 })
     fireEvent.pointerMove(window, { pointerId: 1, buttons: 1, clientY: 40 })

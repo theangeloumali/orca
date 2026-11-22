@@ -7531,6 +7531,7 @@
           "clear": "Temizle",
           "newGroup": "Yeni grup…",
           "groupCount": "Seçilen {{count}} projeyi grupla…",
+          "selected": "Seçili",
           "stayPut_one": "Başka makinedeki {{count}} proje yerinde kalır",
           "stayPut_other": "Başka makinedeki {{count}} proje yerinde kalır"
         }

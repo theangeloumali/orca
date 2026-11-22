@@ -7447,6 +7447,7 @@
           "clear": "Leeren",
           "newGroup": "Neue Gruppe…",
           "groupCount": "{{count}} ausgewählte gruppieren…",
+          "selected": "Ausgewählt",
           "stayPut_one": "{{count}} auf einem anderen Gerät bleibt",
           "stayPut_other": "{{count}} auf einem anderen Gerät bleiben"
         }

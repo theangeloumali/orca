@@ -6790,6 +6790,7 @@
           "clear": "지우기",
           "newGroup": "새 그룹…",
           "groupCount": "선택한 {{count}}개 그룹화…",
+          "selected": "선택됨",
           "stayPut_other": "다른 머신의 {{count}}개는 그대로 유지"
         }
       },

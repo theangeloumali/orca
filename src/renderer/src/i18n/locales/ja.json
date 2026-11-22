@@ -7369,6 +7369,7 @@
           "clear": "クリア",
           "newGroup": "新しいグループ…",
           "groupCount": "選択した {{count}} 件をグループ化…",
+          "selected": "選択済み",
           "stayPut_other": "別のマシンの {{count}} 件はそのまま"
         }
       },

@@ -7654,6 +7654,7 @@
           "clear": "清除",
           "newGroup": "新建分组…",
           "groupCount": "将所选的 {{count}} 个分组…",
+          "selected": "已选择",
           "stayPut_other": "其他机器上的 {{count}} 个保持不变"
         }
       },

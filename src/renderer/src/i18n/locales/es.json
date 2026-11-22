@@ -7070,6 +7070,7 @@
           "clear": "Borrar",
           "newGroup": "Nuevo grupo…",
           "groupCount": "Agrupar {{count}} seleccionados…",
+          "selected": "Seleccionado",
           "stayPut_one": "{{count}} en otra máquina se queda",
           "stayPut_other": "{{count}} en otra máquina se quedan",
           "stayPut_many": "{{count}} en otra máquina se quedan"

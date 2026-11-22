@@ -107,10 +107,12 @@ export function renderWorktreeSectionHeaderRow(
         getRootProjectHeaderOccurrenceKey(rootProjectHeaderKey)
       ))
     : undefined
-  const isDraggableRepoHeader = Boolean(
-    projectIdForHeader &&
-    canDragProjectHeader({ headerDrag, bucketKey: repoHeaderBucketKey, rootProjectHeaderCount })
-  )
+  const isDraggableRepoHeader = canDragProjectHeader({
+    headerDrag,
+    project: headerRepo,
+    bucketKey: repoHeaderBucketKey,
+    rootProjectHeaderCount
+  })
   const isDraggableProjectGroupHeader = Boolean(
     headerDrag.canReorderProjectGroupHeaders &&
     projectGroupDragIdForHeader &&

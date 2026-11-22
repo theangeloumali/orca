@@ -240,14 +240,25 @@ describe('project header multi-select', () => {
     expect(isSelected('beta')).toBe(false)
   })
 
-  it('marks each header pressed or not while project headers can be selected', () => {
+  it('describes a selected header as selected without making it a toggle button', () => {
     render(<Harness projects={[alpha, beta]} onToggle={vi.fn()} />)
-    expect(headerFor('alpha').getAttribute('aria-pressed')).toBe('false')
-    fireEvent.click(headerFor('alpha'), { metaKey: true })
-    expect(headerFor('alpha').getAttribute('aria-pressed')).toBe('true')
-    cleanup()
-    render(<Harness projects={[alpha]} onToggle={vi.fn()} groupBy="workspace-status" />)
     expect(headerFor('alpha').hasAttribute('aria-pressed')).toBe(false)
+    expect(headerFor('alpha').hasAttribute('aria-describedby')).toBe(false)
+    fireEvent.click(headerFor('alpha'), { metaKey: true })
+    const descriptionId = headerFor('alpha').getAttribute('aria-describedby') ?? ''
+    expect(document.getElementById(descriptionId)?.textContent).toBe('Selected')
+    expect(headerFor('alpha').hasAttribute('aria-pressed')).toBe(false)
+  })
+
+  it('reserves the bar in flow above the top row only once two headers are picked', () => {
+    render(<Harness projects={[alpha, beta]} onToggle={vi.fn()} />)
+    const firstHeader = headerFor('alpha').closest('.rounded-md')
+    fireEvent.click(headerFor('alpha'), { metaKey: true })
+    expect(firstHeader?.previousElementSibling).toBeNull()
+    fireEvent.click(headerFor('beta'), { metaKey: true })
+    const bar = screen.getByText('2 selected').parentElement
+    expect(firstHeader?.previousElementSibling).toBe(bar)
+    expect(bar?.className.split(' ')).not.toContain('absolute')
   })
 
   it('toggles with Cmd+Enter and extends with Shift+Space, without collapsing', () => {
@@ -278,17 +289,6 @@ describe('project header multi-select', () => {
     const before = seen.at(-1)
     fireEvent.click(headerFor('alpha'))
     expect(seen.at(-1)).toBe(before)
-  })
-
-  it('overlays the bar instead of pushing the list down when it appears', () => {
-    render(<Harness projects={[alpha, beta]} onToggle={vi.fn()} />)
-    const firstHeader = headerFor('alpha').closest('.rounded-md')
-    const anchorBefore = firstHeader?.previousElementSibling
-    fireEvent.click(headerFor('alpha'), { metaKey: true })
-    fireEvent.click(headerFor('beta'), { metaKey: true })
-    expect(firstHeader?.previousElementSibling).toBe(anchorBefore)
-    expect(anchorBefore?.classList.contains('h-0')).toBe(true)
-    expect(anchorBefore?.contains(screen.getByText('2 selected'))).toBe(true)
   })
 
   it("groups the whole selection from a header's menu after the outside click clears it", async () => {

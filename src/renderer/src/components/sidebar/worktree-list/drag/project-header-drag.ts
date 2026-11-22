@@ -307,7 +307,7 @@ export function useRepoHeaderDrag({
         registration,
         rootProjectHeaderKeys: rootDragRef.current.rootProjectHeaderKeys,
         sidebarRepoHeaderIdsByBucket: sidebarRepoHeaderIdsByBucketRef.current,
-        allowLoneProject: usesProjectGroupOrderingRef.current,
+        projectGroupOwnerHostIdByGroupId: ownerHostIdByGroupIdRef.current,
         getScrollContainer: getContainerRef.current
       })
       if (!session) {

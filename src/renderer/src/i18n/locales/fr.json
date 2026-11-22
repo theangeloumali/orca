@@ -7339,6 +7339,7 @@
           "clear": "Effacer",
           "newGroup": "Nouveau groupe…",
           "groupCount": "Grouper {{count}} sélectionnés…",
+          "selected": "Sélectionné",
           "stayPut_one": "{{count}} sur une autre machine reste",
           "stayPut_other": "{{count}} sur une autre machine restent",
           "stayPut_many": "{{count}} sur une autre machine restent"

@@ -22,8 +22,8 @@ import { REPO_HEADER_ACTION_BUTTON_CLASS } from './repo-header-action-button-cla
 import { SectionCollapseAllButton } from '../controls/SectionCollapseAllButton'
 import { getShortcutPlatform } from '@/lib/keyboard/shortcut-platform'
 import {
-  countVisibleProjectGroupSubtreeProjects,
-  useProjectGroupSubtreeCollapse
+  useProjectGroupSubtreeCollapse,
+  useVisibleProjectGroupSubtreeProjectCount
 } from './use-project-group-subtree-collapse'
 import {
   useProjectGroupAgentActivityCounts,
@@ -157,9 +157,7 @@ export function ProjectGroupFoldedSummary({
 function FoldedGroupCounts({ groupId }: { groupId: string }): React.JSX.Element {
   const t = useTranslate()
   const subtreeGroupIds = useProjectGroupSubtreeIds(groupId)
-  const projectCount = useAppStore((state) =>
-    countVisibleProjectGroupSubtreeProjects(state, subtreeGroupIds)
-  )
+  const projectCount = useVisibleProjectGroupSubtreeProjectCount(subtreeGroupIds)
   const { needsYou } = useProjectGroupAgentActivityCounts(subtreeGroupIds)
   const projectsText = t(
     'auto.components.sidebar.WorktreeList.groupSummaryProjects',
