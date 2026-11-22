@@ -6631,7 +6631,8 @@
           "folderPathIdentity": "分支 / 文件夹路径",
           "cli": "Orca CLI",
           "optionsActiveFilters_other": "工作区选项（{{count}} 个筛选条件已启用）",
-          "optionsFilterCount_other": "工作区选项（{{count}} 个筛选条件）"
+          "optionsFilterCount_other": "工作区选项（{{count}} 个筛选条件）",
+          "groupByClient": "按客户分组…"
         },
         "SshTargetRow": {
           "4677394048": "正在连接…",
@@ -7688,6 +7689,23 @@
           "archiveFailed": "无法归档 {{name}}。其主机可能需要更新 Orca。",
           "archived": "已归档 {{name}}",
           "archivedDescription": "不会删除任何内容，其终端和代理会继续运行。可在列表下方的“归档”中恢复。"
+        },
+        "ClientGroupingSheet": {
+          "title": "按客户分组",
+          "description": "根据文件夹路径和 GitHub 所有者，按机器给出建议。应用之前不会移动任何内容。",
+          "empty": "没有可建议的内容：所有项目都已分组。",
+          "cancel": "取消",
+          "groupFailed": "无法将所有项目归入 {{name}}",
+          "applyFailed": "无法应用客户分组",
+          "existingGroup": "现有分组",
+          "newGroup": "新分组",
+          "summary_other": "将归入 {{count}} 个项目",
+          "apply_other": "应用 {{count}} 个分组",
+          "filed_other": "已按客户归入 {{count}} 个项目"
+        },
+        "ClientGroupingHint": {
+          "dismiss": "忽略按客户分组的建议",
+          "offer_other": "将 {{count}} 个未分组项目按客户分组…"
         }
       },
       "shared": {

@@ -6045,7 +6045,8 @@
           "optionsActiveFilters_many": "Opciones de espacio de trabajo ({{count}} filtros activos)",
           "optionsFilterCount_one": "Opciones de espacio de trabajo ({{count}} filtro)",
           "optionsFilterCount_other": "Opciones de espacio de trabajo ({{count}} filtros)",
-          "optionsFilterCount_many": "Opciones de espacio de trabajo ({{count}} filtros)"
+          "optionsFilterCount_many": "Opciones de espacio de trabajo ({{count}} filtros)",
+          "groupByClient": "Agrupar por cliente…"
         },
         "SshTargetRow": {
           "4677394048": "Conectando…",
@@ -7106,6 +7107,31 @@
           "archiveFailed": "No se pudo archivar {{name}}. Puede que su host necesite actualizar Orca.",
           "archived": "{{name}} archivado",
           "archivedDescription": "No se borra nada y sus terminales y agentes siguen funcionando. Restáuralo desde Archivo, debajo de la lista."
+        },
+        "ClientGroupingSheet": {
+          "title": "Agrupar por cliente",
+          "description": "Sugerido a partir de rutas de carpetas y propietarios de GitHub, por máquina. Nada se mueve hasta que apliques.",
+          "empty": "Nada que sugerir: todos los proyectos ya están agrupados.",
+          "cancel": "Cancelar",
+          "groupFailed": "No se pudieron mover todos los proyectos a {{name}}",
+          "applyFailed": "No se pudieron aplicar los grupos de cliente",
+          "existingGroup": "Grupo existente",
+          "newGroup": "Nuevo grupo",
+          "summary_one": "Se archivará {{count}} proyecto",
+          "summary_many": "Se archivarán {{count}} proyectos",
+          "summary_other": "Se archivarán {{count}} proyectos",
+          "apply_one": "Aplicar {{count}} grupo",
+          "apply_many": "Aplicar {{count}} grupos",
+          "apply_other": "Aplicar {{count}} grupos",
+          "filed_one": "{{count}} proyecto archivado por cliente",
+          "filed_many": "{{count}} proyectos archivados por cliente",
+          "filed_other": "{{count}} proyectos archivados por cliente"
+        },
+        "ClientGroupingHint": {
+          "dismiss": "Descartar sugerencia de agrupar por cliente",
+          "offer_one": "Agrupar {{count}} sin grupo por cliente…",
+          "offer_many": "Agrupar {{count}} sin grupo por cliente…",
+          "offer_other": "Agrupar {{count}} sin grupo por cliente…"
         }
       },
       "shared": {

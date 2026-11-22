@@ -6325,7 +6325,8 @@
           "folderPathIdentity": "分支 / 資料夾路徑",
           "cli": "Orca CLI",
           "optionsActiveFilters_other": "工作區選項（{{count}} 個篩選條件已啟用）",
-          "optionsFilterCount_other": "工作區選項（{{count}} 個篩選條件）"
+          "optionsFilterCount_other": "工作區選項（{{count}} 個篩選條件）",
+          "groupByClient": "依客戶分組…"
         },
         "SshTargetRow": {
           "4677394048": "正在連線…",
@@ -7306,6 +7307,23 @@
           "archiveFailed": "無法封存 {{name}}。其主機可能需要更新 Orca。",
           "archived": "已封存 {{name}}",
           "archivedDescription": "不會刪除任何內容，其終端機和代理會繼續執行。可在清單下方的「封存」中還原。"
+        },
+        "ClientGroupingSheet": {
+          "title": "依客戶分組",
+          "description": "根據資料夾路徑與 GitHub 擁有者，依機器提供建議。套用之前不會移動任何內容。",
+          "empty": "沒有可建議的內容：所有專案都已分組。",
+          "cancel": "取消",
+          "groupFailed": "無法將所有專案歸入 {{name}}",
+          "applyFailed": "無法套用客戶群組",
+          "existingGroup": "現有群組",
+          "newGroup": "新群組",
+          "summary_other": "將歸入 {{count}} 個專案",
+          "apply_other": "套用 {{count}} 個群組",
+          "filed_other": "已依客戶歸入 {{count}} 個專案"
+        },
+        "ClientGroupingHint": {
+          "dismiss": "忽略依客戶分組的建議",
+          "offer_other": "將 {{count}} 個未分組專案依客戶分組…"
         }
       },
       "shared": {

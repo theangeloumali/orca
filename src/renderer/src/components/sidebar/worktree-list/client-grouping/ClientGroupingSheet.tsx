@@ -100,10 +100,10 @@ export function ClientGroupingSheet(): React.JSX.Element {
           'Could not apply client groups'
         )
       )
-    } finally {
-      setApplying(false)
-      setOpen(false)
     }
+    // The catch never rethrows, so this runs on every path (no finally: the React compiler bails on it).
+    setApplying(false)
+    setOpen(false)
   }
 
   return (

@@ -5798,7 +5798,8 @@
           "folderPathIdentity": "브랜치 / 폴더 경로",
           "cli": "Orca CLI",
           "optionsActiveFilters_other": "워크스페이스 옵션(필터 {{count}}개 활성)",
-          "optionsFilterCount_other": "워크스페이스 옵션(필터 {{count}}개)"
+          "optionsFilterCount_other": "워크스페이스 옵션(필터 {{count}}개)",
+          "groupByClient": "클라이언트별 그룹화…"
         },
         "SshTargetRow": {
           "4677394048": "연결 중…",
@@ -6824,6 +6825,23 @@
           "archiveFailed": "{{name}}을(를) 보관할 수 없습니다. 호스트에 Orca 업데이트가 필요할 수 있습니다.",
           "archived": "{{name}} 보관됨",
           "archivedDescription": "아무것도 삭제되지 않으며 터미널과 에이전트는 계속 실행됩니다. 목록 아래 보관함에서 복원하세요."
+        },
+        "ClientGroupingSheet": {
+          "title": "클라이언트별 그룹화",
+          "description": "폴더 경로와 GitHub 소유자를 기준으로 머신별로 제안합니다. 적용하기 전에는 아무것도 이동하지 않습니다.",
+          "empty": "제안할 항목이 없습니다: 모든 프로젝트가 이미 그룹화되어 있습니다.",
+          "cancel": "취소",
+          "groupFailed": "{{name}}에 모든 프로젝트를 분류하지 못했습니다",
+          "applyFailed": "클라이언트 그룹을 적용하지 못했습니다",
+          "existingGroup": "기존 그룹",
+          "newGroup": "새 그룹",
+          "summary_other": "프로젝트 {{count}}개를 분류합니다",
+          "apply_other": "그룹 {{count}}개 적용",
+          "filed_other": "프로젝트 {{count}}개를 클라이언트별로 분류했습니다"
+        },
+        "ClientGroupingHint": {
+          "dismiss": "클라이언트별 그룹화 제안 닫기",
+          "offer_other": "그룹 없는 {{count}}개를 클라이언트별로 그룹화…"
         }
       },
       "shared": {

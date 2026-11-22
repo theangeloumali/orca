@@ -11932,7 +11932,8 @@
           "optionsActiveFilters_many": "Opções do espaço de trabalho ({{count}} filtros ativos)",
           "optionsFilterCount_one": "Opções do espaço de trabalho ({{count}} filtro)",
           "optionsFilterCount_other": "Opções do espaço de trabalho ({{count}} filtros)",
-          "optionsFilterCount_many": "Opções do espaço de trabalho ({{count}} filtros)"
+          "optionsFilterCount_many": "Opções do espaço de trabalho ({{count}} filtros)",
+          "groupByClient": "Agrupar por cliente…"
         },
         "WorktreeList": {
           "7a8b9c0d1e": "Atualização necessária",
@@ -13388,6 +13389,31 @@
           "archiveFailed": "Não foi possível arquivar {{name}}. O host pode precisar de uma atualização do Orca.",
           "archived": "{{name}} arquivado",
           "archivedDescription": "Nada é excluído e seus terminais e agentes continuam rodando. Restaure em Arquivo, abaixo da lista."
+        },
+        "ClientGroupingSheet": {
+          "title": "Agrupar por cliente",
+          "description": "Sugerido a partir de caminhos de pastas e donos no GitHub, por máquina. Nada é movido até você aplicar.",
+          "empty": "Nada a sugerir: todos os projetos já estão agrupados.",
+          "cancel": "Cancelar",
+          "groupFailed": "Não foi possível mover todos os projetos para {{name}}",
+          "applyFailed": "Não foi possível aplicar os grupos de cliente",
+          "existingGroup": "Grupo existente",
+          "newGroup": "Novo grupo",
+          "summary_one": "{{count}} projeto será arquivado no grupo",
+          "summary_many": "{{count}} projetos serão arquivados no grupo",
+          "summary_other": "{{count}} projetos serão arquivados no grupo",
+          "apply_one": "Aplicar {{count}} grupo",
+          "apply_many": "Aplicar {{count}} grupos",
+          "apply_other": "Aplicar {{count}} grupos",
+          "filed_one": "{{count}} projeto agrupado por cliente",
+          "filed_many": "{{count}} projetos agrupados por cliente",
+          "filed_other": "{{count}} projetos agrupados por cliente"
+        },
+        "ClientGroupingHint": {
+          "dismiss": "Dispensar sugestão de agrupar por cliente",
+          "offer_one": "Agrupar {{count}} sem grupo por cliente…",
+          "offer_many": "Agrupar {{count}} sem grupo por cliente…",
+          "offer_other": "Agrupar {{count}} sem grupo por cliente…"
         }
       },
       "editor": {

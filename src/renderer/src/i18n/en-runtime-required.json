@@ -889,6 +889,18 @@
           "foundRepositories_one": "Found {{count}} repository in {{path}}.",
           "foundRepositories_other": "Found {{count}} repositories in {{path}}."
         },
+        "ClientGroupingHint": {
+          "offer_one": "Group {{count}} ungrouped by client…",
+          "offer_other": "Group {{count}} ungrouped by client…"
+        },
+        "ClientGroupingSheet": {
+          "apply_one": "Apply {{count}} group",
+          "apply_other": "Apply {{count}} groups",
+          "filed_one": "Filed {{count}} project by client",
+          "filed_other": "Filed {{count}} projects by client",
+          "summary_one": "{{count}} project will be filed",
+          "summary_other": "{{count}} projects will be filed"
+        },
         "DeleteWorktreeDialog": {
           "removeBatchFolder_one": "Remove <target>{{count}} workspace</target> from Orca. Project folders on disk will not be deleted.",
           "removeBatchFolder_other": "Remove <target>{{count}} workspaces</target> from Orca. Project folders on disk will not be deleted.",

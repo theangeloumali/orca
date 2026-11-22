@@ -5,7 +5,8 @@ import {
 } from '../../../../shared/execution-host/managed-orcad-execution-host'
 import type { SidebarHostOption } from '../sidebar/worktree-list/controls/sidebar-host-options'
 
-/** Machines holding projects or workspaces, plus paired runtimes; configured-only SSH targets don't count. */
+/** Machines holding projects or workspaces, plus paired runtimes; configured-only SSH targets don't count.
+ * The sidebar chip row uses countRepoMachines (projects only), since a project-less runtime has nothing to narrow to. */
 export function countPaletteMachines(
   hostOptions: readonly SidebarHostOption[],
   projectHostIds: Iterable<ExecutionHostId>
