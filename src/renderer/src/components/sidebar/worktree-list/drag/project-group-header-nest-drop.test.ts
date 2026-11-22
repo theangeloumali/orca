@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { findProjectGroupNestTarget, hasSameHostGroupPair } from './project-group-header-nest-drop'
+import {
+  findProjectGroupNestTarget,
+  getProjectGroupOwnerHostIdByGroupId,
+  hasSameHostGroupPair
+} from './project-group-header-nest-drop'
 
 // Headers are 30px tall; the middle band of "work" runs from 109 to 121.
 const rects = [
@@ -46,6 +50,18 @@ describe('findProjectGroupNestTarget', () => {
     expect(find(195, 'zkidz')).toBeNull()
     expect(find(155, 'films')).toBeNull()
     expect(find(235, 'one')).toBeNull()
+  })
+})
+
+describe('getProjectGroupOwnerHostIdByGroupId', () => {
+  it('gives an id two machines share no owner', () => {
+    const owners = getProjectGroupOwnerHostIdByGroupId([
+      { id: 'work', executionHostId: 'local' },
+      { id: 'shared', executionHostId: 'local' },
+      { id: 'shared', executionHostId: 'runtime:m1' }
+    ])
+    expect(owners.get('work')).toBe('local')
+    expect(owners.get('shared')).toBeNull()
   })
 })
 

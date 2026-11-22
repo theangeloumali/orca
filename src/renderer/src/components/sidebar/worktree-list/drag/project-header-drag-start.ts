@@ -21,6 +21,8 @@ export function createProjectHeaderDragSession(args: {
   repo: Repo
   sidebarRepoHeaderIdsByBucket: ReadonlyMap<ProjectHeaderDragBucketKey, readonly string[]>
   rootProjectHeaderKeys?: readonly string[]
+  /** With groups to file into, a project alone in its bucket still has somewhere to go. */
+  allowLoneProject?: boolean
   getScrollContainer: () => HTMLElement | null
 }): ProjectHeaderDragSession | null {
   if (args.event.button !== 0) {
@@ -44,7 +46,7 @@ export function createProjectHeaderDragSession(args: {
   const sidebarRepoHeaderIds =
     rootProjectHeaderKeys ?? args.sidebarRepoHeaderIdsByBucket.get(bucketKey) ?? []
   // A lone project cannot move within its bucket; preserve the collapse click instead.
-  if (sidebarRepoHeaderIds.length <= 1) {
+  if (sidebarRepoHeaderIds.length <= 1 && !args.allowLoneProject) {
     return null
   }
   const container = args.getScrollContainer()
@@ -70,6 +72,7 @@ export function createProjectHeaderDragSession(args: {
           repoId: rect.key
         }))
       : measureProjectHeaderDragRects(container, bucketKey),
+    nestRects: [],
     handleEl,
     startX: args.event.clientX,
     startY: args.event.clientY,
