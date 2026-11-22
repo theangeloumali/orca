@@ -4,8 +4,20 @@ import {
   withOrcaHookRepoAlwaysTrusted,
   withOrcaHookScriptConfirmed
 } from '../../../../../shared/workspace-setup/hooks/orca-hook-trust-entries'
+import { unionDismissalKeys } from '../../../../../shared/collections/dismissal-key-union'
 
-export function createUiTrustActions(set: UISliceSet, _get: UISliceGet): Partial<UISlice> {
+// Why: every window writes the same persisted set, so union with its latest value or a peer's dismissal is lost.
+async function persistClientSuggestionDismissal(set: UISliceSet, get: UISliceGet): Promise<void> {
+  const persisted = await window.api.ui.get()
+  const merged = unionDismissalKeys(
+    persisted.dismissedClientSuggestionsKey,
+    get().dismissedClientSuggestionsKey
+  )
+  set({ dismissedClientSuggestionsKey: merged })
+  await window.api.ui.set({ dismissedClientSuggestionsKey: merged })
+}
+
+export function createUiTrustActions(set: UISliceSet, get: UISliceGet): Partial<UISlice> {
   return {
     trustedOrcaHooks: {},
     markOrcaHookScriptConfirmed: (repoId, kind, contentHash) =>
@@ -141,9 +153,23 @@ export function createUiTrustActions(set: UISliceSet, _get: UISliceGet): Partial
       }),
     dismissedIdleProjectsKey: null,
     dismissIdleProjects: (idleProjectsKey) => {
-      set({ dismissedIdleProjectsKey: idleProjectsKey })
-      window.api.ui.set({ dismissedIdleProjectsKey: idleProjectsKey }).catch(console.error)
+      // Union like main does, so this window and the saved profile agree before a restart.
+      const merged = unionDismissalKeys(get().dismissedIdleProjectsKey, idleProjectsKey)
+      set({ dismissedIdleProjectsKey: merged })
+      window.api.ui.set({ dismissedIdleProjectsKey: merged }).catch(console.error)
     },
+    dismissedClientSuggestionsKey: null,
+    dismissClientSuggestions: (suggestionsKey) => {
+      set((s) => ({
+        dismissedClientSuggestionsKey: unionDismissalKeys(
+          s.dismissedClientSuggestionsKey,
+          suggestionsKey
+        )
+      }))
+      persistClientSuggestionDismissal(set, get).catch(console.error)
+    },
+    clientGroupingSheetOpen: false,
+    setClientGroupingSheetOpen: (open) => set({ clientGroupingSheetOpen: open }),
     usageEmptyStateDismissed: false,
     dismissUsageEmptyState: () =>
       set((s) => {

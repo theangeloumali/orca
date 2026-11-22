@@ -6344,7 +6344,8 @@
           "optionsActiveFilters_many": "Options de l’espace de travail ({{count}} filtres actifs)",
           "optionsFilterCount_one": "Options de l’espace de travail ({{count}} filtre)",
           "optionsFilterCount_other": "Options de l’espace de travail ({{count}} filtres)",
-          "optionsFilterCount_many": "Options de l’espace de travail ({{count}} filtres)"
+          "optionsFilterCount_many": "Options de l’espace de travail ({{count}} filtres)",
+          "groupByClient": "Grouper par client…"
         },
         "SshTargetRow": {
           "4677394048": "Connexion…",
@@ -7383,6 +7384,34 @@
           "archiveFailed": "Impossible d’archiver {{name}}. Son hôte a peut-être besoin d’une mise à jour d’Orca.",
           "archived": "{{name}} archivé",
           "archivedDescription": "Rien n’est supprimé, ses terminaux et agents continuent. Restaurez-le depuis Archive sous la liste."
+        },
+        "ClientGroupingSheet": {
+          "title": "Grouper par client",
+          "description": "Suggéré à partir des chemins de dossiers et des propriétaires GitHub, par machine. Rien ne bouge avant d’appliquer.",
+          "empty": "Rien à suggérer : tous les projets sont déjà groupés.",
+          "cancel": "Annuler",
+          "groupFailed": "Impossible de classer tous les projets dans {{name}}",
+          "applyFailed": "Impossible d’appliquer les groupes de clients",
+          "existingGroup": "Groupe existant",
+          "newGroup": "Nouveau groupe",
+          "summary_one": "{{count}} projet sera classé",
+          "summary_many": "{{count}} projets seront classés",
+          "summary_other": "{{count}} projets seront classés",
+          "apply_one": "Appliquer {{count}} groupe",
+          "apply_many": "Appliquer {{count}} groupes",
+          "apply_other": "Appliquer {{count}} groupes",
+          "filed_one": "{{count}} projet classé par client",
+          "filed_many": "{{count}} projets classés par client",
+          "filed_other": "{{count}} projets classés par client",
+          "skipped_one": "{{count}} projet ignoré, car il a été groupé, masqué ou supprimé",
+          "skipped_many": "{{count}} projets ignorés, car ils ont été groupés, masqués ou supprimés",
+          "skipped_other": "{{count}} projets ignorés, car ils ont été groupés, masqués ou supprimés"
+        },
+        "ClientGroupingHint": {
+          "dismiss": "Ignorer la suggestion de grouper par client",
+          "offer_one": "Grouper {{count}} non groupé par client…",
+          "offer_many": "Grouper {{count}} non groupés par client…",
+          "offer_other": "Grouper {{count}} non groupés par client…"
         }
       },
       "shared": {

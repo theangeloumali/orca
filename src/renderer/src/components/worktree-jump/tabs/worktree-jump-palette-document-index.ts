@@ -1,5 +1,7 @@
-import { getPaletteHostBadge } from '@/components/cmd-j/palette-host-badge'
-import type { SidebarHostOption } from '@/components/sidebar/worktree-list/controls/sidebar-host-options'
+import {
+  getPaletteHostBadge,
+  type PaletteHostBadgeContext
+} from '@/components/cmd-j/palette-host-badge'
 import { getWorkspacePortsByWorktreeId } from '@/lib/workspace-ports/workspace-port-groups'
 import { buildWorktreePaletteDocuments } from '@/lib/workspace/search/worktrees/worktree-palette-document'
 import {
@@ -19,8 +21,7 @@ export function buildWorktreeJumpPaletteDocumentIndex({
   worktrees,
   repoMap,
   repoByHostIdentity,
-  hostOptions,
-  hostFilterActive,
+  hostBadgeContext,
   prCache,
   issueCache,
   workspacePortScan,
@@ -29,8 +30,7 @@ export function buildWorktreeJumpPaletteDocumentIndex({
   worktrees: readonly Worktree[]
   repoMap: ReadonlyMap<string, Repo>
   repoByHostIdentity: ReadonlyMap<string, Repo>
-  hostOptions: readonly SidebarHostOption[]
-  hostFilterActive: boolean
+  hostBadgeContext: PaletteHostBadgeContext
   prCache: AppState['prCache'] | null
   issueCache: AppState['issueCache'] | null
   workspacePortScan: WorkspacePortScanResult | null
@@ -41,8 +41,7 @@ export function buildWorktreeJumpPaletteDocumentIndex({
     const repo = resolvePaletteRepoForWorktree(worktree, repoMap, repoByHostIdentity)
     const badge = getPaletteHostBadge(
       getPaletteWorktreeExecutionHostId(worktree) ?? (repo && getRepoExecutionHostId(repo)),
-      hostOptions,
-      hostFilterActive
+      hostBadgeContext
     )
     if (badge) {
       hostLabelByWorktreeId.set(getPaletteWorktreeIdentity(worktree), badge.label)

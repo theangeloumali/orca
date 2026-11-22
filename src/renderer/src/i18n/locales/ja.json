@@ -6350,7 +6350,8 @@
           "folderPathIdentity": "ブランチ / フォルダーパス",
           "cli": "Orca CLI",
           "optionsActiveFilters_other": "ワークスペースのオプション（{{count}} 個のフィルターが有効）",
-          "optionsFilterCount_other": "ワークスペースのオプション（{{count}} 個のフィルター）"
+          "optionsFilterCount_other": "ワークスペースのオプション（{{count}} 個のフィルター）",
+          "groupByClient": "クライアントでグループ化…"
         },
         "SshTargetRow": {
           "4677394048": "接続中…",
@@ -7403,6 +7404,24 @@
           "archiveFailed": "{{name}} をアーカイブできませんでした。ホストの Orca の更新が必要かもしれません。",
           "archived": "{{name}} をアーカイブしました",
           "archivedDescription": "何も削除されず、ターミナルと Agent は動き続けます。リスト下のアーカイブから復元できます。"
+        },
+        "ClientGroupingSheet": {
+          "title": "クライアントでグループ化",
+          "description": "フォルダーのパスと GitHub のオーナーから、マシンごとに提案します。適用するまで何も移動しません。",
+          "empty": "提案はありません: すべてのプロジェクトはグループ化済みです。",
+          "cancel": "キャンセル",
+          "groupFailed": "{{name}} にすべてのプロジェクトを振り分けられませんでした",
+          "applyFailed": "クライアントグループを適用できませんでした",
+          "existingGroup": "既存のグループ",
+          "newGroup": "新しいグループ",
+          "summary_other": "{{count}} 件のプロジェクトを振り分けます",
+          "apply_other": "{{count}} 個のグループを適用",
+          "filed_other": "{{count}} 件のプロジェクトをクライアント別に振り分けました",
+          "skipped_other": "グループ化、非表示、または削除された {{count}} 件のプロジェクトをスキップしました"
+        },
+        "ClientGroupingHint": {
+          "dismiss": "クライアントでのグループ化の提案を閉じる",
+          "offer_other": "未分類の {{count}} 件をクライアントでグループ化…"
         }
       },
       "shared": {

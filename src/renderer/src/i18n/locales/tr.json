@@ -6572,7 +6572,8 @@
           "optionsActiveFilters_one": "Çalışma alanı seçenekleri ({{count}} etkin filtre)",
           "optionsActiveFilters_other": "Çalışma alanı seçenekleri ({{count}} etkin filtre)",
           "optionsFilterCount_one": "Çalışma alanı seçenekleri ({{count}} filtre)",
-          "optionsFilterCount_other": "Çalışma alanı seçenekleri ({{count}} filtre)"
+          "optionsFilterCount_other": "Çalışma alanı seçenekleri ({{count}} filtre)",
+          "groupByClient": "Müşteriye göre grupla…"
         },
         "SshTargetRow": {
           "4677394048": "Bağlanıyor…",
@@ -7574,6 +7575,29 @@
           "archiveFailed": "{{name}} arşivlenemedi. Host bir Orca güncellemesine ihtiyaç duyabilir.",
           "archived": "{{name}} arşivlendi",
           "archivedDescription": "Hiçbir şey silinmez; terminaller ve ajanlar çalışmaya devam eder. Listenin altındaki Arşiv bölümünden geri yükleyin."
+        },
+        "ClientGroupingSheet": {
+          "title": "Müşteriye göre grupla",
+          "description": "Klasör yolları ve GitHub sahiplerinden, makine başına önerilir. Uygulayana kadar hiçbir şey taşınmaz.",
+          "empty": "Önerilecek bir şey yok: tüm projeler zaten gruplu.",
+          "cancel": "İptal",
+          "groupFailed": "Tüm projeler {{name}} içine yerleştirilemedi",
+          "applyFailed": "Müşteri grupları uygulanamadı",
+          "existingGroup": "Mevcut grup",
+          "newGroup": "Yeni grup",
+          "summary_one": "{{count}} proje yerleştirilecek",
+          "summary_other": "{{count}} proje yerleştirilecek",
+          "apply_one": "{{count}} grubu uygula",
+          "apply_other": "{{count}} grubu uygula",
+          "filed_one": "{{count}} proje müşteriye göre yerleştirildi",
+          "filed_other": "{{count}} proje müşteriye göre yerleştirildi",
+          "skipped_one": "{{count}} proje gruplandığı, gizlendiği veya kaldırıldığı için atlandı",
+          "skipped_other": "{{count}} proje gruplandığı, gizlendiği veya kaldırıldığı için atlandı"
+        },
+        "ClientGroupingHint": {
+          "dismiss": "Müşteriye göre gruplama önerisini kapat",
+          "offer_one": "Gruplanmamış {{count}} projeyi müşteriye göre grupla…",
+          "offer_other": "Gruplanmamış {{count}} projeyi müşteriye göre grupla…"
         }
       },
       "shared": {

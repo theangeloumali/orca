@@ -7575,7 +7575,8 @@
           "optionsActiveFilters_one": "Workspace options ({{count}} filter active)",
           "optionsActiveFilters_other": "Workspace options ({{count}} filters active)",
           "optionsFilterCount_one": "Workspace options ({{count}} filter)",
-          "optionsFilterCount_other": "Workspace options ({{count}} filters)"
+          "optionsFilterCount_other": "Workspace options ({{count}} filters)",
+          "groupByClient": "Group by client…"
         },
         "SshTargetRow": {
           "4677394048": "Connecting…",
@@ -8632,6 +8633,29 @@
           "thisMachine": "This machine",
           "label": "Quick filters",
           "emptyClient": "No projects yet"
+        },
+        "ClientGroupingHint": {
+          "offer_one": "Group {{count}} ungrouped by client…",
+          "offer_other": "Group {{count}} ungrouped by client…",
+          "dismiss": "Dismiss client grouping suggestion"
+        },
+        "ClientGroupingSheet": {
+          "filed_one": "Filed {{count}} project by client",
+          "filed_other": "Filed {{count}} projects by client",
+          "skipped_one": "Skipped {{count}} project that was grouped, hidden or removed",
+          "skipped_other": "Skipped {{count}} projects that were grouped, hidden or removed",
+          "groupFailed": "Could not file every project into {{name}}",
+          "applyFailed": "Could not apply client groups",
+          "title": "Group by client",
+          "description": "Suggested from folder paths and GitHub owners, per machine. Nothing moves until you apply.",
+          "empty": "Nothing to suggest: every project is already grouped.",
+          "summary_one": "{{count}} project will be filed",
+          "summary_other": "{{count}} projects will be filed",
+          "cancel": "Cancel",
+          "apply_one": "Apply {{count}} group",
+          "apply_other": "Apply {{count}} groups",
+          "existingGroup": "Existing group",
+          "newGroup": "New group"
         }
       },
       "shared": {

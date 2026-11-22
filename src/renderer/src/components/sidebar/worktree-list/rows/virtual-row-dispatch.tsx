@@ -21,6 +21,7 @@ import type { ImportedWorktreeCardActionState } from '../listing/imported-worktr
 import type { NewExternalWorktreesInboxActionState } from '../listing/new-external-worktrees-inbox-actions'
 import type { useHostHeaderDrag } from '../drag/host-header-drag'
 import { HostSectionHeader } from './HostSectionHeader'
+import { ClientGroupingHint } from '../client-grouping/ClientGroupingHint'
 import { renderFolderWorkspaceOption, type FolderWorkspaceRowContext } from './folder-row'
 import type { LineageToggleHandler } from '../../workspace-card/identity/worktree-lineage-toggle-handler-cache'
 import {
@@ -168,6 +169,23 @@ export function renderWorktreeVirtualRow(
       onReview: ctx.onOpenWorktreeVisibility,
       onSuppress: ctx.onOpenSuppressExternalWorktreeInbox
     })
+  }
+
+  if (row.type === 'client-grouping-hint') {
+    return (
+      <div
+        key={vItem.key}
+        role="presentation"
+        data-worktree-virtual-row
+        data-worktree-virtual-row-key={String(vItem.key)}
+        data-index={vItem.index}
+        ref={ctx.measureVirtualRowElement}
+        className="absolute left-0 right-0 top-0 px-2"
+        style={{ transform: getVirtualRowTransform(vItem.start) }}
+      >
+        <ClientGroupingHint row={row} />
+      </div>
+    )
   }
 
   if (row.type === 'pending-creation') {

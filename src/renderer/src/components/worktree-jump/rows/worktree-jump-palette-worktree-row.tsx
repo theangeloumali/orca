@@ -39,14 +39,8 @@ export function WorktreeJumpPaletteWorktreeRow({
   controller: WorktreeJumpPaletteController
 }): React.JSX.Element {
   const t = useTranslate()
-  const {
-    repoMap,
-    activeWorktreeId,
-    sshConnectionStates,
-    hostOptions,
-    hostFilterActive,
-    handleSelectItem
-  } = controller
+  const { repoMap, activeWorktreeId, sshConnectionStates, hostBadgeContext, handleSelectItem } =
+    controller
   const worktree = entry.worktree
   const repo = resolvePaletteRepoForWorktree(worktree, repoMap, controller.repoByHostIdentity)
   const repoName = repo?.displayName ?? ''
@@ -75,8 +69,7 @@ export function WorktreeJumpPaletteWorktreeRow({
   const isSshDisconnected = sshStatus != null && sshStatus !== 'connected'
   const hostBadge = getPaletteHostBadge(
     getPaletteWorktreeExecutionHostId(worktree) ?? (repo && getRepoExecutionHostId(repo)),
-    hostOptions,
-    hostFilterActive
+    hostBadgeContext
   )
 
   return (

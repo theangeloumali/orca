@@ -120,8 +120,8 @@ export function createLastActiveAtSelector(): LastActiveAtSelector {
   }
 }
 
-/** Identifies an idle set; see {@link isIdleHintDismissed} for when a dismissal holds. */
-export function getIdleProjectsKey(idleRepos: readonly Repo[]): string {
+/** Identifies a set of project rows; see {@link isIdleHintDismissed} for when a dismissal holds. */
+export function getRepoRowIdentitiesKey(idleRepos: readonly Repo[]): string {
   return idleRepos.map(getRepoRowIdentity).sort().join('\n')
 }
 

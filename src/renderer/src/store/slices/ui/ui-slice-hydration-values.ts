@@ -146,6 +146,7 @@ export function hydrateOneShotNoticesSeen(
   | 'usageEmptyStateDismissed'
   | 'pluginsAlphaNoticeDismissed'
   | 'dismissedIdleProjectsKey'
+  | 'dismissedClientSuggestionsKey'
   | 'codexTerminalServerIsolationNoticeSeen'
   | 'codexSharedSettingsNoticeSeen'
   | 'worktreeCardsUpdateNoticeSeen'
@@ -158,6 +159,10 @@ export function hydrateOneShotNoticesSeen(
     pluginsAlphaNoticeDismissed: ui.pluginsAlphaNoticeDismissed === true,
     dismissedIdleProjectsKey:
       typeof ui.dismissedIdleProjectsKey === 'string' ? ui.dismissedIdleProjectsKey : null,
+    dismissedClientSuggestionsKey:
+      typeof ui.dismissedClientSuggestionsKey === 'string'
+        ? ui.dismissedClientSuggestionsKey
+        : null,
     codexTerminalServerIsolationNoticeSeen: ui.codexTerminalServerIsolationNoticeSeen === true,
     codexSharedSettingsNoticeSeen: ui.codexSharedSettingsNoticeSeen === true,
     worktreeCardsUpdateNoticeSeen: ui.worktreeCardsUpdateNoticeSeen === true,

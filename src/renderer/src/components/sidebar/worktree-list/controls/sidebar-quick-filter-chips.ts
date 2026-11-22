@@ -143,6 +143,7 @@ export function applyAllChip(state: QuickFilterChipState, store: QuickFilterChip
   }
 }
 
+// Machines holding projects; Cmd-J's countPaletteMachines also counts project-less paired runtimes.
 export function countRepoMachines(
   repos: readonly Pick<Repo, 'connectionId' | 'executionHostId'>[]
 ): number {

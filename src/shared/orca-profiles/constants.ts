@@ -208,6 +208,7 @@ export function getDefaultUIState(): PersistedUIState {
     mobileEmulatorAgentSetupDismissed: false,
     pluginsAlphaNoticeDismissed: false,
     dismissedIdleProjectsKey: null,
+    dismissedClientSuggestionsKey: null,
     // Why: only upgraded profiles saw the old ordering, so only they get the one-time notice.
     projectOrderManualDefaultNoticeDismissed: true,
     // Why: only upgraded profiles saw the old default, so only they get the one-time change notice.

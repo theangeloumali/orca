@@ -6488,7 +6488,8 @@
           "optionsActiveFilters_one": "Arbeitsbereichsoptionen ({{count}} Filter aktiv)",
           "optionsActiveFilters_other": "Arbeitsbereichsoptionen ({{count}} Filter aktiv)",
           "optionsFilterCount_one": "Arbeitsbereichsoptionen ({{count}} Filter)",
-          "optionsFilterCount_other": "Arbeitsbereichsoptionen ({{count}} Filter)"
+          "optionsFilterCount_other": "Arbeitsbereichsoptionen ({{count}} Filter)",
+          "groupByClient": "Nach Kunde gruppieren…"
         },
         "SshTargetRow": {
           "4677394048": "Verbindung wird hergestellt…",
@@ -7490,6 +7491,29 @@
           "archiveFailed": "{{name}} konnte nicht archiviert werden. Der Host braucht eventuell ein Orca-Update.",
           "archived": "{{name}} archiviert",
           "archivedDescription": "Es wird nichts gelöscht, Terminals und Agents laufen weiter. Unter „Archiv“ unterhalb der Liste wiederherstellen."
+        },
+        "ClientGroupingSheet": {
+          "title": "Nach Kunde gruppieren",
+          "description": "Vorschläge aus Ordnerpfaden und GitHub-Ownern, pro Gerät. Es wird erst beim Anwenden etwas verschoben.",
+          "empty": "Keine Vorschläge: Alle Projekte sind bereits gruppiert.",
+          "cancel": "Abbrechen",
+          "groupFailed": "Nicht alle Projekte konnten in {{name}} einsortiert werden",
+          "applyFailed": "Kundengruppen konnten nicht angewendet werden",
+          "existingGroup": "Vorhandene Gruppe",
+          "newGroup": "Neue Gruppe",
+          "summary_one": "{{count}} Projekt wird einsortiert",
+          "summary_other": "{{count}} Projekte werden einsortiert",
+          "apply_one": "{{count}} Gruppe anwenden",
+          "apply_other": "{{count}} Gruppen anwenden",
+          "filed_one": "{{count}} Projekt nach Kunde einsortiert",
+          "filed_other": "{{count}} Projekte nach Kunde einsortiert",
+          "skipped_one": "Übersprungen: {{count}} Projekt, das gruppiert, ausgeblendet oder entfernt wurde",
+          "skipped_other": "Übersprungen: {{count}} Projekte, die gruppiert, ausgeblendet oder entfernt wurden"
+        },
+        "ClientGroupingHint": {
+          "dismiss": "Vorschlag zur Kundengruppierung ausblenden",
+          "offer_one": "{{count}} ungruppiertes Projekt nach Kunde gruppieren…",
+          "offer_other": "{{count}} ungruppierte Projekte nach Kunde gruppieren…"
         }
       },
       "shared": {
