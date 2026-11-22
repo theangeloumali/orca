@@ -41,6 +41,8 @@ type WorktreeTitleInlineRenameProps = {
   inputClassName?: string
   titleWrapper?: (title: React.ReactElement) => React.ReactElement
   wrapTitle?: boolean
+  /** Sidebar rows only: find marks belong where the list was filtered, not in hovers or bots. */
+  highlightFindMatches?: boolean
   onEditingChange?: (editing: boolean) => void
   onRename: (displayName: string) => Promise<void> | void
   // Parents request editing once and clear the trigger through onBeginEditingConsumed.
@@ -59,6 +61,7 @@ export function WorktreeTitleInlineRename({
   inputClassName,
   titleWrapper,
   wrapTitle = false,
+  highlightFindMatches = false,
   onEditingChange,
   onRename,
   beginEditing = false,
@@ -350,7 +353,7 @@ export function WorktreeTitleInlineRename({
           {t('auto.components.sidebar.WorktreeTitleInlineRename.2f42ae024f', 'Unread:')}
         </span>
       )}
-      <FindMatchHighlight text={displayName} />
+      {highlightFindMatches ? <FindMatchHighlight text={displayName} /> : displayName}
     </span>
   )
 

@@ -7799,7 +7799,8 @@
           "live": "Активные",
           "needsYou": "Ждут вас",
           "thisMachine": "Эта машина",
-          "label": "Быстрые фильтры"
+          "label": "Быстрые фильтры",
+          "emptyClient": "Проектов пока нет"
         },
         "hiddenProjects": {
           "archiveOnMachineTitle": "Архив · {{machine}} · {{count}}",

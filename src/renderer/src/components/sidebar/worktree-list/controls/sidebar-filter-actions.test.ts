@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   clearSidebarFilters,
   selectHidesEmptyProjectGroups,
+  sidebarHasActiveFilters,
   type SidebarFilterSetters
 } from './sidebar-filter-actions'
 
@@ -17,7 +18,8 @@ function spySetters(): SidebarFilterSetters {
     setFilterRepoIds: vi.fn(),
     setVisibleWorkspaceHostIds: vi.fn(),
     setShowOnlyRunningTerminals: vi.fn(),
-    setShowOnlyNeedsYou: vi.fn()
+    setShowOnlyNeedsYou: vi.fn(),
+    setSidebarFindQuery: vi.fn()
   }
 }
 
@@ -49,6 +51,20 @@ describe('clearSidebarFilters', () => {
     const store = spySetters()
     clearSidebarFilters(unfiltered, store)
     expect(store.setShowOnlyRunningTerminals).not.toHaveBeenCalled()
+    expect(store.setSidebarFindQuery).not.toHaveBeenCalled()
+  })
+
+  it('clears find', () => {
+    const store = spySetters()
+    clearSidebarFilters({ ...unfiltered, sidebarFindQuery: 'api' }, store)
+    expect(store.setSidebarFindQuery).toHaveBeenCalledWith('')
+  })
+})
+
+describe('sidebarHasActiveFilters', () => {
+  it('counts a find query as an active filter, but not a blank one', () => {
+    expect(sidebarHasActiveFilters({ ...unfiltered, sidebarFindQuery: 'api' })).toBe(true)
+    expect(sidebarHasActiveFilters({ ...unfiltered, sidebarFindQuery: '  ' })).toBe(false)
   })
 })
 

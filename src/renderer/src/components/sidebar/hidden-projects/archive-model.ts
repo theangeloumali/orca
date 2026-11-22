@@ -77,6 +77,34 @@ export function getLastActiveAtByRow(
   )
 }
 
+type LastActiveAtSelector = (
+  repos: readonly Repo[],
+  inputs: ProjectActivityInputs,
+  now: number
+) => Record<string, number>
+
+/** Runs on every store write: walks workspaces only for archived or possibly-idle rows, once per input change. */
+export function createLastActiveAtSelector(): LastActiveAtSelector {
+  let cached: { key: readonly unknown[]; result: Record<string, number> } | null = null
+  return (repos, inputs, now) => {
+    const key = [repos, inputs.workspacesByRepoId, inputs.visits, now]
+    if (cached && key.every((input, index) => input === cached?.key[index])) {
+      return cached.result
+    }
+    // Activity never predates addedAt, so a row added under the threshold ago cannot be idle.
+    const candidates = repos.filter(
+      (entry) => isRepoHidden(entry) || isIdleProject(entry.addedAt, now)
+    )
+    cached = { key, result: getLastActiveAtByRow(candidates, inputs) }
+    return cached.result
+  }
+}
+
+/** Identifies an idle set, so a dismissal holds until a project joins or leaves it. */
+export function getIdleProjectsKey(idleRepos: readonly Repo[]): string {
+  return idleRepos.map(getRepoRowIdentity).sort().join('\n')
+}
+
 export function selectIdleListedRepos(
   repos: readonly Repo[],
   lastActiveAtByRow: Readonly<Record<string, number>>,

@@ -11,6 +11,7 @@ import { createLiveAgentWorktreeIdsSelector } from '@/lib/workspace/activity/wor
 import type { Repo } from '../../../../../../shared/repository/repo-types'
 import type { WorktreeLineage } from '../../../../../../shared/worktree/lineage-types'
 import type { ExecutionHostId } from '../../../../../../shared/execution-host/execution-host'
+import type { ProjectGroupingModel } from '../../../../../../shared/sidebar-list/sections/project-section-grouping'
 import './visible-worktrees'
 import { computeVisibleWorktrees } from './compute-visible-worktrees'
 import { createWorktreeNeedsYouReader } from './desktop-workspace-row-facts'
@@ -67,6 +68,7 @@ export function useVisibleSidebarWorktrees(args: {
   /** Pass only focused host so unrelated settings writes cannot invalidate the full workspace scan. */
   defaultHostId: ExecutionHostId
   agentSendTargetWorktreeId: string | null
+  projectGrouping?: ProjectGroupingModel
 }) {
   const { filterState, sortBy, sortedIds, repoMap, worktreeLineageById, defaultHostId } = args
   const {
@@ -167,6 +169,7 @@ export function useVisibleSidebarWorktrees(args: {
       showOnlyNeedsYou,
       worktreeNeedsYou,
       findQuery,
+      projectGrouping: args.projectGrouping,
       repoMap,
       hiddenProjects: indexHiddenProjects(repos, defaultHostId),
       workspaceHostScope,
@@ -200,6 +203,7 @@ export function useVisibleSidebarWorktrees(args: {
     showOnlyNeedsYou,
     worktreeNeedsYou,
     findQuery,
+    args.projectGrouping,
     workspaceHostScope,
     visibleWorkspaceHostIds,
     defaultHostId,
@@ -223,6 +227,7 @@ export function useVisibleSidebarWorktrees(args: {
     visibleWorktrees,
     pairedDeviceIdsByEnvironment,
     botListedWorktreeIdentities,
-    lineageParentIdentities
+    lineageParentIdentities,
+    workspaceNeedsYou: worktreeNeedsYou
   }
 }

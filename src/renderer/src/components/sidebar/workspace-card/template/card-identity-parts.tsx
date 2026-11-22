@@ -55,6 +55,7 @@ function CardTitle({
       className="text-[13px] leading-5"
       editingClassName="flex-1"
       titleWrapper={props.tooltip === false ? withoutTitleTooltip : undefined}
+      highlightFindMatches
       onEditingChange={affiliateListMode ? undefined : card.setTitleRenaming}
       onRename={card.handleRenameTitle}
       beginEditing={

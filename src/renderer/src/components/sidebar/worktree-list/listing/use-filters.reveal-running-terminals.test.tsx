@@ -61,6 +61,19 @@ it('turns Active only off to reveal a workspace with nothing running', () => {
   expect(store.getState().showOnlyRunningTerminals).toBe(false)
 })
 
+it('clears a find that hides the revealed workspace, and keeps one that matches it', () => {
+  store.setState({ settings: getDefaultSettings('/home/me'), sidebarFindQuery: 'zzz' })
+  const filters = renderFilters()
+  expect(filters.hasFilters).toBe(true)
+  const worktree = makeWorktree({ id: 'wt-1', repoId: 'repo-1', displayName: 'Login' })
+  act(() => store.getState().setSidebarFindQuery('log'))
+  act(() => filters.revealWorkspaceFilters(worktree))
+  expect(store.getState().sidebarFindQuery).toBe('log')
+  act(() => store.getState().setSidebarFindQuery('zzz'))
+  act(() => filters.revealWorkspaceFilters(worktree))
+  expect(store.getState().sidebarFindQuery).toBe('')
+})
+
 it('keeps Active only on to reveal a workspace that is already running', () => {
   store.setState({
     settings: getDefaultSettings('/home/me'),

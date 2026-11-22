@@ -22,6 +22,10 @@ import {
 } from '../../../../../../shared/workspace-view/workspace-find-query'
 import { branchRefLabel } from '../../../../../../shared/git/refs/branch-ref-label'
 import { getLineageAncestorIndex, getSortedWorktreeRankIndex } from './visible-worktree-indexes'
+import {
+  getProjectHeaderRevealTarget,
+  type ProjectGroupingModel
+} from '../../../../../../shared/sidebar-list/sections/project-section-grouping'
 
 // Separate store binding avoids attention-slice import cycles; shared builders retain the filter rules.
 
@@ -45,6 +49,8 @@ export type VisibleWorktreeOptions = {
   worktreeNeedsYou?: (worktree: Worktree) => boolean
   /** Transient sidebar find text over name, branch and project. */
   findQuery?: string
+  /** The sidebar's grouping, so find matches the project header it displays. */
+  projectGrouping?: ProjectGroupingModel
   repoMap: Map<string, Repo>
   hiddenProjects: HiddenProjects
   workspaceHostScope: ExecutionHostScope
@@ -94,24 +100,33 @@ export function computeVisibleWorktrees(
   })
 }
 
-function withFindQuery(
-  rows: readonly Worktree[],
-  opts: Pick<VisibleWorktreeOptions, 'findQuery' | 'repoMap'>
-): readonly Worktree[] {
+type FindOptions = Pick<VisibleWorktreeOptions, 'findQuery' | 'repoMap' | 'projectGrouping'>
+
+/** The one find rule the list and every reveal path share; a blank query matches everything. */
+export function worktreeMatchesSidebarFind(
+  worktree: Pick<Worktree, 'displayName' | 'branch' | 'repoId'>,
+  opts: FindOptions
+): boolean {
   const query = normalizeFindQuery(opts.findQuery ?? '')
-  if (!query) {
-    return rows
-  }
-  return rows.filter((worktree) =>
+  return (
+    !query ||
     matchesFindQuery(
       [
         worktree.displayName,
         branchRefLabel(worktree.branch),
-        opts.repoMap.get(worktree.repoId)?.displayName ?? ''
+        opts.repoMap.get(worktree.repoId)?.displayName ?? '',
+        getProjectHeaderRevealTarget(worktree.repoId, opts.repoMap, opts.projectGrouping).label
       ],
       query
     )
   )
+}
+
+function withFindQuery(rows: readonly Worktree[], opts: FindOptions): readonly Worktree[] {
+  if (!normalizeFindQuery(opts.findQuery ?? '')) {
+    return rows
+  }
+  return rows.filter((worktree) => worktreeMatchesSidebarFind(worktree, opts))
 }
 
 export function computeVisibleWorktreeIds(

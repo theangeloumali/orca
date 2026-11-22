@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { repo } from '../worktree-list/grouping/worktree-list-groups-test-fixtures'
 import type { Repo } from '../../../../../shared/repository/repo-types'
 import {
+  createLastActiveAtSelector,
   getLastActiveAtByRow,
   groupArchivedRepos,
   selectIdleListedRepos,
@@ -74,5 +75,44 @@ describe('selectIdleListedRepos', () => {
         (entry) => entry.connectionId
       )
     ).toEqual([repo.connectionId])
+  })
+})
+
+describe('createLastActiveAtSelector', () => {
+  function countingInputs(onRead: () => void): ProjectActivityInputs {
+    const workspacesByRepoId = new Proxy<ProjectActivityInputs['workspacesByRepoId']>(
+      {},
+      {
+        get: (_target, _key) => {
+          onRead()
+          return undefined
+        }
+      }
+    )
+    return { workspacesByRepoId, visits: {} }
+  }
+
+  it('reads no workspaces when nothing is archived and no project could be idle yet', () => {
+    let reads = 0
+    const select = createLastActiveAtSelector()
+    const fresh = [project('new-a', { addedAt: NOW - DAY_MS }), project('new-b', { addedAt: NOW })]
+    expect(
+      select(
+        fresh,
+        countingInputs(() => reads++),
+        NOW
+      )
+    ).toEqual({})
+    expect(reads).toBe(0)
+  })
+
+  it('returns the same answer without recomputing while its inputs are unchanged', () => {
+    let reads = 0
+    const select = createLastActiveAtSelector()
+    const repos = [project('old')]
+    const inputs = countingInputs(() => reads++)
+    const first = select(repos, inputs, NOW)
+    expect(select(repos, inputs, NOW)).toBe(first)
+    expect(reads).toBe(1)
   })
 })

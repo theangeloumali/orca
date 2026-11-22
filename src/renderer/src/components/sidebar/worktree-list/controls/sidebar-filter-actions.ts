@@ -25,6 +25,7 @@ export type SidebarFilterState = {
   showOnlyNeedsYou?: boolean
   visibleWorkspaceHostIds?: readonly ExecutionHostId[] | null
   workspaceHostScope?: ExecutionHostScope
+  sidebarFindQuery?: string
 }
 
 export function sidebarWorkspaceRowFilters(state: SidebarFilterState): WorkspaceRowFilters {
@@ -62,12 +63,21 @@ export function selectSidebarFilterState(
     showOnlyRunningTerminals: state.showOnlyRunningTerminals,
     showOnlyNeedsYou: state.showOnlyNeedsYou,
     visibleWorkspaceHostIds: state.visibleWorkspaceHostIds,
-    workspaceHostScope: state.workspaceHostScope
+    workspaceHostScope: state.workspaceHostScope,
+    sidebarFindQuery: state.sidebarFindQuery
   }
 }
 
+/** Find is no row filter, but it hides rows, so clearing and recovery treat it as one. */
+export function sidebarFindIsActive(state: Pick<SidebarFilterState, 'sidebarFindQuery'>): boolean {
+  return normalizeFindQuery(state.sidebarFindQuery ?? '') !== ''
+}
+
 export function sidebarHasActiveFilters(state: SidebarFilterState): boolean {
-  return activeWorkspaceRowFilterKeys(sidebarWorkspaceRowFilters(state)).length > 0
+  return (
+    activeWorkspaceRowFilterKeys(sidebarWorkspaceRowFilters(state)).length > 0 ||
+    sidebarFindIsActive(state)
+  )
 }
 
 export type SidebarFilterSetters = Pick<
@@ -83,6 +93,7 @@ export type SidebarFilterSetters = Pick<
   | 'setVisibleWorkspaceHostIds'
   | 'setShowOnlyRunningTerminals'
   | 'setShowOnlyNeedsYou'
+  | 'setSidebarFindQuery'
 >
 
 /** How each shared filter returns to its default; a new filter fails to compile until listed. */
@@ -120,16 +131,15 @@ const RESET_SIDEBAR_FILTER: Record<
 export function selectHidesEmptyProjectGroups(
   state: Pick<AppState, 'showOnlyRunningTerminals' | 'showOnlyNeedsYou' | 'sidebarFindQuery'>
 ): boolean {
-  return (
-    state.showOnlyRunningTerminals ||
-    state.showOnlyNeedsYou ||
-    normalizeFindQuery(state.sidebarFindQuery) !== ''
-  )
+  return state.showOnlyRunningTerminals || state.showOnlyNeedsYou || sidebarFindIsActive(state)
 }
 
 /** Reset only active filters so an unfiltered click performs no writes. */
 export function clearSidebarFilters(state: SidebarFilterState, store: SidebarFilterSetters): void {
   for (const key of activeWorkspaceRowFilterKeys(sidebarWorkspaceRowFilters(state))) {
     RESET_SIDEBAR_FILTER[key](store)
+  }
+  if (sidebarFindIsActive(state)) {
+    store.setSidebarFindQuery('')
   }
 }

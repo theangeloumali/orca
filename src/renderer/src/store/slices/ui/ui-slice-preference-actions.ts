@@ -3,7 +3,6 @@ import {
   normalizeStatusBarUsageFormat
 } from '../../../../../shared/status-bar/status-bar-usage-format'
 import type { UISlice, UISliceGet, UISliceSet } from './ui-slice-contract'
-import { workspaceHostScopeForVisibleHosts } from '../../../../../shared/workspace-view/workspace-host-visibility'
 import { createAgentsViewPreferenceActions } from './ui-slice-agents-view-preference-actions'
 import {
   DEFAULT_AGENT_ACTIVITY_DISPLAY_MODE,
@@ -24,11 +23,7 @@ import {
   DEFAULT_STATUS_BAR_USAGE_MODE,
   normalizeStatusBarUsageMode
 } from '../../../../../shared/status-bar/status-bar-usage-mode'
-import {
-  normalizeExecutionHostOrder,
-  normalizeExecutionHostScope,
-  normalizeVisibleExecutionHostIds
-} from '../../../../../shared/execution-host/execution-host'
+import { normalizeExecutionHostOrder } from '../../../../../shared/execution-host/execution-host'
 import {
   ALL_AUTOMATION_HOSTS_FILTER,
   toPersistedAutomationHostFilter
@@ -72,21 +67,6 @@ export function createUiPreferenceActions(set: UISliceSet, get: UISliceGet): Par
     showSleepingWorkspaces: DEFAULT_SHOW_SLEEPING_WORKSPACES,
     setShowSleepingWorkspaces: (v) => set({ showSleepingWorkspaces: v }),
 
-    workspaceHostScope: 'all',
-    // Why: host scope is presentation/filtering only — must never trigger resource teardown (terminals, browser pages).
-    setWorkspaceHostScope: (scope) => {
-      const normalized = normalizeExecutionHostScope(scope)
-      const visibleWorkspaceHostIds = normalized === 'all' ? null : [normalized]
-      set({ workspaceHostScope: normalized, visibleWorkspaceHostIds })
-    },
-    visibleWorkspaceHostIds: null,
-    setVisibleWorkspaceHostIds: (ids) => {
-      const normalized = normalizeVisibleExecutionHostIds(ids)
-      set({
-        visibleWorkspaceHostIds: normalized,
-        workspaceHostScope: workspaceHostScopeForVisibleHosts(normalized, get().workspaceHostScope)
-      })
-    },
     workspaceHostOrder: [],
     setWorkspaceHostOrder: (ids) => {
       const workspaceHostOrder = normalizeExecutionHostOrder(ids)
@@ -116,9 +96,7 @@ export function createUiPreferenceActions(set: UISliceSet, get: UISliceGet): Par
     setAlwaysShowDefaultBranchWorkspace: (v) => set({ alwaysShowDefaultBranchWorkspace: v }),
     showOnlyRunningTerminals: false,
     setShowOnlyRunningTerminals: (v) => set({ showOnlyRunningTerminals: v }),
-    showOnlyNeedsYou: false,
-    setShowOnlyNeedsYou: (v) => set({ showOnlyNeedsYou: v }),
-    ...createUiQuickFilterActions(set),
+    ...createUiQuickFilterActions(set, get),
     ...createUiBotPreferenceActions(set, get),
 
     explorerDisplayRootByWorktree: {},

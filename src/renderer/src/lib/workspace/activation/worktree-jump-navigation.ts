@@ -4,7 +4,10 @@ import { useAppStore } from '@/store/index'
 import { activateAndRevealWorkspace } from '@/lib/workspace/activation/worktree-activation'
 import { getVisibleWorktreeShortcutTargets } from '@/components/sidebar/worktree-list/listing/visible-worktrees'
 import { worktreePassesSidebarFilters } from '@/components/sidebar/worktree-list/listing/worktree-filter-visibility'
-import { sidebarHasActiveFilters } from '@/components/sidebar/worktree-list/controls/sidebar-filter-actions'
+import {
+  sidebarFindIsActive,
+  sidebarHasActiveFilters
+} from '@/components/sidebar/worktree-list/controls/sidebar-filter-actions'
 import { parseWorkspaceKey } from '../../../../../shared/workspace/identity/workspace-scope'
 import {
   normalizeExecutionHostId,
@@ -12,7 +15,11 @@ import {
 } from '../../../../../shared/execution-host/execution-host'
 import { selectWorktreesByRepo } from '@/store/workspaces/catalog/workspace-record-fields'
 
-function wasHiddenBySidebarFilters(worktreeId: string, executionHostId?: ExecutionHostId): boolean {
+function wasHiddenBySidebarFilters(
+  worktreeId: string,
+  executionHostId?: ExecutionHostId,
+  options?: { ignoreFind?: boolean }
+): boolean {
   const state = useAppStore.getState()
   // Some lightweight callers/tests provide only the activation slice of state.
   if (!selectWorktreesByRepo(state) || !sidebarHasActiveFilters(state)) {
@@ -42,7 +49,21 @@ function wasHiddenBySidebarFilters(worktreeId: string, executionHostId?: Executi
     return false
   }
   // Collapsed unfiltered targets need reveal, not a toast. Require host identity so an unfiltered twin cannot vouch for a filtered target.
-  return !worktreePassesSidebarFilters(worktreeId, executionHostId)
+  return !worktreePassesSidebarFilters(worktreeId, executionHostId, options)
+}
+
+// Find is a lookup, so a jump to a row only it hides clears it instead of warning.
+function clearFindHidingOnly(worktreeId: string, executionHostId?: ExecutionHostId): void {
+  const state = useAppStore.getState()
+  if (!selectWorktreesByRepo(state) || !sidebarFindIsActive(state)) {
+    return
+  }
+  if (
+    wasHiddenBySidebarFilters(worktreeId, executionHostId) &&
+    !wasHiddenBySidebarFilters(worktreeId, executionHostId, { ignoreFind: true })
+  ) {
+    state.setSidebarFindQuery('')
+  }
 }
 
 /** Navigate from a worktree reference in either sidebar back to the workspace surface. */
@@ -51,9 +72,12 @@ export function jumpToWorktreeFromSidebar(
   options?: { executionHostId?: ExecutionHostId }
 ): boolean {
   // Folder workspaces aren't in the worktree filter pipeline; only git worktrees can be filter-hidden.
+  const isFolder = parseWorkspaceKey(worktreeId)?.type === 'folder'
+  if (!isFolder) {
+    clearFindHidingOnly(worktreeId, options?.executionHostId)
+  }
   const hiddenBeforeActivation =
-    parseWorkspaceKey(worktreeId)?.type !== 'folder' &&
-    wasHiddenBySidebarFilters(worktreeId, options?.executionHostId)
+    !isFolder && wasHiddenBySidebarFilters(worktreeId, options?.executionHostId)
 
   // Workspace dispatch owns folder/worktree routing and folder path-status guards.
   const activated = activateAndRevealWorkspace(worktreeId, {

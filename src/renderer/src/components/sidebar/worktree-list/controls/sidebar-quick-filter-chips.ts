@@ -51,9 +51,47 @@ export function clientGroupRepoIds(
 ): string[] {
   const subtree = getDescendantGroupIds(groupId, projectGroups)
   subtree.add(groupId)
-  return repos
+  const ids = repos
     .filter((repo) => repo.projectGroupId != null && subtree.has(repo.projectGroupId))
     .map((repo) => repo.id)
+  return [...new Set(ids)]
+}
+
+export type ClientChoice<G extends GroupLink> = { group: G; repoIds: string[] }
+
+/** Top-level groups with their projects; an empty one stays listed so the menu can disable it. */
+export function listClientChoices<G extends GroupLink>(
+  projectGroups: readonly G[],
+  repos: readonly RepoLink[]
+): ClientChoice<G>[] {
+  return projectGroups
+    .filter((group) => group.parentGroupId === null)
+    .map((group) => ({ group, repoIds: clientGroupRepoIds(group.id, projectGroups, repos) }))
+}
+
+type ClientFilterInputs = {
+  filterRepoIds: readonly string[]
+  projectGroups: readonly GroupLink[]
+  repos: readonly RepoLink[]
+}
+
+/** The filter stores ids, so a selected client's new projects only match once they are re-derived. */
+export function followClientMembership(
+  previous: ClientFilterInputs,
+  next: ClientFilterInputs
+): string[] | null {
+  const clientId = findActiveClientGroupId(
+    previous.filterRepoIds,
+    previous.projectGroups,
+    previous.repos
+  )
+  if (clientId === null || next.filterRepoIds !== previous.filterRepoIds) {
+    return null
+  }
+  const ids = clientGroupRepoIds(clientId, next.projectGroups, next.repos)
+  const current = new Set(next.filterRepoIds)
+  const unchanged = ids.length === current.size && ids.every((id) => current.has(id))
+  return ids.length === 0 || unchanged ? null : ids
 }
 
 export function findActiveClientGroupId(

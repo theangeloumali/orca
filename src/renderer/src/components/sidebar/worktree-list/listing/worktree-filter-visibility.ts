@@ -15,17 +15,17 @@ import { selectWorktreesByRepo } from '@/store/workspaces/catalog/workspace-reco
 /** Check filters without collapse/order elision; a known host must match so a visible twin cannot qualify another host. */
 export function worktreePassesSidebarFilters(
   worktreeId: string,
-  executionHostId?: ExecutionHostId
+  executionHostId?: ExecutionHostId,
+  options?: { ignoreFind?: boolean }
 ): boolean {
   const state = useAppStore.getState()
   const repoMap = getIndexedRepoMap(state.repos)
   const requestedHostId = executionHostId ? normalizeExecutionHostId(executionHostId) : null
   const defaultHostId = getSettingsFocusedExecutionHostId(state.settings)
-  return computeVisibleWorktrees(
-    selectWorktreesByRepo(state),
-    [],
-    buildVisibleWorktreeOptionsFromState(state, readRuntimeStatuses(), repoMap)
-  ).some((worktree) => {
+  return computeVisibleWorktrees(selectWorktreesByRepo(state), [], {
+    ...buildVisibleWorktreeOptionsFromState(state, readRuntimeStatuses(), repoMap),
+    ...(options?.ignoreFind ? { findQuery: '' } : {})
+  }).some((worktree) => {
     if (worktree.id !== worktreeId) {
       return false
     }

@@ -12,20 +12,39 @@ export function matchesFindQuery(fields: readonly string[], normalizedQuery: str
 
 export type FindMatchRange = { start: number; end: number }
 
-/** Every non-overlapping case-insensitive match of the query in a label, for highlighting. */
+/** Lowercased text plus, per lowered code unit, the original span it came from. */
+function lowerWithOrigins(text: string): { lowered: string; starts: number[]; ends: number[] } {
+  let lowered = ''
+  const starts: number[] = []
+  const ends: number[] = []
+  let offset = 0
+  for (const char of text) {
+    const lower = char.toLowerCase()
+    for (let unit = 0; unit < lower.length; unit++) {
+      starts.push(offset)
+      ends.push(offset + char.length)
+    }
+    lowered += lower
+    offset += char.length
+  }
+  return { lowered, starts, ends }
+}
+
+/** Every non-overlapping case-insensitive match of the query, as ranges on the original label. */
 export function findQueryMatchRanges(text: string, query: string): FindMatchRange[] {
   const needle = normalizeFindQuery(query)
   if (needle === '') {
     return []
   }
-  const haystack = text.toLowerCase()
+  // Why: 'İ' lowercases to two units, so lowered offsets would drift from the label.
+  const { lowered, starts, ends } = lowerWithOrigins(text)
   const ranges: FindMatchRange[] = []
   for (
-    let at = haystack.indexOf(needle);
+    let at = lowered.indexOf(needle);
     at !== -1;
-    at = haystack.indexOf(needle, at + needle.length)
+    at = lowered.indexOf(needle, at + needle.length)
   ) {
-    ranges.push({ start: at, end: at + needle.length })
+    ranges.push({ start: starts[at], end: ends[at + needle.length - 1] })
   }
   return ranges
 }

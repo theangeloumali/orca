@@ -13368,7 +13368,8 @@
           "live": "Ativos",
           "needsYou": "Precisa de você",
           "thisMachine": "Esta máquina",
-          "label": "Filtros rápidos"
+          "label": "Filtros rápidos",
+          "emptyClient": "Nenhum projeto ainda"
         },
         "hiddenProjects": {
           "archiveOnMachineTitle": "Arquivo · {{machine}} · {{count}}",

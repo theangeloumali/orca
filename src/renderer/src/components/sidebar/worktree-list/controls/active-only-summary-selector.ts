@@ -10,7 +10,6 @@ import {
 import { getIndexedRepoMap } from '@/store/repos/repository-catalog-index'
 import type { RuntimeStatuses } from '@/store/slices/runtime-status/views/runtime-status-owner'
 import { selectSidebarLineageParentIdentities } from '@/store/slices/worktrees/metadata/cross-store-lineage-parents'
-import { getProjectHostSetupProjectionFromState } from '@/store/projects/project-host-setup-selector'
 import {
   withoutHiddenVmWorktrees,
   type readHiddenVmCheckouts
@@ -35,7 +34,7 @@ import {
   getWorktreeIdsWithStructuredChat
 } from '../listing/visible-worktree-activity-inputs'
 import { worktreeHasRunningTerminal } from '../listing/desktop-workspace-row-facts'
-import { getSidebarProjectGrouping } from '../listing/sidebar-project-grouping'
+import { getSidebarProjectGroupingFromState } from '../listing/sidebar-project-grouping'
 import { selectSidebarFilterState } from './sidebar-filter-actions'
 import { summarizeActiveOnly, type ActiveOnlySummary } from './active-only-project-summary'
 
@@ -177,10 +176,7 @@ function computeSummary(
         return row
       }
     )
-  const grouping = getSidebarProjectGrouping(
-    getProjectHostSetupProjectionFromState(state),
-    state.showWorkspaceHostSections
-  )
+  const grouping = getSidebarProjectGroupingFromState(state)
   const sectionKeyOfRepo = (repoId: string): string =>
     getProjectHeaderRevealTarget(repoId, options.repoMap, grouping).key
   const { projection } = state.agentStatusByPaneKey

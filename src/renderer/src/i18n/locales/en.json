@@ -8622,7 +8622,8 @@
           "live": "Live",
           "needsYou": "Needs you",
           "thisMachine": "This machine",
-          "label": "Quick filters"
+          "label": "Quick filters",
+          "emptyClient": "No projects yet"
         }
       },
       "shared": {

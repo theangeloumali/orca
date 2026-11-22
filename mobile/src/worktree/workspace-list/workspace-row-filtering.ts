@@ -5,7 +5,7 @@ import {
   type HiddenProjects
 } from '../../../../src/shared/project/catalog/hidden-projects'
 import {
-  filterFolderWorkspacesForActiveOnly,
+  filterFolderWorkspacesForListingRules,
   filterWorkspaceRows,
   type WorkspaceRowFactReader
 } from '../../../../src/shared/workspace-view/workspace-row-filters'
@@ -13,6 +13,7 @@ import {
   matchesFindQuery,
   normalizeFindQuery
 } from '../../../../src/shared/workspace-view/workspace-find-query'
+import { branchRefLabel } from '../../../../src/shared/git/refs/branch-ref-label'
 import type { FilterState, Worktree } from './workspace-list-types'
 import { resolveWorktreeHostId } from '../row-presentation/worktree-host-context-labels'
 import { getWorktreeRowIdentity } from '../row-presentation/worktree-host-row-identity'
@@ -94,7 +95,7 @@ function withListedFolderAncestors(
   ).filter(read.isFolderWorkspace)
   const kept = new Set<Worktree>([
     ...listed,
-    ...filterFolderWorkspacesForActiveOnly(folders, filters, {
+    ...filterFolderWorkspacesForListingRules(folders, filters, {
       hasRunningTerminal: read.hasRunningTerminal,
       identityOf: getWorktreeRowIdentity,
       listedRowIdentities: listed.map(getWorktreeRowIdentity),
@@ -124,5 +125,7 @@ export function filterWorktrees(
   if (!query) {
     return result
   }
-  return result.filter((w) => matchesFindQuery([w.displayName, w.branch, w.repo], query))
+  return result.filter((w) =>
+    matchesFindQuery([w.displayName, branchRefLabel(w.branch), w.repo], query)
+  )
 }

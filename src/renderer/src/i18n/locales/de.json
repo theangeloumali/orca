@@ -7462,7 +7462,8 @@
           "live": "Aktiv",
           "needsYou": "Braucht dich",
           "thisMachine": "Dieses Gerät",
-          "label": "Schnellfilter"
+          "label": "Schnellfilter",
+          "emptyClient": "Noch keine Projekte"
         },
         "hiddenProjects": {
           "archiveOnMachineTitle": "Archiv · {{machine}} · {{count}}",

@@ -7086,7 +7086,8 @@
           "live": "Activos",
           "needsYou": "Te necesita",
           "thisMachine": "Esta máquina",
-          "label": "Filtros rápidos"
+          "label": "Filtros rápidos",
+          "emptyClient": "Aún no hay proyectos"
         },
         "hiddenProjects": {
           "archiveOnMachineTitle": "Archivo · {{machine}} · {{count}}",

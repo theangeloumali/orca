@@ -103,7 +103,8 @@ export const visibilityArgs: Parameters<typeof useVisibleSidebarWorktrees>[0] = 
     showOnlyRunningTerminals: false,
     showOnlyNeedsYou: false,
     visibleWorkspaceHostIds: null,
-    workspaceHostScope: 'all'
+    workspaceHostScope: 'all',
+    sidebarFindQuery: ''
   },
   sortBy: 'recent',
   sortedIds: [worktree.id],

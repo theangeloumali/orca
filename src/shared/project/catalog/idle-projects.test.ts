@@ -18,6 +18,20 @@ describe('getProjectLastActiveAt', () => {
     expect(getProjectLastActiveAt(NOW - 300 * DAY_MS, workspaces)).toBe(NOW - 5 * DAY_MS)
   })
 
+  it('keeps a new project with a zero-activity workspace from going idle', () => {
+    const workspaces = [{ lastActivityAt: 0, lastVisitedAt: undefined }]
+    const lastActiveAt = getProjectLastActiveAt(NOW - 2 * DAY_MS, workspaces)
+    expect(lastActiveAt).toBe(NOW - 2 * DAY_MS)
+    expect(isIdleProject(lastActiveAt, NOW)).toBe(false)
+  })
+
+  it('counts a recent visit as activity', () => {
+    const workspaces = [{ lastActivityAt: NOW - 90 * DAY_MS, lastVisitedAt: NOW - DAY_MS }]
+    const lastActiveAt = getProjectLastActiveAt(NOW - 300 * DAY_MS, workspaces)
+    expect(lastActiveAt).toBe(NOW - DAY_MS)
+    expect(isIdleProject(lastActiveAt, NOW)).toBe(false)
+  })
+
   it('uses addedAt when the project has no workspaces', () => {
     expect(getProjectLastActiveAt(NOW - 45 * DAY_MS, [])).toBe(NOW - 45 * DAY_MS)
   })

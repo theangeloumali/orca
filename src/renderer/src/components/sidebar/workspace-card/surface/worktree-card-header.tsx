@@ -97,6 +97,7 @@ export function WorktreeCardHeader({
           className="text-[13px] leading-5"
           editingClassName="flex-1"
           titleWrapper={titleWrapper}
+          highlightFindMatches
           onEditingChange={affiliateListMode ? undefined : setTitleRenaming}
           onRename={handleRenameTitle}
           beginEditing={

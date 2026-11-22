@@ -139,6 +139,11 @@ export function createUiTrustActions(set: UISliceSet, _get: UISliceGet): Partial
         window.api.ui.set({ pluginsAlphaNoticeDismissed: true }).catch(console.error)
         return { pluginsAlphaNoticeDismissed: true }
       }),
+    dismissedIdleProjectsKey: null,
+    dismissIdleProjects: (idleProjectsKey) => {
+      set({ dismissedIdleProjectsKey: idleProjectsKey })
+      window.api.ui.set({ dismissedIdleProjectsKey: idleProjectsKey }).catch(console.error)
+    },
     usageEmptyStateDismissed: false,
     dismissUsageEmptyState: () =>
       set((s) => {

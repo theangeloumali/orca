@@ -7668,7 +7668,8 @@
           "live": "运行中",
           "needsYou": "需要你",
           "thisMachine": "本机",
-          "label": "快速筛选"
+          "label": "快速筛选",
+          "emptyClient": "暂无项目"
         },
         "hiddenProjects": {
           "archiveOnMachineTitle": "归档 · {{machine}} · {{count}}",

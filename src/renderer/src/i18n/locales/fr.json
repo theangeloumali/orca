@@ -7355,7 +7355,8 @@
           "live": "Actifs",
           "needsYou": "Vous attend",
           "thisMachine": "Cette machine",
-          "label": "Filtres rapides"
+          "label": "Filtres rapides",
+          "emptyClient": "Aucun projet pour l’instant"
         },
         "hiddenProjects": {
           "archiveOnMachineTitle": "Archive · {{machine}} · {{count}}",

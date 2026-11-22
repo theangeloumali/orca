@@ -4,7 +4,9 @@ import {
   clientGroupRepoIds,
   countRepoMachines,
   findActiveClientGroupId,
+  followClientMembership,
   isThisMachineChipOn,
+  listClientChoices,
   toggleThisMachineChip,
   type QuickFilterChipState,
   type QuickFilterChipSetters
@@ -71,6 +73,40 @@ describe('Client chip', () => {
     expect(findActiveClientGroupId(['r-site', 'r-api'], groups, repos)).toBe('acme')
     expect(findActiveClientGroupId(['r-api'], groups, repos)).toBeNull()
     expect(findActiveClientGroupId([], groups, repos)).toBeNull()
+  })
+
+  it('still names the client when a repo id appears twice', () => {
+    const twice = [...repos, { id: 'r-api', projectGroupId: 'acme' }]
+    expect(findActiveClientGroupId(['r-site', 'r-api', 'r-api'], groups, twice)).toBe('acme')
+  })
+
+  it('lists a client with no projects as empty so the menu can disable it', () => {
+    const withEmpty = [...groups, { id: 'initech', parentGroupId: null, name: 'Initech' }]
+    const choices = listClientChoices(withEmpty, repos)
+    expect(choices.map((choice) => [choice.group.id, choice.repoIds])).toEqual([
+      ['acme', ['r-api', 'r-site']],
+      ['globex', ['r-billing']],
+      ['initech', []]
+    ])
+  })
+
+  it('follows the selected client when a project joins it later', () => {
+    const joined = [...repos, { id: 'r-new', projectGroupId: 'acme-web' }]
+    const before = { filterRepoIds: ['r-api', 'r-site'], projectGroups: groups, repos }
+    expect(followClientMembership(before, { ...before, repos: joined })).toEqual([
+      'r-api',
+      'r-site',
+      'r-new'
+    ])
+  })
+
+  it('leaves a hand-picked project filter and an emptied client alone', () => {
+    const picked = { filterRepoIds: ['r-api'], projectGroups: groups, repos }
+    const joined = [...repos, { id: 'r-new', projectGroupId: 'acme' }]
+    expect(followClientMembership(picked, { ...picked, repos: joined })).toBeNull()
+    const before = { filterRepoIds: ['r-billing'], projectGroups: groups, repos }
+    const emptied = repos.filter((repo) => repo.id !== 'r-billing')
+    expect(followClientMembership(before, { ...before, repos: emptied })).toBeNull()
   })
 })
 

@@ -1,4 +1,4 @@
-import React, { useId } from 'react'
+import React, { useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAppStore } from '@/store/index'
 import { useTranslate } from '@/i18n/use-translate'
@@ -55,6 +55,7 @@ const SidebarHeader = React.memo(function SidebarHeader({
   )
   const toggleCollapsedGroup = useAppStore((s) => s.toggleCollapsedGroup)
   const showOnlyRunningTerminals = useAppStore((s) => s.showOnlyRunningTerminals)
+  const [findButtonSlot, setFindButtonSlot] = useState<HTMLDivElement | null>(null)
   const sidebarTitle =
     groupBy === 'repo'
       ? t('dashboard.sidebar.projects', 'Projects')
@@ -88,6 +89,7 @@ const SidebarHeader = React.memo(function SidebarHeader({
         titleAccessory={
           <>
             <ActiveOnlyToggle />
+            <div ref={setFindButtonSlot} className="flex shrink-0 items-center empty:hidden" />
             <div
               ref={projectsCollapseTarget}
               className="relative flex shrink-0 items-center empty:hidden"
@@ -182,7 +184,7 @@ const SidebarHeader = React.memo(function SidebarHeader({
         }
       />
       {showOnlyRunningTerminals && !projectsCollapsed && <ActiveOnlyStatusLine />}
-      {!projectsCollapsed && <SidebarQuickFilterBar />}
+      {!projectsCollapsed && <SidebarQuickFilterBar findButtonTarget={findButtonSlot} />}
     </>
   )
 })

@@ -6804,7 +6804,8 @@
           "live": "실행 중",
           "needsYou": "확인 필요",
           "thisMachine": "이 머신",
-          "label": "빠른 필터"
+          "label": "빠른 필터",
+          "emptyClient": "아직 프로젝트가 없습니다"
         },
         "hiddenProjects": {
           "archiveOnMachineTitle": "보관함 · {{machine}} · {{count}}",

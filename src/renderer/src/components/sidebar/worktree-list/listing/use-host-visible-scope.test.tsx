@@ -19,7 +19,8 @@ const NO_PAIRED_DEVICES = new Map<string, string>()
 
 function visibleFolderIds(
   listedWorktrees: readonly Worktree[] = [],
-  lineageParentIdentities?: ReadonlyMap<string, string>
+  lineageParentIdentities?: ReadonlyMap<string, string>,
+  workspaceNeedsYou?: (workspace: { id: string }) => boolean
 ): string[] {
   const { result } = renderHook(() =>
     useSidebarHostVisibleScope({
@@ -30,7 +31,8 @@ function visibleFolderIds(
       folderWorkspaces: [runningFolder, idleFolder],
       pairedDeviceIdsByEnvironment: NO_PAIRED_DEVICES,
       listedWorktrees,
-      lineageParentIdentities
+      lineageParentIdentities,
+      workspaceNeedsYou
     })
   )
   return result.current.visibleFolderWorkspacesForRows.map((entry) => entry.id)
@@ -60,6 +62,18 @@ describe('useSidebarHostVisibleScope folder workspaces under Active only', () =>
       [getWorktreeHostIdentity(child), getFolderWorkspaceHostIdentity(idleFolder)]
     ])
     expect(visibleFolderIds([child], parents)).toEqual(['fw-running', 'fw-idle'])
+  })
+
+  it('applies Needs you to folders through their folder: key', () => {
+    useAppStore.setState({ showOnlyRunningTerminals: false, showOnlyNeedsYou: true })
+    const needsYou = (workspace: { id: string }) =>
+      workspace.id === folderWorkspaceKey(idleFolder.id)
+    expect(visibleFolderIds([], undefined, needsYou)).toEqual(['fw-idle'])
+  })
+
+  it('matches find against the folder name', () => {
+    useAppStore.setState({ showOnlyRunningTerminals: false, sidebarFindQuery: idleFolder.name })
+    expect(visibleFolderIds()).toEqual(['fw-idle'])
   })
 
   it('keeps every folder while Active only is off', () => {

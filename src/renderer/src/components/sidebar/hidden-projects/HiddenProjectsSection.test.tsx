@@ -59,8 +59,14 @@ const hiddenIds = (): string[] =>
     .repos.filter((entry) => typeof entry.hiddenAt === 'number')
     .map((entry) => entry.id)
 
+const uiSet = vi.fn(async () => undefined)
+
 describe('HiddenProjectsSection', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => {
+    vi.clearAllMocks()
+    Object.assign(window, { api: { ui: { set: uiSet } } })
+    useAppStore.setState({ dismissedIdleProjectsKey: null })
+  })
   afterEach(cleanup)
 
   it('shows one unnamed Archive section when only this computer has archived projects', () => {
@@ -69,6 +75,18 @@ describe('HiddenProjectsSection', () => {
     const toggle = screen.getByRole('button', { name: 'Archive · 2' })
     fireEvent.click(toggle)
     expect(screen.getByText('94d')).toBeTruthy()
+  })
+
+  it('points aria-controls at the list only while it is open, with the note outside it', () => {
+    setProjects([project('anno', { hiddenAt: 2 })], {})
+    render(<HiddenProjectsSection />)
+    const toggle = screen.getByRole('button', { name: 'Archive · 1' })
+    expect(toggle.hasAttribute('aria-controls')).toBe(false)
+    fireEvent.click(toggle)
+    const list = screen.getByRole('list', { name: 'Archive · 1' })
+    expect(toggle.getAttribute('aria-controls')).toBe(list.id)
+    expect(list.textContent).not.toContain('Nothing is deleted.')
+    expect(screen.getByText('Nothing is deleted.').tagName).toBe('P')
   })
 
   it('folds archived projects into one section per machine', () => {
@@ -117,5 +135,19 @@ describe('HiddenProjectsSection', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Dismiss idle projects suggestion' }))
     expect(screen.queryByText('1 project idle 30+ days')).toBeNull()
     expect(hiddenIds()).toEqual([])
+  })
+
+  it('keeps the idle suggestion dismissed across remounts until the idle set changes', () => {
+    setProjects([project('stale')], { stale: 40 })
+    const first = render(<HiddenProjectsSection />)
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss idle projects suggestion' }))
+    const dismissedKey = useAppStore.getState().dismissedIdleProjectsKey
+    expect(dismissedKey).toBeTruthy()
+    expect(uiSet).toHaveBeenCalledWith({ dismissedIdleProjectsKey: dismissedKey })
+    first.unmount()
+    render(<HiddenProjectsSection />)
+    expect(screen.queryByText('1 project idle 30+ days')).toBeNull()
+    act(() => setProjects([project('stale'), project('older')], { stale: 40, older: 50 }))
+    expect(screen.getByText('2 projects idle 30+ days')).toBeTruthy()
   })
 })

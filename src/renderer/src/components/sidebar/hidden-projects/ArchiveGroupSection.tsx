@@ -58,7 +58,7 @@ export function ArchiveGroupSection({
       <button
         type="button"
         aria-expanded={expanded}
-        aria-controls={listId}
+        aria-controls={expanded ? listId : undefined}
         onClick={() => setExpanded((value) => !value)}
         className={TOGGLE_CLASS}
       >
@@ -69,66 +69,68 @@ export function ArchiveGroupSection({
         <span className="min-w-0 flex-1 truncate">{title}</span>
       </button>
       {expanded ? (
-        <ul id={listId} className="flex flex-col pb-1" aria-label={title}>
-          <li className="px-1.5 pb-1 pl-6 text-[11px] leading-4 text-muted-foreground">
+        <>
+          <p className="px-1.5 pb-1 pl-6 text-[11px] leading-4 text-muted-foreground">
             {t('auto.components.sidebar.hiddenProjects.archiveNote', 'Nothing is deleted.')}
-          </li>
-          {repos.map((repo) => {
-            // The full row identity: paired-server twins share id and host, differing by SSH target.
-            const key = getRepoRowIdentity(repo)
-            const idleDays = getIdleDays(lastActiveAtByRow[key] ?? repo.addedAt, now)
-            return (
-              <li
-                key={key}
-                data-testid="hidden-project"
-                className="group/hidden-project flex h-7 min-w-0 items-center gap-1.5 rounded-md pl-1.5 pr-0.5 transition-colors hover:bg-worktree-sidebar-accent focus-within:bg-worktree-sidebar-accent"
-              >
-                <RepoIconGlyph
-                  repoIcon={repo.repoIcon}
-                  color={repo.badgeColor || undefined}
-                  className="size-4 shrink-0 text-muted-foreground"
-                  iconClassName="size-3.5"
-                />
-                <span className="min-w-0 flex-1 truncate text-[13px] leading-4 text-muted-foreground">
-                  {repo.displayName}
-                </span>
-                <span
-                  className="shrink-0 text-[10px] leading-none tabular-nums text-muted-foreground"
-                  aria-label={t(
-                    'auto.components.sidebar.hiddenProjects.idleAgeLabel',
-                    'Idle {{count}} days',
-                    {
-                      count: idleDays
-                    }
-                  )}
+          </p>
+          <ul id={listId} className="flex flex-col pb-1" aria-label={title}>
+            {repos.map((repo) => {
+              // The full row identity: paired-server twins share id and host, differing by SSH target.
+              const key = getRepoRowIdentity(repo)
+              const idleDays = getIdleDays(lastActiveAtByRow[key] ?? repo.addedAt, now)
+              return (
+                <li
+                  key={key}
+                  data-testid="hidden-project"
+                  className="group/hidden-project flex h-7 min-w-0 items-center gap-1.5 rounded-md pl-1.5 pr-0.5 transition-colors hover:bg-worktree-sidebar-accent focus-within:bg-worktree-sidebar-accent"
                 >
-                  {t('auto.components.sidebar.hiddenProjects.idleAge', '{{count}}d', {
-                    count: idleDays
-                  })}
-                </span>
-                {/* Revealed on row hover; focus-within keeps it visible for keyboard users. */}
-                <span className="flex shrink-0 can-hover:opacity-0 can-hover:group-hover/hidden-project:opacity-100 focus-within:opacity-100">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="xs"
-                    disabled={pendingKeys.has(key)}
+                  <RepoIconGlyph
+                    repoIcon={repo.repoIcon}
+                    color={repo.badgeColor || undefined}
+                    className="size-4 shrink-0 text-muted-foreground"
+                    iconClassName="size-3.5"
+                  />
+                  <span className="min-w-0 flex-1 truncate text-[13px] leading-4 text-muted-foreground">
+                    {repo.displayName}
+                  </span>
+                  <span
+                    className="shrink-0 text-[10px] leading-none tabular-nums text-muted-foreground"
                     aria-label={t(
-                      'auto.components.sidebar.hiddenProjects.restoreAriaLabel',
-                      'Restore {{name}}',
+                      'auto.components.sidebar.hiddenProjects.idleAgeLabel',
+                      'Idle {{count}} days',
                       {
-                        name: repo.displayName
+                        count: idleDays
                       }
                     )}
-                    onClick={() => void restore(repo, key)}
                   >
-                    {t('auto.components.sidebar.hiddenProjects.restore', 'Restore')}
-                  </Button>
-                </span>
-              </li>
-            )
-          })}
-        </ul>
+                    {t('auto.components.sidebar.hiddenProjects.idleAge', '{{count}}d', {
+                      count: idleDays
+                    })}
+                  </span>
+                  {/* Revealed on row hover; focus-within keeps it visible for keyboard users. */}
+                  <span className="flex shrink-0 can-hover:opacity-0 can-hover:group-hover/hidden-project:opacity-100 focus-within:opacity-100">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="xs"
+                      disabled={pendingKeys.has(key)}
+                      aria-label={t(
+                        'auto.components.sidebar.hiddenProjects.restoreAriaLabel',
+                        'Restore {{name}}',
+                        {
+                          name: repo.displayName
+                        }
+                      )}
+                      onClick={() => void restore(repo, key)}
+                    >
+                      {t('auto.components.sidebar.hiddenProjects.restore', 'Restore')}
+                    </Button>
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
+        </>
       ) : null}
     </div>
   )

@@ -47,12 +47,17 @@ export type WorktreeAttentionSource = {
 // Smart sort's class 1 is the sidebar's own "needs you" (active-only-summary-selector.ts).
 const NEEDS_YOU_ATTENTION_CLASS = 1
 
+/** Reads a worktree or a folder: key; folders carry no lastActivityAt. */
+export type WorkspaceNeedsYouReader = (
+  workspace: Pick<Worktree, 'id'> & Partial<Pick<Worktree, 'lastActivityAt'>>
+) => boolean
+
 export function createWorktreeNeedsYouReader(
   projection: WorktreeAttentionSource,
   now: number
-): (worktree: Worktree) => boolean {
-  return (worktree) =>
-    projection.attention(worktree.id, worktree.lastActivityAt, now).cls ===
+): WorkspaceNeedsYouReader {
+  return (workspace) =>
+    projection.attention(workspace.id, workspace.lastActivityAt, now).cls ===
     NEEDS_YOU_ATTENTION_CLASS
 }
 

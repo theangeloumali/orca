@@ -7383,7 +7383,8 @@
           "live": "稼働中",
           "needsYou": "対応待ち",
           "thisMachine": "このマシン",
-          "label": "クイックフィルター"
+          "label": "クイックフィルター",
+          "emptyClient": "プロジェクトはまだありません"
         },
         "hiddenProjects": {
           "archiveOnMachineTitle": "アーカイブ · {{machine}} · {{count}}",

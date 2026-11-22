@@ -7546,7 +7546,8 @@
           "live": "Etkin",
           "needsYou": "Sizi bekliyor",
           "thisMachine": "Bu makine",
-          "label": "Hızlı filtreler"
+          "label": "Hızlı filtreler",
+          "emptyClient": "Henüz proje yok"
         },
         "hiddenProjects": {
           "archiveOnMachineTitle": "Arşiv · {{machine}} · {{count}}",

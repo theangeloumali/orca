@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { makeRepo, makeWorktree } from '../../../worktree-jump/worktree-jump-palette-test-fixtures'
 import type { Repo } from '../../../../../../shared/repository/repo-types'
+import type { ProjectGroupingModel } from '../../../../../../shared/sidebar-list/sections/project-section-grouping'
 import { NO_HIDDEN_PROJECTS } from '../../../../../../shared/project/catalog/hidden-projects'
 import { computeVisibleWorktreeIds, type VisibleWorktreeOptions } from './compute-visible-worktrees'
 import { createWorktreeNeedsYouReader } from './desktop-workspace-row-facts'
@@ -51,6 +52,39 @@ describe('sidebar find', () => {
 
   it('matches the project name', () => {
     expect(visible({ findQuery: 'billing' })).toEqual(['wt-invoices'])
+  })
+
+  it('matches the project header label the sidebar shows', () => {
+    const projectGrouping: ProjectGroupingModel = {
+      projects: [
+        {
+          id: 'project-1',
+          displayName: 'Storefront',
+          badgeColor: '',
+          sourceRepoIds: [repo.id],
+          createdAt: 0,
+          updatedAt: 0
+        }
+      ],
+      projectHostSetups: [
+        {
+          id: 'setup-1',
+          projectId: 'project-1',
+          hostId: 'local',
+          repoId: repo.id,
+          path: repo.path,
+          displayName: repo.displayName,
+          setupState: 'ready',
+          setupMethod: 'legacy-repo',
+          createdAt: 0,
+          updatedAt: 0
+        }
+      ]
+    }
+    expect(visible({ findQuery: 'storefront', projectGrouping })).toEqual([
+      'wt-login',
+      'wt-checkout'
+    ])
   })
 
   it('lists everything for a blank query', () => {

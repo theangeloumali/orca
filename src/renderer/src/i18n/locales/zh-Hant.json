@@ -7286,7 +7286,8 @@
           "live": "執行中",
           "needsYou": "需要你",
           "thisMachine": "本機",
-          "label": "快速篩選"
+          "label": "快速篩選",
+          "emptyClient": "尚無專案"
         },
         "hiddenProjects": {
           "archiveOnMachineTitle": "封存 · {{machine}} · {{count}}",

@@ -8,7 +8,10 @@ import {
 } from '../../../../../shared/worktree/visibility/workspace-kinds'
 import { revealRepoInProjectFilter } from '@/components/sidebar/worktree-list/controls/project-filter-reveal'
 import { getIndexedRepoMap } from '@/store/repos/repository-catalog-index'
-import { buildVisibleWorktreeOptionsFromState } from '@/components/sidebar/worktree-list/listing/visible-worktree-options-from-state'
+import {
+  buildVisibleWorktreeOptionsFromState,
+  clearSidebarFindHidingWorktree
+} from '@/components/sidebar/worktree-list/listing/visible-worktree-options-from-state'
 
 /** Hiding is no filter: opening such a workspace leaves the sidebar's filters and the project hidden. */
 export function isWorktreeInHiddenProject(wt: Pick<Worktree, 'repoId' | 'hostId'>): boolean {
@@ -38,4 +41,5 @@ export function liftSidebarFiltersHidingWorktree(wt: Worktree): void {
   if (state.hideDetachedHeadWorkspaces && isDetachedHeadWorkspace(wt)) {
     state.setHideDetachedHeadWorkspaces(false)
   }
+  clearSidebarFindHidingWorktree(state, wt)
 }

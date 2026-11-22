@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, type JSX } from 'react'
+import { createPortal } from 'react-dom'
 import { Search } from 'lucide-react'
 import { useShallow } from 'zustand/react/shallow'
 import { useAppStore } from '@/store/index'
@@ -12,9 +13,37 @@ import { SidebarFindField } from './SidebarFindField'
 import { SidebarQuickFilterChips } from './SidebarQuickFilterChips'
 import { useSidebarFindShortcut } from './use-sidebar-find-shortcut'
 
-/** Chips and find under the Projects header; a lone machine with nothing filtered keeps the header bare. */
-export function SidebarQuickFilterBar(): JSX.Element | null {
+function FindButton({ onClick, className }: { onClick: () => void; className?: string }) {
   const t = useTranslate()
+  const findLabel = t('auto.components.sidebar.quickFilters.find', 'Find in sidebar')
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          type="button"
+          variant="muted-field-icon"
+          size="icon-xs"
+          className={className}
+          aria-label={findLabel}
+          onClick={onClick}
+        >
+          <Search className="size-3" aria-hidden="true" />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom" sideOffset={6}>
+        {findLabel}
+      </TooltipContent>
+    </Tooltip>
+  )
+}
+
+/** Chips and find under the Projects header; a lone machine with nothing filtered keeps only the header's find button. */
+export function SidebarQuickFilterBar({
+  findButtonTarget
+}: {
+  /** Header slot for the find button while the chip row is hidden, so a mouse can still reach find. */
+  findButtonTarget?: HTMLElement | null
+}): JSX.Element | null {
   const machineCount = useAppStore((s) => countRepoMachines(s.repos))
   const filterState = useAppStore(useShallow(selectSidebarFilterState))
   const query = useAppStore((s) => s.sidebarFindQuery)
@@ -35,34 +64,17 @@ export function SidebarQuickFilterBar(): JSX.Element | null {
 
   const showChips = machineCount >= 2 || sidebarHasActiveFilters(filterState)
   if (!showChips && !findOpen) {
-    return null
+    return findButtonTarget
+      ? createPortal(<FindButton onClick={openFind} />, findButtonTarget)
+      : null
   }
-  const findLabel = t('auto.components.sidebar.quickFilters.find', 'Find in sidebar')
   return (
     <div className="flex flex-col gap-1 px-2 pb-1" data-sidebar-quick-filters="">
       {showChips ? (
         <div className="flex min-w-0 flex-wrap items-center gap-1">
           <SidebarQuickFilterChips />
           <SidebarClientFilterMenu />
-          {findOpen ? null : (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant="muted-field-icon"
-                  size="icon-xs"
-                  className="ml-auto"
-                  aria-label={findLabel}
-                  onClick={openFind}
-                >
-                  <Search className="size-3" aria-hidden="true" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" sideOffset={6}>
-                {findLabel}
-              </TooltipContent>
-            </Tooltip>
-          )}
+          {findOpen ? null : <FindButton onClick={openFind} className="ml-auto" />}
         </div>
       ) : null}
       {findOpen ? (

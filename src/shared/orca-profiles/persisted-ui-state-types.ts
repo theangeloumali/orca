@@ -221,6 +221,8 @@ export type PersistedUIState = {
   statusBarCompactChangeNoticeDismissed?: boolean
   /** User dismissed the Alpha notice at the top of Settings > Plugins. */
   pluginsAlphaNoticeDismissed?: boolean
+  /** Idle projects the user waved off; the hint returns only when the idle set differs. */
+  dismissedIdleProjectsKey?: string | null
   /** User-hidden empty-state usage CTA; permanently hides the "Connect AI accounts" prompt even if providers are later disconnected. */
   usageEmptyStateDismissed?: boolean
   /** One-shot toast announcing per-terminal Codex servers; set when shown, so absent means not yet seen. */

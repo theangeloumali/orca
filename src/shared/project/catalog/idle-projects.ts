@@ -1,5 +1,3 @@
-import { getWorkspaceLastActiveAt } from '../../workspace-cleanup/workspace-last-active'
-
 /** Projects untouched this long are offered for Archive; never archived automatically. */
 export const IDLE_PROJECT_THRESHOLD_DAYS = 30
 
@@ -10,19 +8,16 @@ export type ProjectWorkspaceActivity = {
   lastVisitedAt: number | undefined
 }
 
-/** The newest workspace activity; a project with no workspaces counts from when it was added. */
+/** Newest of addedAt, activity and visits: an unused workspace (activity 0) must not age a new project. */
 export function getProjectLastActiveAt(
   addedAt: number,
   workspaces: readonly ProjectWorkspaceActivity[]
 ): number {
-  if (workspaces.length === 0) {
-    return addedAt
+  let newest = addedAt
+  for (const workspace of workspaces) {
+    newest = Math.max(newest, workspace.lastActivityAt, workspace.lastVisitedAt ?? 0)
   }
-  return Math.max(
-    ...workspaces.map((workspace) =>
-      getWorkspaceLastActiveAt(workspace.lastActivityAt, workspace.lastVisitedAt)
-    )
-  )
+  return newest
 }
 
 export function getIdleDays(lastActiveAt: number, now: number): number {

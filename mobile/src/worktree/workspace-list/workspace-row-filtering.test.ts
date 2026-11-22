@@ -57,3 +57,14 @@ describe('filterWorktrees under Active only', () => {
     expect(shown.map((w) => w.worktreeId)).toEqual(['wt-running'])
   })
 })
+
+describe('filterWorktrees find', () => {
+  it('matches the branch name without its refs/heads/ prefix, like desktop', () => {
+    const branchRow = row('wt-1', { branch: 'refs/heads/feature/login' })
+    const shown = filterWorktrees([branchRow], NO_WORKSPACE_ROW_FILTERS, 'heads')
+    expect(shown).toEqual([])
+    expect(filterWorktrees([branchRow], NO_WORKSPACE_ROW_FILTERS, 'feature/login')).toEqual([
+      branchRow
+    ])
+  })
+})

@@ -42,6 +42,7 @@ import {
   worktreeHasRunningTerminal
 } from './desktop-workspace-row-facts'
 import { selectFolderWorkspaces } from '@/store/workspaces/catalog/workspace-record-fields'
+import { clearSidebarFindHidingWorktree } from './visible-worktree-options-from-state'
 
 export type SidebarWorktreeFilters = ReturnType<typeof useSidebarWorktreeFilters>
 
@@ -152,6 +153,7 @@ export function useSidebarWorktreeFilters() {
     for (const key of activeWorkspaceRowFilterKeys(sidebarWorkspaceRowFilters(state))) {
       REVEAL_WORKSPACE[key](context)
     }
+    clearSidebarFindHidingWorktree(state, worktree)
   }, [])
 
   const clearFilters = useCallback(
