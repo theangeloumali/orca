@@ -10,6 +10,11 @@ import type { PaletteResultQualityClass } from '../../../../shared/palette-match
 import type { ProjectGroup } from '../../../../shared/project/groups/project-group-types'
 import type { Project, ProjectHostSetup } from '../../../../shared/project/project-types'
 import type { Repo } from '../../../../shared/repository/repo-types'
+import {
+  getRepoExecutionHostId,
+  type ExecutionHostId
+} from '../../../../shared/execution-host/execution-host'
+import { getProjectGroupExecutionHostIdForRows } from '../../../../shared/sidebar-list/hosts/host-filtering'
 import { translate } from '@/i18n/i18n'
 import type { Translate } from '@/i18n/use-translate'
 import { getProjectGroupHeaderKey } from '../../../../shared/sidebar-list/sections/group-keys'
@@ -23,6 +28,7 @@ export type CmdJProjectGroupResult = {
   title: string
   description: string
   rowKey: string
+  hostId: ExecutionHostId
   order: number
   keywords: string[]
 }
@@ -39,6 +45,11 @@ export type CmdJProjectResult = {
 }
 
 export type CmdJProjectSearchResult = CmdJProjectGroupResult | CmdJProjectResult
+
+/** The machine a project or group row lives on, for its device chip. */
+export function getProjectTargetHostId(result: CmdJProjectSearchResult): ExecutionHostId {
+  return result.kind === 'project' ? getRepoExecutionHostId(result.repo) : result.hostId
+}
 
 /** Ranked row plus the cross-section class that decides which palette section leads. */
 export type CmdJRankedProjectSearchResult = CmdJProjectSearchResult & {
@@ -66,6 +77,8 @@ type CmdJProjectSearchInput = {
   projectHostSetups: readonly ProjectHostSetup[]
   /** Machine sections list each machine's copy as its own row, so results must too. */
   showMachineSections: boolean
+  /** Host for groups that carry no host stamp of their own. */
+  defaultHostId: ExecutionHostId
   renderableRepoIds?: ReadonlySet<string>
 }
 
@@ -79,6 +92,7 @@ function buildCmdJProjectSearchCandidates(
     projects,
     projectHostSetups,
     showMachineSections,
+    defaultHostId,
     renderableRepoIds
   }: CmdJProjectSearchInput,
   t: Translate = translate
@@ -97,6 +111,7 @@ function buildCmdJProjectSearchCandidates(
       title: group.name,
       description: t('auto.components.cmd.j.palette.project.results.repoGroup', 'Repo group'),
       rowKey: getProjectGroupHeaderKey(group.id),
+      hostId: getProjectGroupExecutionHostIdForRows(group, defaultHostId),
       order,
       keywords: uniqueNormalizedCmdJPaletteKeywords([group.name, ...PROJECT_GROUP_ALIASES])
     })

@@ -1,5 +1,5 @@
 import {
-  LOCAL_EXECUTION_HOST_ID,
+  isLocalExecutionHost,
   type ExecutionHostId
 } from '../../../../shared/execution-host/execution-host'
 import type { SidebarHostOption } from '../sidebar/worktree-list/controls/sidebar-host-options'
@@ -10,24 +10,23 @@ export type PaletteHostBadge = {
   label: string
 }
 
-// Show unfiltered host labels only with a reachable remote; sidebar headers also list disconnected hosts for connection.
-function hasActiveRemoteHost(hostOptions: readonly SidebarHostOption[]): boolean {
-  return hostOptions.some(
-    (host) => host.id !== LOCAL_EXECUTION_HOST_ID && host.health === 'available'
-  )
+export type PaletteHostBadgeContext = {
+  hostOptions: readonly SidebarHostOption[]
+  // Filtered rows need their host label to explain inclusion, this computer's included.
+  hostFilterActive: boolean
+  machineCount: number
 }
 
+// Same rule as the sidebar's device chip: only another machine's rows, and only once 2+ machines exist.
 export function getPaletteHostBadge(
   hostId: ExecutionHostId | null | undefined,
-  hostOptions: readonly SidebarHostOption[],
-  // Filtered rows need their host label to explain inclusion even while every remote is disconnected.
-  alwaysShowHostLabel = false
+  { hostOptions, hostFilterActive, machineCount }: PaletteHostBadgeContext
 ): PaletteHostBadge | null {
-  if (!alwaysShowHostLabel && !hasActiveRemoteHost(hostOptions)) {
-    return null
-  }
   const host = hostOptions.find((option) => option.id === hostId)
   if (!host) {
+    return null
+  }
+  if (!hostFilterActive && (isLocalExecutionHost(host.id) || machineCount < 2)) {
     return null
   }
   return { hostId: host.id, label: translateHostDisplayLabel(host) }

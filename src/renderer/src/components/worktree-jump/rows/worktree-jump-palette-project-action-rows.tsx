@@ -3,6 +3,7 @@ import { FolderTree } from 'lucide-react'
 import { CommandItem } from '@/components/ui/command'
 import { RepoBadgeMark } from '@/components/repo/RepoBadgeLabel'
 import { getPaletteHostBadge } from '@/components/cmd-j/palette-host-badge'
+import { getProjectTargetHostId } from '@/components/cmd-j/palette-project-results'
 import { useTranslate } from '@/i18n/use-translate'
 import type {
   ProjectTargetPaletteItem,
@@ -11,7 +12,6 @@ import type {
 } from '../worktree-jump-palette-model'
 import type { WorktreeJumpPaletteController } from '../use-worktree-jump-palette-controller'
 import { PaletteHostBadgeChip } from './worktree-jump-palette-row-content'
-import { getRepoExecutionHostId } from '../../../../../shared/execution-host/execution-host'
 import { BROWSER_NAVIGATION_ACTION_ID } from '../../cmd-j/browser-navigation-action'
 
 export function WorktreeJumpPaletteProjectRow({
@@ -26,13 +26,7 @@ export function WorktreeJumpPaletteProjectRow({
   const t = useTranslate()
   const result = entry.result
   const isProject = result.kind === 'project'
-  const hostBadge = isProject
-    ? getPaletteHostBadge(
-        getRepoExecutionHostId(result.repo),
-        controller.hostOptions,
-        controller.hostFilterActive
-      )
-    : null
+  const hostBadge = getPaletteHostBadge(getProjectTargetHostId(result), controller.hostBadgeContext)
   const badgeLabel = isProject
     ? t('auto.components.WorktreeJumpPalette.projectBadge', 'Project')
     : t('auto.components.WorktreeJumpPalette.repoGroupBadge', 'Repo group')
@@ -58,15 +52,15 @@ export function WorktreeJumpPaletteProjectRow({
               </span>
             </div>
           </div>
-          {isProject ? (
-            <div className="flex shrink-0 items-center gap-1.5">
-              <PaletteHostBadgeChip badge={hostBadge} />
+          <div className="flex shrink-0 items-center gap-1.5">
+            <PaletteHostBadgeChip badge={hostBadge} />
+            {isProject ? (
               <span className="inline-flex max-w-[180px] items-center gap-1.5 rounded-md border border-border bg-muted px-2 py-1 text-[11px] font-semibold leading-none text-foreground">
                 <RepoBadgeMark color={result.repo.badgeColor} />
                 <span className="truncate">{result.repo.displayName}</span>
               </span>
-            </div>
-          ) : null}
+            ) : null}
+          </div>
         </div>
       </div>
     </CommandItem>

@@ -42,7 +42,6 @@ export function useWorktreeJumpPaletteProjectTargets({
   hasQuery,
   deferredQuery,
   filterPredicate,
-  groupHostIdByGroupId,
   defaultHostId
 }: WorktreeJumpPaletteProjectTargetsInput) {
   const settingsResults = useMemo(
@@ -99,9 +98,11 @@ export function useWorktreeJumpPaletteProjectTargets({
         projects,
         projectHostSetups,
         showMachineSections,
+        defaultHostId,
         renderableRepoIds: renderableProjectRepoIds
       }),
     [
+      defaultHostId,
       projectGroups,
       projectHostSetups,
       projects,
@@ -120,6 +121,7 @@ export function useWorktreeJumpPaletteProjectTargets({
             projects,
             projectHostSetups,
             showMachineSections,
+            defaultHostId,
             renderableRepoIds: renderableProjectRepoIds
           })
             .filter((result) => {
@@ -128,10 +130,7 @@ export function useWorktreeJumpPaletteProjectTargets({
               }
               return result.kind === 'project'
                 ? filterPredicate.matchesProjectRowKey(result.rowKey)
-                : filterPredicate.matchesGroupHostId(
-                    groupHostIdByGroupId.get(result.id.slice('project-group:'.length)) ??
-                      defaultHostId
-                  )
+                : filterPredicate.matchesGroupHostId(result.hostId)
             })
             .map((result) => ({ id: result.id, type: 'project-target' as const, result }))
         : [],
@@ -139,7 +138,6 @@ export function useWorktreeJumpPaletteProjectTargets({
       deferredQuery,
       defaultHostId,
       filterPredicate,
-      groupHostIdByGroupId,
       hasQuery,
       projectGroups,
       projectHostSetups,

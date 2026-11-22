@@ -38,8 +38,7 @@ export function WorktreeJumpPaletteSimulatorRow({
   const simulatorRepoName = simulatorRepo?.displayName ?? result.repoName
   const simulatorHostBadge = getPaletteHostBadge(
     result.executionHostId ?? (simulatorRepo && getRepoExecutionHostId(simulatorRepo)),
-    controller.hostOptions,
-    controller.hostFilterActive
+    controller.hostBadgeContext
   )
   const simulatorSessionAge = formatPaletteSessionAge(
     result.lastActiveAt ?? null,
@@ -129,8 +128,7 @@ export function WorktreeJumpPaletteBrowserRow({
   const browserRepoName = browserRepo?.displayName ?? result.repoName
   const browserHostBadge = getPaletteHostBadge(
     result.executionHostId ?? (browserRepo && getRepoExecutionHostId(browserRepo)),
-    controller.hostOptions,
-    controller.hostFilterActive
+    controller.hostBadgeContext
   )
   const browserSessionAge = formatPaletteSessionAge(
     result.lastActiveAt ?? null,

@@ -40,8 +40,7 @@ export function WorktreeJumpPaletteWorkspaceTabRow({
   const workspaceTabRepoName = workspaceTabRepo?.displayName ?? result.repoName
   const workspaceTabHostBadge = getPaletteHostBadge(
     result.executionHostId ?? (workspaceTabRepo && getRepoExecutionHostId(workspaceTabRepo)),
-    controller.hostOptions,
-    controller.hostFilterActive
+    controller.hostBadgeContext
   )
   const recentRow = controller.recentTabRowByItem.get(entry) ?? null
   const fallback = result.occupantAgent ? (
