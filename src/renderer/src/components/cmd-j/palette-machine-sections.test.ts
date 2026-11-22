@@ -1,10 +1,28 @@
 import { describe, expect, it } from 'vitest'
 import { getProjectHostSetupProjectionFromState } from '@/store/projects/project-host-setup-selector'
 import type { Repo } from '../../../../shared/repository/repo-types'
-import { makeProjectGroup } from '../../../../shared/folder-workspaces/folder-workspace-host-routing.test-fixture'
 import { buildPaletteFilterModel } from './palette-filter-options'
 import { getPaletteHostBadge } from './palette-host-badge'
 import { getProjectTargetHostId, searchCmdJProjectResults } from './palette-project-results'
+import type { ProjectGroup } from '../../../../shared/project/groups/project-group-types'
+
+// Local builder: the shared fixture was removed upstream.
+function makeProjectGroup(overrides: Partial<ProjectGroup>): ProjectGroup {
+  return {
+    id: 'group-mixed',
+    name: 'group',
+    parentPath: null,
+    parentGroupId: null,
+    createdFrom: 'manual',
+    tabOrder: 0,
+    isCollapsed: false,
+    color: null,
+    createdAt: 1,
+    updatedAt: 1,
+    connectionId: null,
+    ...overrides
+  }
+}
 
 const remote = {
   canonicalKey: 'github.com/acme/picklebook',

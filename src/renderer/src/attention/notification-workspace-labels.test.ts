@@ -5,11 +5,29 @@ import {
   repo,
   worktree
 } from '@/components/sidebar/worktree-list/grouping/worktree-list-groups-test-fixtures'
-import { makeProjectGroup } from '../../../shared/folder-workspaces/folder-workspace-host-routing.test-fixture'
 import { getDefaultSettings } from '../../../shared/orca-profiles/constants'
 import type { ExecutionHostId } from '../../../shared/execution-host/execution-host'
 import { folderWorkspaceKey } from '../../../shared/workspace/identity/workspace-scope'
 import { getNotificationWorkspaceLabels } from './notification-workspace-labels'
+import type { ProjectGroup } from '../../../shared/project/groups/project-group-types'
+
+// Local builder: the shared fixture was removed upstream.
+function makeProjectGroup(overrides: Partial<ProjectGroup>): ProjectGroup {
+  return {
+    id: 'group-mixed',
+    name: 'group',
+    parentPath: null,
+    parentGroupId: null,
+    createdFrom: 'manual',
+    tabOrder: 0,
+    isCollapsed: false,
+    color: null,
+    createdAt: 1,
+    updatedAt: 1,
+    connectionId: null,
+    ...overrides
+  }
+}
 
 const M1: ExecutionHostId = 'runtime:env-b'
 const settings = {
