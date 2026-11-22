@@ -4,7 +4,8 @@ import {
 } from '../drag/root-project-header-drop'
 import React from 'react'
 import { ChevronDown } from 'lucide-react'
-import { ProjectHeaderHostLabel, ProjectHeaderHostTooltip } from './ProjectHeaderHostLabel'
+import { ProjectHeaderHostLabel } from './ProjectHeaderHostLabel'
+import { SelectableProjectHeader } from './project-header-selection'
 import type { VirtualItem } from '@tanstack/react-virtual'
 import { cn } from '@/lib/class-names'
 import { RepoIconGlyph } from '@/components/repo/repo-icon'
@@ -195,7 +196,7 @@ export function renderWorktreeSectionHeaderRow(
       )}
       style={isActiveStickyHeader ? undefined : { transform: getVirtualRowTransform(vItem.start) }}
     >
-      <ProjectHeaderHostTooltip label={label} context={hostContext}>
+      <SelectableProjectHeader row={row} label={label} context={hostContext}>
         <div
           id={getWorktreeOptionId(row.key)}
           role="button"
@@ -406,7 +407,7 @@ export function renderWorktreeSectionHeaderRow(
             ) : null}
           </ProjectHeaderActions>
         </div>
-      </ProjectHeaderHostTooltip>
+      </SelectableProjectHeader>
     </div>
   )
 }
