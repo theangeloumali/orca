@@ -1,0 +1,108 @@
+import { describe, expect, it, vi } from 'vitest'
+import {
+  applyAllChip,
+  clientGroupRepoIds,
+  countRepoMachines,
+  findActiveClientGroupId,
+  isThisMachineChipOn,
+  toggleThisMachineChip,
+  type QuickFilterChipState,
+  type QuickFilterChipSetters
+} from './sidebar-quick-filter-chips'
+
+function spySetters(): QuickFilterChipSetters {
+  return {
+    setShowOnlyRunningTerminals: vi.fn(),
+    setShowOnlyNeedsYou: vi.fn(),
+    setVisibleWorkspaceHostIds: vi.fn(),
+    setHostIdsBeforeThisMachineChip: vi.fn(),
+    setFilterRepoIds: vi.fn()
+  }
+}
+
+const idle: QuickFilterChipState = {
+  showOnlyRunningTerminals: false,
+  showOnlyNeedsYou: false,
+  visibleWorkspaceHostIds: null,
+  hostIdsBeforeThisMachineChip: null,
+  filterRepoIds: []
+}
+
+const groups = [
+  { id: 'acme', parentGroupId: null },
+  { id: 'acme-web', parentGroupId: 'acme' },
+  { id: 'globex', parentGroupId: null }
+]
+const repos = [
+  { id: 'r-api', projectGroupId: 'acme' },
+  { id: 'r-site', projectGroupId: 'acme-web' },
+  { id: 'r-billing', projectGroupId: 'globex' },
+  { id: 'r-loose', projectGroupId: null }
+]
+
+describe('This machine chip', () => {
+  it('narrows to the local machine and remembers the previous list', () => {
+    const store = spySetters()
+    toggleThisMachineChip({ ...idle, visibleWorkspaceHostIds: ['ssh:box'] }, store)
+    expect(store.setHostIdsBeforeThisMachineChip).toHaveBeenCalledWith(['ssh:box'])
+    expect(store.setVisibleWorkspaceHostIds).toHaveBeenCalledWith(['local'])
+  })
+
+  it('restores the previous host list when turned off', () => {
+    const store = spySetters()
+    const on = {
+      ...idle,
+      visibleWorkspaceHostIds: ['local' as const],
+      hostIdsBeforeThisMachineChip: ['ssh:box' as const]
+    }
+    expect(isThisMachineChipOn(on.visibleWorkspaceHostIds)).toBe(true)
+    toggleThisMachineChip(on, store)
+    expect(store.setVisibleWorkspaceHostIds).toHaveBeenCalledWith(['ssh:box'])
+    expect(store.setHostIdsBeforeThisMachineChip).toHaveBeenCalledWith(null)
+  })
+})
+
+describe('Client chip', () => {
+  it('maps a client to the projects in its group and subgroups', () => {
+    expect(clientGroupRepoIds('acme', groups, repos)).toEqual(['r-api', 'r-site'])
+  })
+
+  it('names the client whose projects are the current project filter', () => {
+    expect(findActiveClientGroupId(['r-site', 'r-api'], groups, repos)).toBe('acme')
+    expect(findActiveClientGroupId(['r-api'], groups, repos)).toBeNull()
+    expect(findActiveClientGroupId([], groups, repos)).toBeNull()
+  })
+})
+
+describe('All chip', () => {
+  it('clears Live, Needs you, This machine and Client', () => {
+    const store = spySetters()
+    applyAllChip(
+      {
+        showOnlyRunningTerminals: true,
+        showOnlyNeedsYou: true,
+        visibleWorkspaceHostIds: ['local'],
+        hostIdsBeforeThisMachineChip: null,
+        filterRepoIds: ['r-api']
+      },
+      store
+    )
+    expect(store.setShowOnlyRunningTerminals).toHaveBeenCalledWith(false)
+    expect(store.setShowOnlyNeedsYou).toHaveBeenCalledWith(false)
+    expect(store.setVisibleWorkspaceHostIds).toHaveBeenCalledWith(null)
+    expect(store.setFilterRepoIds).toHaveBeenCalledWith([])
+  })
+
+  it('writes nothing while no chip filter is on', () => {
+    const store = spySetters()
+    applyAllChip(idle, store)
+    expect(Object.values(store).every((spy) => vi.mocked(spy).mock.calls.length === 0)).toBe(true)
+  })
+})
+
+describe('chip row visibility', () => {
+  it('counts the distinct machines the projects live on', () => {
+    expect(countRepoMachines([{ connectionId: null }, { connectionId: null }])).toBe(1)
+    expect(countRepoMachines([{ connectionId: null }, { executionHostId: 'runtime:mini' }])).toBe(2)
+  })
+})

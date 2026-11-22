@@ -14,6 +14,8 @@ export type WorkspaceRowFilters = WorkspaceKindSwitches & {
   hideWorkspacesFromOtherDevices: boolean
   /** "Active only": keep just the workspaces with a live terminal. Absent means off. */
   showOnlyRunningTerminals?: boolean
+  /** "Needs you": keep just the workspaces whose agent waits on you. Absent means off. */
+  showOnlyNeedsYou?: boolean
   filterRepoIds: readonly string[]
   /** The hosts shown; null shows every host. */
   visibleHostIds: readonly ExecutionHostId[] | null
@@ -29,6 +31,7 @@ export const WORKSPACE_ROW_FILTER_UI_FIELDS = {
   hideDetachedHeadWorkspaces: 'hideDetachedHeadWorkspaces',
   hideWorkspacesFromOtherDevices: 'hideWorkspacesFromOtherDevices',
   showOnlyRunningTerminals: 'showOnlyRunningTerminals',
+  showOnlyNeedsYou: 'showOnlyNeedsYou',
   filterRepoIds: 'filterRepoIds',
   visibleHostIds: 'visibleWorkspaceHostIds'
 } as const satisfies { [Key in keyof WorkspaceRowFilters]: keyof PersistedUIState }
@@ -48,6 +51,7 @@ export const NO_WORKSPACE_ROW_FILTERS: WorkspaceRowFilters = {
   hideDetachedHeadWorkspaces: false,
   hideWorkspacesFromOtherDevices: false,
   showOnlyRunningTerminals: false,
+  showOnlyNeedsYou: false,
   filterRepoIds: [],
   visibleHostIds: null
 }
@@ -73,6 +77,8 @@ export type WorkspaceRowFactReader<Row> = {
   isSleeping: (row: Row) => boolean
   /** Desktop reads local live PTYs; the feed and phone read the host's count, lost contact included. */
   hasRunningTerminal: (row: Row) => boolean
+  /** Desktop reads the agent attention class; a reader without it (phone, feed, older host) keeps the row. */
+  needsYou?: (row: Row) => boolean
 }
 
 /** Exempt the main checkout from sleeping sweeps, including detached/offline mains that may be a project’s only entry point (#8873). */
@@ -120,6 +126,9 @@ function buildWorkspaceRowPredicate<Row>(
     }
     if (read.isFolderWorkspace(row)) {
       return true
+    }
+    if (filters.showOnlyNeedsYou && read.needsYou && !read.needsYou(row)) {
+      return false
     }
     if (isHiddenByKindSwitch(filters, (kind) => KIND_READERS[kind](read, row))) {
       return false
@@ -210,8 +219,8 @@ function comparableFilterValue(
   if (key === 'alwaysShowDefaultBranchWorkspace') {
     return filters.alwaysShowDefaultBranchWorkspace !== false
   }
-  return key === 'showOnlyRunningTerminals'
-    ? filters.showOnlyRunningTerminals === true
+  return key === 'showOnlyRunningTerminals' || key === 'showOnlyNeedsYou'
+    ? filters[key] === true
     : filters[key]
 }
 

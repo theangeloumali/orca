@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
-import { clearSidebarFilters, type SidebarFilterSetters } from './sidebar-filter-actions'
+import {
+  clearSidebarFilters,
+  selectHidesEmptyProjectGroups,
+  type SidebarFilterSetters
+} from './sidebar-filter-actions'
 
 function spySetters(): SidebarFilterSetters {
   return {
@@ -12,7 +16,8 @@ function spySetters(): SidebarFilterSetters {
     setHideWorkspacesFromOtherDevices: vi.fn(),
     setFilterRepoIds: vi.fn(),
     setVisibleWorkspaceHostIds: vi.fn(),
-    setShowOnlyRunningTerminals: vi.fn()
+    setShowOnlyRunningTerminals: vi.fn(),
+    setShowOnlyNeedsYou: vi.fn()
   }
 }
 
@@ -34,9 +39,30 @@ describe('clearSidebarFilters', () => {
     expect(store.setShowOnlyRunningTerminals).toHaveBeenCalledWith(false)
   })
 
+  it('turns Needs you off', () => {
+    const store = spySetters()
+    clearSidebarFilters({ ...unfiltered, showOnlyNeedsYou: true }, store)
+    expect(store.setShowOnlyNeedsYou).toHaveBeenCalledWith(false)
+  })
+
   it('writes nothing while Active only is already off', () => {
     const store = spySetters()
     clearSidebarFilters(unfiltered, store)
     expect(store.setShowOnlyRunningTerminals).not.toHaveBeenCalled()
+  })
+})
+
+describe('selectHidesEmptyProjectGroups', () => {
+  const quiet = { showOnlyRunningTerminals: false, showOnlyNeedsYou: false, sidebarFindQuery: '' }
+
+  it('keeps empty projects while nothing narrows to matches', () => {
+    expect(selectHidesEmptyProjectGroups(quiet)).toBe(false)
+    expect(selectHidesEmptyProjectGroups({ ...quiet, sidebarFindQuery: '  ' })).toBe(false)
+  })
+
+  it('hides empty projects under Live, Needs you or a find query', () => {
+    expect(selectHidesEmptyProjectGroups({ ...quiet, showOnlyRunningTerminals: true })).toBe(true)
+    expect(selectHidesEmptyProjectGroups({ ...quiet, showOnlyNeedsYou: true })).toBe(true)
+    expect(selectHidesEmptyProjectGroups({ ...quiet, sidebarFindQuery: 'api' })).toBe(true)
   })
 })

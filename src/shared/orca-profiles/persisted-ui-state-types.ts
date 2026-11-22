@@ -93,6 +93,8 @@ export type PersistedUIState = {
   alwaysShowDefaultBranchWorkspace?: boolean
   /** Sidebar "Active only". A new field: legacy showActiveOnly is forced off on hydration. */
   showOnlyRunningTerminals?: boolean
+  /** Sidebar "Needs you" chip: rows whose agent waits on the user. */
+  showOnlyNeedsYou?: boolean
   /** Per-worktree Explorer dotfile visibility. Missing entries inherit the default: show. */
   _explorerDisplayRootMigrated?: boolean
   explorerDisplayRootByWorktree?: Record<string, string>

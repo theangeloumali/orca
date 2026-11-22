@@ -8,5 +8,6 @@ export const ClientUiWorkspaceFilterFields = {
   hideWorkspacesFromOtherDevices: z.boolean().optional(),
   alwaysShowDefaultBranchWorkspace: z.boolean().optional(),
   showOnlyRunningTerminals: z.boolean().optional(),
+  showOnlyNeedsYou: z.boolean().optional(),
   filterRepoIds: z.array(z.string()).optional()
 }

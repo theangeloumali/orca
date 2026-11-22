@@ -12,6 +12,7 @@ import { Sparkles, Bell } from 'lucide-react'
 import { cn } from '@/lib/class-names'
 import { ActiveOnlyToggle } from '../worktree-list/controls/ActiveOnlyToggle'
 import { ActiveOnlyStatusLine } from '../worktree-list/controls/ActiveOnlyStatusLine'
+import { SidebarQuickFilterBar } from '../worktree-list/controls/SidebarQuickFilterBar'
 
 type SidebarHeaderProps = {
   activityBadgeTarget?: React.Ref<HTMLSpanElement>
@@ -181,6 +182,7 @@ const SidebarHeader = React.memo(function SidebarHeader({
         }
       />
       {showOnlyRunningTerminals && !projectsCollapsed && <ActiveOnlyStatusLine />}
+      {!projectsCollapsed && <SidebarQuickFilterBar />}
     </>
   )
 })

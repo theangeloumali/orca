@@ -150,6 +150,7 @@ export function getDefaultUIState(): PersistedUIState {
     hideWorkspacesFromOtherDevices: false,
     alwaysShowDefaultBranchWorkspace: true,
     showOnlyRunningTerminals: false,
+    showOnlyNeedsYou: false,
     _explorerDisplayRootMigrated: true,
     explorerDisplayRootByWorktree: {},
     showDotfilesByWorktree: {},

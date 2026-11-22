@@ -4,6 +4,7 @@ import { shallow } from 'zustand/shallow'
 import { persistedUIValuesEqual } from '../../../../../../shared/collections/persisted-ui-equality'
 import { useShallow } from 'zustand/react/shallow'
 import { useAppStore } from '@/store/index'
+import { selectHidesEmptyProjectGroups } from '../controls/sidebar-filter-actions'
 import { useUiLanguageRevision } from '@/i18n/use-ui-language-revision'
 import { selectSidebarLineageParentIdentities } from '@/store/slices/worktrees/metadata/cross-store-lineage-parents'
 import type { AppState } from '@/store/types'
@@ -139,7 +140,7 @@ export function useSidebarSectionRows(args: SectionRowsArgs) {
   )
   const hostLabelById = selectHostLabels(hostOptions)
   const showMachineSections = useAppStore((state) => state.showWorkspaceHostSections)
-  const hideEmptyProjectGroups = useAppStore((state) => state.showOnlyRunningTerminals)
+  const hideEmptyProjectGroups = useAppStore(selectHidesEmptyProjectGroups)
 
   const hostScopedGroups =
     showMachineSections ||

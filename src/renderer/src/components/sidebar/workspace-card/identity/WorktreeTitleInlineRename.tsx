@@ -9,6 +9,7 @@ import { cn } from '@/lib/class-names'
 import { isImeCompositionKeyDown } from '@/lib/text-input/ime/ime-composition-keyboard-event'
 import { translate } from '@/i18n/i18n'
 import { useTranslate } from '@/i18n/use-translate'
+import { FindMatchHighlight } from '@/components/sidebar/worktree-list/controls/FindMatchHighlight'
 
 export type WorktreeTitleRenameCommit = { kind: 'cancel' } | { kind: 'save'; displayName: string }
 
@@ -349,7 +350,7 @@ export function WorktreeTitleInlineRename({
           {t('auto.components.sidebar.WorktreeTitleInlineRename.2f42ae024f', 'Unread:')}
         </span>
       )}
-      {displayName}
+      <FindMatchHighlight text={displayName} />
     </span>
   )
 

@@ -42,6 +42,7 @@ import {
 } from '../../../../../shared/workspace/status/workspace-statuses'
 import { createHostWorkspaceStatusActions } from './ui-slice-host-workspace-statuses'
 import { createUiBotPreferenceActions } from './ui-slice-bot-preference-actions'
+import { createUiQuickFilterActions } from './ui-slice-quick-filter-actions'
 import { toggleCollapsedGroupSet } from './collapsed-group-toggle'
 
 /** Builds preference defaults and setters for the UI slice, leaving durable writes to the persistence layer. */
@@ -115,6 +116,9 @@ export function createUiPreferenceActions(set: UISliceSet, get: UISliceGet): Par
     setAlwaysShowDefaultBranchWorkspace: (v) => set({ alwaysShowDefaultBranchWorkspace: v }),
     showOnlyRunningTerminals: false,
     setShowOnlyRunningTerminals: (v) => set({ showOnlyRunningTerminals: v }),
+    showOnlyNeedsYou: false,
+    setShowOnlyNeedsYou: (v) => set({ showOnlyNeedsYou: v }),
+    ...createUiQuickFilterActions(set),
     ...createUiBotPreferenceActions(set, get),
 
     explorerDisplayRootByWorktree: {},

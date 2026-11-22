@@ -16,6 +16,11 @@ import {
 import type { SidebarLineageParentIdentities } from '../../../../../../shared/sidebar-list/lineage/worktree-lineage-projection'
 import { buildDesktopWorkspaceRowFactReader } from './desktop-workspace-row-facts'
 import { sidebarWorkspaceRowFilters } from '../controls/sidebar-filter-actions'
+import {
+  matchesFindQuery,
+  normalizeFindQuery
+} from '../../../../../../shared/workspace-view/workspace-find-query'
+import { branchRefLabel } from '../../../../../../shared/git/refs/branch-ref-label'
 import { getLineageAncestorIndex, getSortedWorktreeRankIndex } from './visible-worktree-indexes'
 
 // Separate store binding avoids attention-slice import cycles; shared builders retain the filter rules.
@@ -36,6 +41,10 @@ export type VisibleWorktreeOptions = {
   pairedDeviceIdsByEnvironment: ReadonlyMap<string, string>
   alwaysShowDefaultBranchWorkspace?: boolean
   showOnlyRunningTerminals: boolean
+  showOnlyNeedsYou?: boolean
+  worktreeNeedsYou?: (worktree: Worktree) => boolean
+  /** Transient sidebar find text over name, branch and project. */
+  findQuery?: string
   repoMap: Map<string, Repo>
   hiddenProjects: HiddenProjects
   workspaceHostScope: ExecutionHostScope
@@ -65,9 +74,12 @@ export function computeVisibleWorktrees(
     ? getWorktreeHostIdentity
     : (worktree: Worktree) => worktree.id
   return selectVisibleSidebarWorktrees({
-    rows: withoutBotListedWorktrees(
-      getIndexedAllWorktrees(worktreesByRepo),
-      opts.botListedWorktreeIdentities
+    rows: withFindQuery(
+      withoutBotListedWorktrees(
+        getIndexedAllWorktrees(worktreesByRepo),
+        opts.botListedWorktreeIdentities
+      ),
+      opts
     ),
     ancestorByIdentity: getLineageAncestorIndex(worktreesByRepo),
     rankOf: (worktree) => rankByKey.get(keyOf(worktree)),
@@ -80,6 +92,26 @@ export function computeVisibleWorktrees(
     preserveLineageParentOrder: opts.preserveLineageParentOrder,
     forcedVisibleWorktreeIds: opts.forcedVisibleWorktreeIds
   })
+}
+
+function withFindQuery(
+  rows: readonly Worktree[],
+  opts: Pick<VisibleWorktreeOptions, 'findQuery' | 'repoMap'>
+): readonly Worktree[] {
+  const query = normalizeFindQuery(opts.findQuery ?? '')
+  if (!query) {
+    return rows
+  }
+  return rows.filter((worktree) =>
+    matchesFindQuery(
+      [
+        worktree.displayName,
+        branchRefLabel(worktree.branch),
+        opts.repoMap.get(worktree.repoId)?.displayName ?? ''
+      ],
+      query
+    )
+  )
 }
 
 export function computeVisibleWorktreeIds(

@@ -52,6 +52,7 @@ const STATIC_TITLE_COPY = {
     translate('keybindings.title.437260810f', 'Toggle sleeping workspaces'),
   'sidebar.focusWorktreeList': () =>
     translate('keybindings.title.sidebarFocusWorktreeList', 'Focus worktree list'),
+  'sidebar.find': () => translate('keybindings.title.sidebarFind', 'Find in sidebar'),
   'floatingTerminal.toggle': () =>
     translate('keybindings.title.e67a41569d', 'Toggle floating terminal'),
   'floatingWorkspace.maximize': () =>

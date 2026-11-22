@@ -77,6 +77,14 @@ export type UISlicePreferences = {
   setAlwaysShowDefaultBranchWorkspace: (v: boolean) => void
   showOnlyRunningTerminals: boolean
   setShowOnlyRunningTerminals: (v: boolean) => void
+  showOnlyNeedsYou: boolean
+  setShowOnlyNeedsYou: (v: boolean) => void
+  /** Sidebar find text; transient, never persisted. */
+  sidebarFindQuery: string
+  setSidebarFindQuery: (query: string) => void
+  /** Host list the "This machine" chip replaced, restored when it turns off; transient. */
+  hostIdsBeforeThisMachineChip: VisibleWorkspaceHostIds
+  setHostIdsBeforeThisMachineChip: (ids: VisibleWorkspaceHostIds) => void
   explorerDisplayRootByWorktree: Record<string, string>
   showDotfilesByWorktree: Record<string, boolean>
   setExplorerDisplayRootForWorktree: (worktreeId: string, value: string) => void

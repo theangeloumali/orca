@@ -144,6 +144,7 @@ export function usePersistedUIWriter(): void {
       hideWorkspacesFromOtherDevices: s.hideWorkspacesFromOtherDevices,
       alwaysShowDefaultBranchWorkspace: s.alwaysShowDefaultBranchWorkspace,
       showOnlyRunningTerminals: s.showOnlyRunningTerminals,
+      showOnlyNeedsYou: s.showOnlyNeedsYou,
       explorerDisplayRootByWorktree: s.explorerDisplayRootByWorktree,
       showDotfilesByWorktree: s.showDotfilesByWorktree,
       notificationsMutedByWorktree: s.notificationsMutedByWorktree,
