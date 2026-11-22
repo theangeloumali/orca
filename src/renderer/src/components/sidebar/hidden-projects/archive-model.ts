@@ -1,9 +1,13 @@
 import {
   getRepoExecutionHostId,
-  getWorktreeExecutionHostId,
   LOCAL_EXECUTION_HOST_ID,
   type ExecutionHostId
 } from '../../../../../shared/execution-host/execution-host'
+import {
+  createRepoRowExecutionHostLookup,
+  resolveWorktreeExecutionHost,
+  type ExecutionHostOwnerLookup
+} from '../../../../../shared/execution-host/worktree-execution-host-resolution'
 import { isRepoHidden } from '../../../../../shared/project/catalog/hidden-projects'
 import {
   getProjectLastActiveAt,
@@ -26,15 +30,28 @@ export const IDLE_AGE_TICK_MS = 60 * 60 * 1000
 
 export type ArchiveGroup = { hostId: ExecutionHostId; repos: Repo[] }
 
-/** Last activity of this host copy: its own machine's workspaces only, so a busy twin elsewhere does not count. */
-export function getRepoLastActiveAt(repo: Repo, inputs: ProjectActivityInputs): number {
+/** Last activity of this host copy: only workspaces the ownership rule resolves to its machine, so a busy twin
+ * elsewhere (or an unstamped workspace two copies could own) does not count. */
+function getRepoLastActiveAt(
+  repo: Repo,
+  inputs: ProjectActivityInputs,
+  owners: ExecutionHostOwnerLookup<Repo>
+): number {
   const hostId = getRepoExecutionHostId(repo)
-  const workspaces = (inputs.workspacesByRepoId[repo.id] ?? [])
-    .filter((workspace) => getWorktreeExecutionHostId(workspace, repo) === hostId)
-    .map((workspace) => ({
-      lastActivityAt: workspace.lastActivityAt,
-      lastVisitedAt: getWorktreeVisitTimestamp(inputs.visits, workspace)
-    }))
+  const workspaces: Parameters<typeof getProjectLastActiveAt>[1][number][] = []
+  for (const workspace of inputs.workspacesByRepoId[repo.id] ?? []) {
+    const owner = resolveWorktreeExecutionHost(owners, {
+      repoId: repo.id,
+      hostId: workspace.hostId
+    })
+    if (owner.kind === 'resolved' && owner.hostId === hostId) {
+      workspaces.push({
+        lastActivityAt: workspace.lastActivityAt,
+        // Visits are written under the resolved host, so read them the same way.
+        lastVisitedAt: getWorktreeVisitTimestamp(inputs.visits, { id: workspace.id, hostId })
+      })
+    }
+  }
   return getProjectLastActiveAt(repo.addedAt, workspaces)
 }
 
@@ -70,10 +87,13 @@ export function groupArchivedRepos(repos: readonly Repo[]): ArchiveGroup[] {
 /** Last activity per project row, keyed by row identity: a stable, shallow-comparable store selection. */
 export function getLastActiveAtByRow(
   repos: readonly Repo[],
-  inputs: ProjectActivityInputs
+  inputs: ProjectActivityInputs,
+  allRepos: readonly Repo[] = repos
 ): Record<string, number> {
+  // Ownership needs every row: a twin left out of `repos` would make an unstamped workspace look resolved.
+  const owners = createRepoRowExecutionHostLookup(allRepos)
   return Object.fromEntries(
-    repos.map((entry) => [getRepoRowIdentity(entry), getRepoLastActiveAt(entry, inputs)])
+    repos.map((entry) => [getRepoRowIdentity(entry), getRepoLastActiveAt(entry, inputs, owners)])
   )
 }
 
@@ -95,7 +115,7 @@ export function createLastActiveAtSelector(): LastActiveAtSelector {
     const candidates = repos.filter(
       (entry) => isRepoHidden(entry) || isIdleProject(entry.addedAt, now)
     )
-    cached = { key, result: getLastActiveAtByRow(candidates, inputs) }
+    cached = { key, result: getLastActiveAtByRow(candidates, inputs, repos) }
     return cached.result
   }
 }

@@ -14,6 +14,15 @@ import { filterFolderWorkspacesForVisibleHosts } from '../hosts/host-filtering'
 import type { SidebarLineageParentIdentities } from '../lineage/worktree-lineage-projection'
 import { withoutBotListedFolderWorkspaces } from '../selection/visible-worktrees'
 
+/** The folder find rule: a folder matches on its name alone; a blank query matches everything. */
+export function folderMatchesSidebarFind(
+  folder: Pick<FolderWorkspace, 'name'>,
+  findQuery: string
+): boolean {
+  const query = normalizeFindQuery(findQuery)
+  return query === '' || matchesFindQuery([folder.name], query)
+}
+
 /** The folder workspaces a sidebar list draws after host scope, bot listing, other-device, Active only,
  *  Needs you and find. Each surface passes its own running-terminal and needs-you readers. */
 export function selectVisibleFolderWorkspaces(args: {
@@ -45,11 +54,13 @@ export function selectVisibleFolderWorkspaces(args: {
     ? filterFolderWorkspacesFromOtherDevices(hostVisible, args.pairedDeviceIdsByEnvironment)
     : hostVisible
   const parents = args.lineageParentIdentities
-  const query = normalizeFindQuery(args.findQuery ?? '')
+  const findQuery = args.findQuery ?? ''
   return filterFolderWorkspacesForListingRules(deviceVisible, args.filters, {
     hasRunningTerminal: args.hasRunningTerminal,
     needsYou: args.needsYou,
-    matchesFind: query === '' ? undefined : (folder) => matchesFindQuery([folder.name], query),
+    matchesFind: normalizeFindQuery(findQuery)
+      ? (folder) => folderMatchesSidebarFind(folder, findQuery)
+      : undefined,
     identityOf: getFolderWorkspaceHostIdentity,
     // Without folder parents nothing nests under a folder, so no listed row can keep one.
     listedRowIdentities: parents ? args.listedWorktrees.map(getWorktreeHostIdentity) : [],

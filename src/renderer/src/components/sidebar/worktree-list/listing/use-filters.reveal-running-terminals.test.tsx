@@ -62,7 +62,14 @@ it('turns Active only off to reveal a workspace with nothing running', () => {
 })
 
 it('clears a find that hides the revealed workspace, and keeps one that matches it', () => {
-  store.setState({ settings: getDefaultSettings('/home/me'), sidebarFindQuery: 'zzz' })
+  // The find reveal reads the listing, so seed the catalog it walks.
+  store.setState({
+    settings: getDefaultSettings('/home/me'),
+    sidebarFindQuery: 'zzz',
+    repos: [],
+    worktreesByRepo: {},
+    worktreeLineageById: {}
+  })
   const filters = renderFilters()
   expect(filters.hasFilters).toBe(true)
   const worktree = makeWorktree({ id: 'wt-1', repoId: 'repo-1', displayName: 'Login' })

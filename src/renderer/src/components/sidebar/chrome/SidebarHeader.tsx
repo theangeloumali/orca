@@ -89,7 +89,12 @@ const SidebarHeader = React.memo(function SidebarHeader({
         titleAccessory={
           <>
             <ActiveOnlyToggle />
-            <div ref={setFindButtonSlot} className="flex shrink-0 items-center empty:hidden" />
+            {/* Positioned so the portaled find button paints above the full-width fold button. */}
+            <div
+              ref={setFindButtonSlot}
+              className="relative flex shrink-0 items-center empty:hidden"
+              data-sidebar-header-actions=""
+            />
             <div
               ref={projectsCollapseTarget}
               className="relative flex shrink-0 items-center empty:hidden"

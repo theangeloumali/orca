@@ -140,4 +140,19 @@ describe('createActiveOnlySummarySelector', () => {
     expect(summary.shownWorkspaces).toBe(2)
     expect(summary.totalWorkspaces).toBe(4)
   })
+
+  it('counts only the folders find matches, as the list draws them', () => {
+    useAppStore.setState({
+      folderWorkspaces: [runningFolder, idleFolder],
+      sidebarFindQuery: 'fw-idle'
+    })
+    const summary = createActiveOnlySummarySelector()(useAppStore.getState(), context())
+    expect(summary.totalWorkspaces).toBe(1)
+  })
+
+  it('leaves out folders Needs you hides, as the list does', () => {
+    useAppStore.setState({ folderWorkspaces: [runningFolder, idleFolder], showOnlyNeedsYou: true })
+    const summary = createActiveOnlySummarySelector()(useAppStore.getState(), context())
+    expect(summary.totalWorkspaces).toBe(0)
+  })
 })

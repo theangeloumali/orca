@@ -76,6 +76,21 @@ describe('selectIdleListedRepos', () => {
       )
     ).toEqual([repo.connectionId])
   })
+
+  it("does not credit an unstamped workspace to either machine's copy of a shared project", () => {
+    const repos = [project('twin'), project('twin', { connectionId: 'box' })]
+    const inputs = activity({ twin: [{ id: 'twin::unknown', lastActivityAt: NOW - DAY_MS }] })
+    expect(selectIdleListedRepos(repos, getLastActiveAtByRow(repos, inputs), NOW)).toHaveLength(2)
+  })
+
+  it("reads a remote workspace's visit under its resolved machine's key", () => {
+    const repos = [project('remote', { connectionId: 'box' })]
+    const inputs: ProjectActivityInputs = {
+      workspacesByRepoId: { remote: [{ id: 'remote::a', lastActivityAt: NOW - 90 * DAY_MS }] },
+      visits: { 'ssh:box|remote::a': NOW - DAY_MS }
+    }
+    expect(selectIdleListedRepos(repos, getLastActiveAtByRow(repos, inputs), NOW)).toEqual([])
+  })
 })
 
 describe('createLastActiveAtSelector', () => {
