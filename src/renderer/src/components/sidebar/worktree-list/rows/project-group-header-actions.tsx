@@ -21,14 +21,16 @@ import { PROJECT_GROUP_PARENT_UPDATE_RUNTIME_CAPABILITY } from '../../../../../.
 import { REPO_HEADER_ACTION_BUTTON_CLASS } from './repo-header-action-button-class'
 import { SectionCollapseAllButton } from '../controls/SectionCollapseAllButton'
 import { getShortcutPlatform } from '@/lib/keyboard/shortcut-platform'
-import { useProjectGroupSubtreeCollapse } from './use-project-group-subtree-collapse'
+import {
+  countVisibleProjectGroupSubtreeProjects,
+  useProjectGroupSubtreeCollapse
+} from './use-project-group-subtree-collapse'
 import {
   useProjectGroupAgentActivityCounts,
   useProjectGroupSubtreeIds
 } from './use-project-group-agent-activity-counts'
 import { useAppStore } from '@/store/index'
 import { getProjectGroupHeaderKey } from '../../../../../../shared/sidebar-list/sections/group-keys'
-import { countProjectGroupSubtreeProjects } from '../../../../../../shared/sidebar-list/sections/project-group-tree'
 import {
   handleRepoHeaderActionPointerDown,
   stopRepoHeaderKeyboardToggle,
@@ -156,7 +158,7 @@ function FoldedGroupCounts({ groupId }: { groupId: string }): React.JSX.Element 
   const t = useTranslate()
   const subtreeGroupIds = useProjectGroupSubtreeIds(groupId)
   const projectCount = useAppStore((state) =>
-    countProjectGroupSubtreeProjects(subtreeGroupIds, state.repos)
+    countVisibleProjectGroupSubtreeProjects(state, subtreeGroupIds)
   )
   const { needsYou } = useProjectGroupAgentActivityCounts(subtreeGroupIds)
   const projectsText = t(

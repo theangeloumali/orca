@@ -113,6 +113,22 @@ describe('commitProjectHeaderNestDrop', () => {
     expect(onCommitProjectGroupOrder).toHaveBeenCalledWith(project, 'work', 10)
   })
 
+  it("lands after an SSH sibling filed in this computer's group", () => {
+    const onCommitProjectGroupOrder = vi.fn()
+    commitProjectHeaderNestDrop({
+      project: localProject,
+      groupId: 'work',
+      liveRepos: [
+        localProject,
+        { id: 'a', projectGroupId: 'work', projectGroupOrder: 4 },
+        { id: 'ssh', projectGroupId: 'work', projectGroupOrder: 30, connectionId: 'box' }
+      ],
+      orderedRepoIds: ['orca', 'a', 'ssh'],
+      onCommitProjectGroupOrder
+    })
+    expect(onCommitProjectGroupOrder).toHaveBeenCalledWith(localProject, 'work', 31)
+  })
+
   it('starts an empty group at order 0', () => {
     const onCommitProjectGroupOrder = vi.fn()
     commitProjectHeaderNestDrop({

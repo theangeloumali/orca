@@ -1,12 +1,9 @@
 import { recordCollapsedGroupChanges } from '@/store/slices/ui/collapsed-group-toggle'
 import type { ProjectGroup } from '../../../../../../shared/project/groups/project-group-types'
 import type { Repo } from '../../../../../../shared/repository/repo-types'
-import { isRepoHidden } from '../../../../../../shared/project/catalog/hidden-projects'
 import { getProjectGroupHeaderKey } from '../../../../../../shared/sidebar-list/sections/group-keys'
-import {
-  getProjectHeaderRevealTarget,
-  type ProjectGroupingModel
-} from '../../../../../../shared/sidebar-list/sections/project-section-grouping'
+import type { ProjectGroupingModel } from '../../../../../../shared/sidebar-list/sections/project-section-grouping'
+import { getProjectGroupSubtreeProjectKeys } from '../../../../../../shared/sidebar-list/sections/project-group-tree'
 import { areAllProjectsCollapsed } from './project-collapse-all'
 import { getDistinctProjectGroups } from '../../../../../../shared/project/groups/project-groups'
 
@@ -38,14 +35,11 @@ export function getProjectGroupSubtreeCollapseKeys(
   projectGrouping: ProjectGroupingModel
 ): string[] {
   const descendants = getDescendantGroupIds(groupId, projectGroups)
-  const repoMap = new Map(repos.map((repo) => [repo.id, repo]))
-  const projectKeys = new Set<string>()
-  for (const repo of repos) {
-    const memberOf = repo.projectGroupId
-    if (!isRepoHidden(repo) && memberOf && (memberOf === groupId || descendants.has(memberOf))) {
-      projectKeys.add(getProjectHeaderRevealTarget(repo.id, repoMap, projectGrouping).key)
-    }
-  }
+  const projectKeys = getProjectGroupSubtreeProjectKeys(
+    new Set([groupId, ...descendants]),
+    repos,
+    projectGrouping
+  )
   return [...[...descendants].map(getProjectGroupHeaderKey), ...projectKeys]
 }
 

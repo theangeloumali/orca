@@ -49,6 +49,30 @@ describe('collectProjectGroupWorkspaceIds', () => {
     expect(collectProjectGroupWorkspaceIds(subtree, twinSources)).toEqual(['wt-local'])
   })
 
+  it("counts an SSH project's worktrees, stamped with its host or not", () => {
+    const sshSources = {
+      repos: [
+        { id: 'r-ssh', projectGroupId: 'client', connectionId: 'box' },
+        {
+          id: 'r-nested-ssh',
+          projectGroupId: 'nested',
+          executionHostId: 'runtime:m1' as const,
+          connectionId: 'box'
+        }
+      ],
+      workspacesByRepoId: {
+        'r-ssh': [{ id: 'wt-unstamped' }, { id: 'wt-stamped', hostId: 'ssh:box' as const }],
+        'r-nested-ssh': [{ id: 'wt-runtime', hostId: 'runtime:m1' as const }]
+      },
+      folderEntries: []
+    }
+    expect(collectProjectGroupWorkspaceIds(subtree, sshSources)).toEqual([
+      'wt-unstamped',
+      'wt-stamped',
+      'wt-runtime'
+    ])
+  })
+
   it('counts needs-you from live agent status inside the subtree only', () => {
     const live = new Map([
       ['wt-nested', 'permission' as const],

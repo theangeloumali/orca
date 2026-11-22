@@ -102,8 +102,11 @@ export function commitProjectHeaderNestDrop<TProject extends NestableProject>(ar
   const rankOf = (repo: TProject): number =>
     getEffectiveProjectGroupManualRank(repo, repoOrderRankById)
   const siblings = args.liveRepos
+    // Same-catalog siblings: SSH projects share this computer's groups.
     .filter(
-      (repo) => repo.projectGroupId === args.groupId && getRepoExecutionHostId(repo) === hostId
+      (repo) =>
+        repo.projectGroupId === args.groupId &&
+        sharesProjectGroupCatalog(getRepoExecutionHostId(repo), hostId)
     )
     .sort((left, right) => rankOf(left) - rankOf(right))
   const order = getProjectGroupOrderForSidebarDrop({

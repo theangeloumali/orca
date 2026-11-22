@@ -15,6 +15,7 @@ import {
   getProjectGroupSubtreeCollapseKeys,
   toggleProjectGroupSubtreeCollapsed
 } from '../listing/project-group-subtree-collapse'
+import { getProjectGroupSubtreeProjectKeys } from '../../../../../../shared/sidebar-list/sections/project-group-tree'
 
 const EMPTY_PROJECT_GROUPS: readonly ProjectGroup[] = []
 
@@ -24,27 +25,40 @@ type SubtreeState = Pick<
 > &
   Partial<Pick<AppState, 'projectGroups' | 'projects' | 'projectHostSetups'>>
 
-/** Subtree keys limited to the hosts the sidebar shows, so a hidden host's rows never count. */
-export function getVisibleProjectGroupSubtreeKeys(state: SubtreeState, groupId: string): string[] {
+// Limited to the hosts the sidebar shows, so a hidden host's rows never count.
+function getVisibleSubtreeSources(state: SubtreeState) {
   const visibleHostIds = resolveVisibleWorkspaceHostIds(
     state.visibleWorkspaceHostIds,
     state.workspaceHostScope
   )
   const visibleHostIdSet = visibleHostIds ? new Set(visibleHostIds) : null
   // Unstamped rows belong to this computer; reading the focused host here would grow the focus-read ratchet.
-  return getProjectGroupSubtreeCollapseKeys(
-    groupId,
-    filterProjectGroupsForVisibleHosts(
+  return {
+    projectGroups: filterProjectGroupsForVisibleHosts(
       state.projectGroups ?? EMPTY_PROJECT_GROUPS,
       visibleHostIdSet,
       LOCAL_EXECUTION_HOST_ID
     ),
-    filterReposForVisibleHosts(state.repos, visibleHostIdSet, LOCAL_EXECUTION_HOST_ID),
-    getSidebarProjectGrouping(
+    repos: filterReposForVisibleHosts(state.repos, visibleHostIdSet, LOCAL_EXECUTION_HOST_ID),
+    projectGrouping: getSidebarProjectGrouping(
       getProjectHostSetupProjectionFromState(state),
       state.showWorkspaceHostSections
     )
-  )
+  }
+}
+
+export function getVisibleProjectGroupSubtreeKeys(state: SubtreeState, groupId: string): string[] {
+  const { projectGroups, repos, projectGrouping } = getVisibleSubtreeSources(state)
+  return getProjectGroupSubtreeCollapseKeys(groupId, projectGroups, repos, projectGrouping)
+}
+
+/** Project headers drawn under a group subtree, for its folded "N projects" summary. */
+export function countVisibleProjectGroupSubtreeProjects(
+  state: SubtreeState,
+  subtreeGroupIds: ReadonlySet<string>
+): number {
+  const { repos, projectGrouping } = getVisibleSubtreeSources(state)
+  return getProjectGroupSubtreeProjectKeys(subtreeGroupIds, repos, projectGrouping).size
 }
 
 // Reads the store at call time so Alt-click needs no hook; false means nothing listed to fold.

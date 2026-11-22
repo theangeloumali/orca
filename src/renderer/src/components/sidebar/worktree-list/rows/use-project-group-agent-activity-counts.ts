@@ -19,8 +19,11 @@ import {
   type HostAgentActivityCounts
 } from '../../../../../../shared/sidebar-list/hosts/host-agent-activity'
 import { getDescendantGroupIds } from '../listing/project-group-subtree-collapse'
-import { worktreeBelongsToHost } from '@/store/repos/repo-host-identity'
 import { getRepoExecutionHostId } from '../../../../../../shared/execution-host/execution-host'
+import {
+  createRepoRowExecutionHostLookup,
+  resolveWorktreeExecutionHost
+} from '../../../../../../shared/execution-host/worktree-execution-host-resolution'
 
 type ProjectGroupWorkspaceSources = {
   repos: readonly (Pick<Repo, 'id'> &
@@ -44,12 +47,17 @@ export function collectProjectGroupWorkspaceIds(
   sources: ProjectGroupWorkspaceSources
 ): string[] {
   const ids: string[] = []
+  const ownerLookup = createRepoRowExecutionHostLookup(sources.repos)
   for (const repo of sources.repos) {
     if (!isRepoHidden(repo) && repo.projectGroupId && subtreeGroupIds.has(repo.projectGroupId)) {
-      // Why per host: another machine's copy of this repo shares the id and the catalog bucket.
+      // Why per host: another machine's copy shares the id; an unstamped worktree takes its repo's host.
       const hostId = getRepoExecutionHostId(repo)
       for (const worktree of sources.workspacesByRepoId[repo.id] ?? []) {
-        if (worktreeBelongsToHost(worktree, hostId)) {
+        const owner = resolveWorktreeExecutionHost(ownerLookup, {
+          repoId: repo.id,
+          hostId: worktree.hostId
+        })
+        if (owner.kind === 'resolved' && owner.hostId === hostId) {
           ids.push(worktree.id)
         }
       }
