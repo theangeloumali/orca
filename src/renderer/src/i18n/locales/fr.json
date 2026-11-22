@@ -7402,7 +7402,10 @@
           "apply_other": "Appliquer {{count}} groupes",
           "filed_one": "{{count}} projet classé par client",
           "filed_many": "{{count}} projets classés par client",
-          "filed_other": "{{count}} projets classés par client"
+          "filed_other": "{{count}} projets classés par client",
+          "skipped_one": "{{count}} projet ignoré, car il a été groupé, masqué ou supprimé",
+          "skipped_many": "{{count}} projets ignorés, car ils ont été groupés, masqués ou supprimés",
+          "skipped_other": "{{count}} projets ignorés, car ils ont été groupés, masqués ou supprimés"
         },
         "ClientGroupingHint": {
           "dismiss": "Ignorer la suggestion de grouper par client",

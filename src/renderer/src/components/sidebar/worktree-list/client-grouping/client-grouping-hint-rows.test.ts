@@ -6,6 +6,7 @@ import type {
   HostSectionRow
 } from '../../../../../../shared/sidebar-list/hosts/host-section-rows'
 import { suggestClientGroups } from '../../../../../../shared/project/groups/client-suggestions'
+import { makeWorktree } from '../../../../store/slices/worktrees/worktree.test-fixture'
 import { estimateRenderRowSize, HOST_HEADER_ROW_HEIGHT } from '../viewport/virtual-rows'
 import {
   getClientGroupingHintRows,
@@ -20,6 +21,24 @@ function project(id: string, client = 'ZKidz', extra: Partial<Repo> = {}): Repo 
     badgeColor: '#000',
     addedAt: 0,
     ...extra
+  }
+}
+
+function header(key: string): HostSectionRow {
+  return { type: 'header', key, count: 1, icon: { kind: key === 'pinned' ? 'pinned' : 'project' } }
+}
+
+function item(sectionKey: string): HostSectionRow {
+  return {
+    type: 'item',
+    rowKey: `${sectionKey}:wt`,
+    sectionKey,
+    worktree: makeWorktree({ id: 'wt', repoId: 'orca' }),
+    repo: undefined,
+    depth: 0,
+    groupDepth: 0,
+    isLastLineageChild: false,
+    lineageChildCount: 0
   }
 }
 
@@ -71,6 +90,26 @@ describe('insertClientGroupingHintRows', () => {
     ])
     const collapsed = insertClientGroupingHintRows([hostHeader('local', true)], hints)
     expect(collapsed.map((row) => row.type)).toEqual(['host-header'])
+  })
+
+  it('puts one hint at the top of a flat list, for this computer only', () => {
+    const rows = [header('repo:orca'), item('repo:orca')]
+    const flat = insertClientGroupingHintRows(rows, hintsFor(zkidz))
+    expect(flat.map((row) => row.type)).toEqual(['client-grouping-hint', 'header', 'item'])
+    const remoteOnly = hintsFor(zkidz.map((repo) => ({ ...repo, connectionId: 'box' })))
+    expect(insertClientGroupingHintRows(rows, remoteOnly)).toBe(rows)
+  })
+
+  it('puts the flat-list hint below the Pinned section', () => {
+    const rows = [header('pinned'), item('pinned'), item('pinned'), header('repo:orca')]
+    const flat = insertClientGroupingHintRows(rows, hintsFor(zkidz))
+    expect(flat.map((row) => row.type)).toEqual([
+      'header',
+      'item',
+      'item',
+      'client-grouping-hint',
+      'header'
+    ])
   })
 
   it('gives the hint row its own height, so the rows below it start lower', () => {

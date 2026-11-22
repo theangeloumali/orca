@@ -13415,7 +13415,10 @@
           "apply_other": "Aplicar {{count}} grupos",
           "filed_one": "{{count}} projeto agrupado por cliente",
           "filed_many": "{{count}} projetos agrupados por cliente",
-          "filed_other": "{{count}} projetos agrupados por cliente"
+          "filed_other": "{{count}} projetos agrupados por cliente",
+          "skipped_one": "{{count}} projeto ignorado porque foi agrupado, ocultado ou removido",
+          "skipped_many": "{{count}} projetos ignorados porque foram agrupados, ocultados ou removidos",
+          "skipped_other": "{{count}} projetos ignorados porque foram agrupados, ocultados ou removidos"
         },
         "ClientGroupingHint": {
           "dismiss": "Dispensar sugestão de agrupar por cliente",

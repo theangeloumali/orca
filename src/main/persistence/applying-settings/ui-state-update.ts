@@ -28,6 +28,7 @@ import { normalizeContextualTourIds } from '../../../shared/feature-education/co
 import { normalizeFeatureInteractions } from '../../../shared/feature-education/interactions/feature-interactions'
 import { mergeWorkspaceCleanupUIState } from '../../../shared/workspace-cleanup/workspace-cleanup-ui-state'
 import { persistedUIValuesEqual } from '../../../shared/collections/persisted-ui-equality'
+import { unionDismissalKeys } from '../../../shared/collections/dismissal-key-union'
 import {
   PROTECTED_SECRET_SLOT,
   type ProtectedSecretPersistence
@@ -239,7 +240,16 @@ export function updatePersistedUI(
             operations.state.ui?.featureInteractions,
             sanitizedUpdates.featureInteractions
           )
-        : normalizeFeatureInteractions(operations.state.ui?.featureInteractions)
+        : normalizeFeatureInteractions(operations.state.ui?.featureInteractions),
+    // Union here, where writes are serialized, so a stale window cannot drop a peer's dismissal.
+    dismissedClientSuggestionsKey: unionDismissalKeys(
+      operations.state.ui?.dismissedClientSuggestionsKey,
+      sanitizedUpdates.dismissedClientSuggestionsKey
+    ),
+    dismissedIdleProjectsKey: unionDismissalKeys(
+      operations.state.ui?.dismissedIdleProjectsKey,
+      sanitizedUpdates.dismissedIdleProjectsKey
+    )
   }
   // A sealed secret looks empty in memory; an explicit clear must still reach disk.
   if (!clearsProtectedSecret && persistedUIValuesEqual(previousUI, nextUI)) {

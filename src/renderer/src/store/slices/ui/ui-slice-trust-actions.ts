@@ -4,11 +4,7 @@ import {
   withOrcaHookRepoAlwaysTrusted,
   withOrcaHookScriptConfirmed
 } from '../../../../../shared/workspace-setup/hooks/orca-hook-trust-entries'
-
-function unionDismissalKeys(...keys: (string | null | undefined)[]): string {
-  const identities = keys.flatMap((key) => key?.split('\n') ?? [])
-  return [...new Set(identities)].sort().join('\n')
-}
+import { unionDismissalKeys } from '../../../../../shared/collections/dismissal-key-union'
 
 // Why: every window writes the same persisted set, so union with its latest value or a peer's dismissal is lost.
 async function persistClientSuggestionDismissal(set: UISliceSet, get: UISliceGet): Promise<void> {

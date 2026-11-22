@@ -7590,7 +7590,9 @@
           "apply_one": "{{count}} grubu uygula",
           "apply_other": "{{count}} grubu uygula",
           "filed_one": "{{count}} proje müşteriye göre yerleştirildi",
-          "filed_other": "{{count}} proje müşteriye göre yerleştirildi"
+          "filed_other": "{{count}} proje müşteriye göre yerleştirildi",
+          "skipped_one": "{{count}} proje gruplandığı, gizlendiği veya kaldırıldığı için atlandı",
+          "skipped_other": "{{count}} proje gruplandığı, gizlendiği veya kaldırıldığı için atlandı"
         },
         "ClientGroupingHint": {
           "dismiss": "Müşteriye göre gruplama önerisini kapat",

@@ -7506,7 +7506,9 @@
           "apply_one": "{{count}} Gruppe anwenden",
           "apply_other": "{{count}} Gruppen anwenden",
           "filed_one": "{{count}} Projekt nach Kunde einsortiert",
-          "filed_other": "{{count}} Projekte nach Kunde einsortiert"
+          "filed_other": "{{count}} Projekte nach Kunde einsortiert",
+          "skipped_one": "Übersprungen: {{count}} Projekt, das gruppiert, ausgeblendet oder entfernt wurde",
+          "skipped_other": "Übersprungen: {{count}} Projekte, die gruppiert, ausgeblendet oder entfernt wurden"
         },
         "ClientGroupingHint": {
           "dismiss": "Vorschlag zur Kundengruppierung ausblenden",

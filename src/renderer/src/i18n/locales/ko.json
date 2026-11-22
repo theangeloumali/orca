@@ -7728,7 +7728,8 @@
           "newGroup": "새 그룹",
           "summary_other": "프로젝트 {{count}}개를 분류합니다",
           "apply_other": "그룹 {{count}}개 적용",
-          "filed_other": "프로젝트 {{count}}개를 클라이언트별로 분류했습니다"
+          "filed_other": "프로젝트 {{count}}개를 클라이언트별로 분류했습니다",
+          "skipped_other": "그룹화되었거나 숨겨졌거나 제거된 프로젝트 {{count}}개를 건너뛰었습니다"
         },
         "ClientGroupingHint": {
           "dismiss": "클라이언트별 그룹화 제안 닫기",

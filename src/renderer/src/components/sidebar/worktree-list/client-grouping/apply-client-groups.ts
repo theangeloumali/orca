@@ -1,4 +1,10 @@
-import type { ExecutionHostId } from '../../../../../../shared/execution-host/execution-host'
+import { getRepoRowIdentity } from '@/store/repos/repo-host-identity'
+import {
+  getRepoExecutionHostId,
+  type ExecutionHostId
+} from '../../../../../../shared/execution-host/execution-host'
+import { isRepoHidden } from '../../../../../../shared/project/catalog/hidden-projects'
+import type { ProjectGroup } from '../../../../../../shared/project/groups/project-group-types'
 import type { Repo } from '../../../../../../shared/repository/repo-types'
 import { moveReposToGroup } from '../rows/project-group-batch'
 
@@ -21,6 +27,37 @@ export type ClientGroupsResult = {
   failedGroups: string[]
   /** Set when a store call threw; the counts still cover what was done before it. */
   error?: unknown
+}
+
+export type LiveClientGroupState = {
+  repos: readonly Repo[]
+  projectGroups: readonly ProjectGroup[]
+}
+
+/** Drops what changed since the review opened: projects grouped, hidden or removed, and deleted target groups. */
+export function recheckClientGroupPlans(
+  plans: readonly ClientGroupPlan[],
+  live: LiveClientGroupState
+): { plans: ClientGroupPlan[]; skippedCount: number } {
+  const liveRepos = new Map(live.repos.map((repo) => [getRepoRowIdentity(repo), repo]))
+  let skippedCount = 0
+  const checked = plans.flatMap((plan) => {
+    const groupExists =
+      plan.existingGroupId === null ||
+      live.projectGroups.some(
+        (group) =>
+          group.id === plan.existingGroupId && getRepoExecutionHostId(group) === plan.hostId
+      )
+    const projects = groupExists
+      ? plan.projects.flatMap((project) => {
+          const repo = liveRepos.get(getRepoRowIdentity(project))
+          return repo && !repo.projectGroupId && !isRepoHidden(repo) ? [repo] : []
+        })
+      : []
+    skippedCount += plan.projects.length - projects.length
+    return projects.length > 0 ? [{ ...plan, projects }] : []
+  })
+  return { plans: checked, skippedCount }
 }
 
 /** Creates each new group on its machine, then files its projects; one group at a time, in order. */

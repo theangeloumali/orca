@@ -7416,7 +7416,8 @@
           "newGroup": "新しいグループ",
           "summary_other": "{{count}} 件のプロジェクトを振り分けます",
           "apply_other": "{{count}} 個のグループを適用",
-          "filed_other": "{{count}} 件のプロジェクトをクライアント別に振り分けました"
+          "filed_other": "{{count}} 件のプロジェクトをクライアント別に振り分けました",
+          "skipped_other": "グループ化、非表示、または削除された {{count}} 件のプロジェクトをスキップしました"
         },
         "ClientGroupingHint": {
           "dismiss": "クライアントでのグループ化の提案を閉じる",

@@ -117,6 +117,44 @@ describe('ClientGroupingSheet', () => {
     consoleError.mockRestore()
   })
 
+  it('skips projects grouped, hidden or removed after the sheet opened', async () => {
+    openSheet([project('orca'), project('aicc'), project('site'), project('web')])
+    useAppStore.setState({
+      repos: [
+        project('orca'),
+        { ...project('aicc'), projectGroupId: 'elsewhere' },
+        { ...project('site'), hiddenAt: 1 }
+      ]
+    })
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Apply 1 group' }))
+    })
+    expect(calls).toEqual(['create:ZKidz', 'move:orca->g-ZKidz'])
+    expect(toast.success).toHaveBeenCalledWith('Filed 1 project by client', {
+      description: 'Skipped 3 projects that were grouped, hidden or removed'
+    })
+  })
+
+  it('skips an existing target group deleted after the sheet opened', async () => {
+    const acme = { ...(await createGroup('Acme')), id: 'g-acme' }
+    calls.length = 0
+    useAppStore.setState({ projectGroups: [acme] })
+    useAppStore.setState({
+      repos: [project('app', 'Acme')],
+      clientGroupingSheetOpen: true,
+      createProjectGroup,
+      moveProjectToGroup
+    })
+    render(<ClientGroupingSheet />)
+    useAppStore.setState({ projectGroups: [] })
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Apply 1 group' }))
+    })
+    expect(calls).toEqual([])
+    expect(toast.success).not.toHaveBeenCalled()
+    expect(toast.info).toHaveBeenCalledWith('Skipped 1 project that was grouped, hidden or removed')
+  })
+
   it("labels each client's project list as a group named after the client", () => {
     openSheet([project('orca'), project('aicc')])
     const list = screen.getByRole('group', { name: 'ZKidz' })

@@ -8642,6 +8642,8 @@
         "ClientGroupingSheet": {
           "filed_one": "Filed {{count}} project by client",
           "filed_other": "Filed {{count}} projects by client",
+          "skipped_one": "Skipped {{count}} project that was grouped, hidden or removed",
+          "skipped_other": "Skipped {{count}} projects that were grouped, hidden or removed",
           "groupFailed": "Could not file every project into {{name}}",
           "applyFailed": "Could not apply client groups",
           "title": "Group by client",

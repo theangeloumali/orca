@@ -7701,7 +7701,8 @@
           "newGroup": "新分组",
           "summary_other": "将归入 {{count}} 个项目",
           "apply_other": "应用 {{count}} 个分组",
-          "filed_other": "已按客户归入 {{count}} 个项目"
+          "filed_other": "已按客户归入 {{count}} 个项目",
+          "skipped_other": "已跳过 {{count}} 个已分组、已隐藏或已移除的项目"
         },
         "ClientGroupingHint": {
           "dismiss": "忽略按客户分组的建议",

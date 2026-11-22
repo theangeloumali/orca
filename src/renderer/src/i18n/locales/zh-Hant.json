@@ -7327,7 +7327,8 @@
           "newGroup": "新群組",
           "summary_other": "將歸入 {{count}} 個專案",
           "apply_other": "套用 {{count}} 個群組",
-          "filed_other": "已依客戶歸入 {{count}} 個專案"
+          "filed_other": "已依客戶歸入 {{count}} 個專案",
+          "skipped_other": "已略過 {{count}} 個已分組、已隱藏或已移除的專案"
         },
         "ClientGroupingHint": {
           "dismiss": "忽略依客戶分組的建議",

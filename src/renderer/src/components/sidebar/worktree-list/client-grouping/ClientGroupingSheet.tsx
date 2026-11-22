@@ -15,7 +15,11 @@ import { selectExecutionHostDisplayLabel } from '@/runtime/hosts/display/executi
 import { useAppStore } from '@/store'
 import { getRepoRowIdentity } from '@/store/repos/repo-host-identity'
 import type { MachineClientSuggestions } from '../../../../../../shared/project/groups/client-suggestions'
-import { applyClientGroups, type ClientGroupPlan } from './apply-client-groups'
+import {
+  applyClientGroups,
+  recheckClientGroupPlans,
+  type ClientGroupPlan
+} from './apply-client-groups'
 import { ClientSuggestionCard } from './ClientSuggestionCard'
 import {
   getAllSuggestedIdentities,
@@ -68,8 +72,21 @@ export function ClientGroupingSheet(): React.JSX.Element {
 
   const apply = async (): Promise<void> => {
     setApplying(true)
-    const { createProjectGroup, moveProjectToGroup } = useAppStore.getState()
-    const result = await applyClientGroups(plans, { createProjectGroup, moveProjectToGroup })
+    const live = useAppStore.getState()
+    // Why: the snapshot can be stale by Apply, so only what is still ungrouped and listed moves.
+    const checked = recheckClientGroupPlans(plans, live)
+    const result = await applyClientGroups(checked.plans, live)
+    const skipped =
+      checked.skippedCount > 0
+        ? t(
+            'auto.components.sidebar.ClientGroupingSheet.skipped',
+            'Skipped {{count}} projects that were grouped, hidden or removed',
+            {
+              count: checked.skippedCount,
+              defaultValue_one: 'Skipped {{count}} project that was grouped, hidden or removed'
+            }
+          )
+        : undefined
     if (result.filedCount > 0) {
       toast.success(
         t(
@@ -79,8 +96,11 @@ export function ClientGroupingSheet(): React.JSX.Element {
             count: result.filedCount,
             defaultValue_one: 'Filed {{count}} project by client'
           }
-        )
+        ),
+        skipped ? { description: skipped } : undefined
       )
+    } else if (skipped) {
+      toast.info(skipped)
     }
     for (const clientName of result.failedGroups) {
       toast.error(

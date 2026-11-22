@@ -900,6 +900,8 @@
           "apply_other": "Apply {{count}} groups",
           "filed_one": "Filed {{count}} project by client",
           "filed_other": "Filed {{count}} projects by client",
+          "skipped_one": "Skipped {{count}} project that was grouped, hidden or removed",
+          "skipped_other": "Skipped {{count}} projects that were grouped, hidden or removed",
           "summary_one": "{{count}} project will be filed",
           "summary_other": "{{count}} projects will be filed"
         },
