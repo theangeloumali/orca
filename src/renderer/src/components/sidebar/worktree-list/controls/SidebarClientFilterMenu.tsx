@@ -48,7 +48,6 @@ export function SidebarClientFilterMenu(): JSX.Element | null {
     }))
   )
   useFollowSelectedClient()
-  useFollowSelectedClient()
   const clients = listClientChoices(projectGroups, repos)
   if (clients.length === 0) {
     return null

@@ -4,6 +4,8 @@ import {
   LOCAL_EXECUTION_HOST_ID
 } from '../../../../../../shared/execution-host/execution-host'
 import type { ProjectGroup } from '../../../../../../shared/project/groups/project-group-types'
+import { getDistinctProjectGroups } from '../../../../../../shared/project/groups/project-groups'
+import { isRepoHidden } from '../../../../../../shared/project/catalog/hidden-projects'
 import type { Repo } from '../../../../../../shared/repository/repo-types'
 import { getDescendantGroupIds } from '../listing/project-group-subtree-collapse'
 
@@ -24,7 +26,7 @@ export type QuickFilterChipSetters = {
 }
 
 type GroupLink = Pick<ProjectGroup, 'id' | 'parentGroupId'>
-type RepoLink = Pick<Repo, 'id' | 'projectGroupId'>
+type RepoLink = Pick<Repo, 'id' | 'projectGroupId' | 'hiddenAt'>
 
 export function isThisMachineChipOn(visibleHostIds: VisibleWorkspaceHostIds): boolean {
   return visibleHostIds?.length === 1 && visibleHostIds[0] === LOCAL_EXECUTION_HOST_ID
@@ -43,7 +45,7 @@ export function toggleThisMachineChip(
   store.setVisibleWorkspaceHostIds([LOCAL_EXECUTION_HOST_ID])
 }
 
-/** A client is a top-level group; picking it filters to every project in its subtree. */
+/** A client is a top-level group; picking it filters to every listed (unarchived) project in its subtree. */
 export function clientGroupRepoIds(
   groupId: string,
   projectGroups: readonly GroupLink[],
@@ -52,19 +54,22 @@ export function clientGroupRepoIds(
   const subtree = getDescendantGroupIds(groupId, projectGroups)
   subtree.add(groupId)
   const ids = repos
-    .filter((repo) => repo.projectGroupId != null && subtree.has(repo.projectGroupId))
+    .filter(
+      (repo) =>
+        !isRepoHidden(repo) && repo.projectGroupId != null && subtree.has(repo.projectGroupId)
+    )
     .map((repo) => repo.id)
   return [...new Set(ids)]
 }
 
 export type ClientChoice<G extends GroupLink> = { group: G; repoIds: string[] }
 
-/** Top-level groups with their projects; an empty one stays listed so the menu can disable it. */
+/** Top-level groups with their projects, one per id across host copies; an empty one stays listed so the menu can disable it. */
 export function listClientChoices<G extends GroupLink>(
   projectGroups: readonly G[],
   repos: readonly RepoLink[]
 ): ClientChoice<G>[] {
-  return projectGroups
+  return getDistinctProjectGroups(projectGroups)
     .filter((group) => group.parentGroupId === null)
     .map((group) => ({ group, repoIds: clientGroupRepoIds(group.id, projectGroups, repos) }))
 }

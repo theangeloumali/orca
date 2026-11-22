@@ -4,7 +4,9 @@ import type { Repo } from '../../../../../shared/repository/repo-types'
 import {
   createLastActiveAtSelector,
   getLastActiveAtByRow,
+  getIdleProjectsKey,
   groupArchivedRepos,
+  isIdleHintDismissed,
   selectIdleListedRepos,
   type ProjectActivityInputs
 } from './archive-model'
@@ -129,5 +131,21 @@ describe('createLastActiveAtSelector', () => {
     const first = select(repos, inputs, NOW)
     expect(select(repos, inputs, NOW)).toBe(first)
     expect(reads).toBe(1)
+  })
+})
+
+describe('isIdleHintDismissed', () => {
+  const dismissed = getIdleProjectsKey([project('a'), project('b')])
+
+  it('stays dismissed while the idle set only shrinks', () => {
+    expect(isIdleHintDismissed(getIdleProjectsKey([project('b')]), dismissed)).toBe(true)
+    expect(isIdleHintDismissed(dismissed, dismissed)).toBe(true)
+  })
+
+  it('shows again once a project not in the dismissed set goes idle', () => {
+    expect(isIdleHintDismissed(getIdleProjectsKey([project('a'), project('c')]), dismissed)).toBe(
+      false
+    )
+    expect(isIdleHintDismissed(dismissed, null)).toBe(false)
   })
 })

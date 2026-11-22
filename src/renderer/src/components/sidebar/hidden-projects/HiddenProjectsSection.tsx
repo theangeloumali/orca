@@ -10,6 +10,7 @@ import {
   getIdleProjectsKey,
   groupArchivedRepos,
   IDLE_AGE_TICK_MS,
+  isIdleHintDismissed,
   selectIdleListedRepos
 } from './archive-model'
 import { selectWorktreesByRepo } from '@/store/workspaces/catalog/workspace-record-fields'
@@ -44,7 +45,7 @@ const HiddenProjectsSection = React.memo(function HiddenProjectsSection() {
     [repos, lastActiveAtByRow, now]
   )
   const idleKey = getIdleProjectsKey(idleListed)
-  const idleRepos = idleKey === dismissedIdleKey ? [] : idleListed
+  const idleRepos = isIdleHintDismissed(idleKey, dismissedIdleKey) ? [] : idleListed
   // Name machines only when one is not this computer; a local-only Archive needs no machine name.
   const machineLabels = useAppStore(
     useShallow((state) =>

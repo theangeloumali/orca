@@ -14,7 +14,7 @@ import type { ExecutionHostId } from '../../../../../../shared/execution-host/ex
 import type { ProjectGroupingModel } from '../../../../../../shared/sidebar-list/sections/project-section-grouping'
 import './visible-worktrees'
 import { computeVisibleWorktrees } from './compute-visible-worktrees'
-import { createWorktreeNeedsYouReader } from './desktop-workspace-row-facts'
+import { useWorktreeNeedsYouReader } from './use-worktree-needs-you-reader'
 import {
   EMPTY_PAIRED_DEVICE_IDS_BY_ENVIRONMENT,
   getPairedDeviceIdsByEnvironment
@@ -86,18 +86,7 @@ export function useVisibleSidebarWorktrees(args: {
     workspaceHostScope
   } = filterState
   const findQuery = useAppStore((s) => s.sidebarFindQuery)
-  const needsYouProjection = useAppStore((s) =>
-    showOnlyNeedsYou ? s.agentStatusByPaneKey.projection : null
-  )
-  const needsYouEpoch = useAppStore((s) => (showOnlyNeedsYou ? s.agentStatusEpoch : 0))
-  // Re-read attention on each agent-status epoch while Needs you is on.
-  const worktreeNeedsYou = useMemo(
-    () =>
-      needsYouProjection
-        ? createWorktreeNeedsYouReader(needsYouProjection, getAgentStatusEpochNow(needsYouEpoch))
-        : undefined,
-    [needsYouProjection, needsYouEpoch]
-  )
+  const worktreeNeedsYou = useWorktreeNeedsYouReader(showOnlyNeedsYou)
   const worktreesByRepo = useAppStore((s) => selectWorktreesByRepo(s))
   const botListedWorktreeIdentities = useBotListedWorktreeIdentities()
   const repos = useAppStore((s) => s.repos)

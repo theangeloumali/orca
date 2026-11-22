@@ -73,11 +73,12 @@ export function sidebarFindIsActive(state: Pick<SidebarFilterState, 'sidebarFind
   return normalizeFindQuery(state.sidebarFindQuery ?? '') !== ''
 }
 
+export function sidebarHasActiveRowFilters(state: SidebarFilterState): boolean {
+  return activeWorkspaceRowFilterKeys(sidebarWorkspaceRowFilters(state)).length > 0
+}
+
 export function sidebarHasActiveFilters(state: SidebarFilterState): boolean {
-  return (
-    activeWorkspaceRowFilterKeys(sidebarWorkspaceRowFilters(state)).length > 0 ||
-    sidebarFindIsActive(state)
-  )
+  return sidebarHasActiveRowFilters(state) || sidebarFindIsActive(state)
 }
 
 export type SidebarFilterSetters = Pick<

@@ -103,7 +103,7 @@ function listFolderRows(
   return selectListedFolderWorkspaces(
     { ...options, showOnlyRunningTerminals: listed.showOnlyRunningTerminals },
     {
-      folderWorkspaces: selectFolderWorkspaces(state) ?? NO_FOLDERS,
+      folders: selectFolderWorkspaces(state) ?? NO_FOLDERS,
       projectGroups: state.projectGroups,
       visibleHostIdSet: getVisibleSidebarHostIdSet(
         state.visibleWorkspaceHostIds,

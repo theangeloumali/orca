@@ -49,7 +49,7 @@ function sidebarFindShowsWorkspace(
   const listed = computeVisibleWorktrees(selectWorktreesByRepo(state), [], options)
   if (folder) {
     const listedFolders = selectListedFolderWorkspaces(options, {
-      folderWorkspaces: [folder],
+      folders: [folder],
       projectGroups: state.projectGroups,
       visibleHostIdSet: getVisibleWorkspaceHostIdSet(state),
       listedWorktrees: listed

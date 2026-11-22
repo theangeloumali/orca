@@ -17,10 +17,31 @@ vi.mock('@/components/ui/tooltip', () => ({
 
 const localRepo = { ...repo, id: 'r-local', connectionId: null }
 const remoteRepo = { ...repo, id: 'r-remote', connectionId: 'conn-remote' }
+const acme: ProjectGroup = {
+  id: 'acme',
+  name: 'Acme',
+  parentPath: null,
+  parentGroupId: null,
+  createdFrom: 'manual',
+  tabOrder: 0,
+  isCollapsed: false,
+  color: null,
+  createdAt: 0,
+  updatedAt: 0
+}
+
+function openFindFromHeaderSlot(): { slot: HTMLElement; field: HTMLElement } {
+  const slot = document.createElement('div')
+  document.body.append(slot)
+  render(<SidebarQuickFilterBar findButtonTarget={slot} />)
+  fireEvent.click(screen.getByRole('button', { name: 'Find in sidebar' }))
+  return { slot, field: screen.getByRole('searchbox', { name: 'Find workspaces' }) }
+}
 
 describe('SidebarQuickFilterBar', () => {
   afterEach(() => {
     cleanup()
+    vi.restoreAllMocks()
     useAppStore.setState(useAppStore.getInitialState(), true)
   })
 
@@ -78,18 +99,6 @@ describe('SidebarQuickFilterBar', () => {
   })
 
   it('keeps a selected client matching a project added to it later', () => {
-    const acme: ProjectGroup = {
-      id: 'acme',
-      name: 'Acme',
-      parentPath: null,
-      parentGroupId: null,
-      createdFrom: 'manual',
-      tabOrder: 0,
-      isCollapsed: false,
-      color: null,
-      createdAt: 0,
-      updatedAt: 0
-    }
     const inAcme = { ...localRepo, projectGroupId: 'acme' }
     useAppStore.setState({
       projectGroups: [acme],
@@ -100,6 +109,58 @@ describe('SidebarQuickFilterBar', () => {
     const joined = { ...remoteRepo, id: 'r-new', projectGroupId: 'acme' }
     useAppStore.setState({ repos: [inAcme, remoteRepo, joined] })
     expect(useAppStore.getState().filterRepoIds).toEqual(['r-local', 'r-new'])
+  })
+
+  it('re-derives a selected client once when a project joins it', () => {
+    const inAcme = { ...localRepo, projectGroupId: 'acme' }
+    useAppStore.setState({
+      projectGroups: [acme],
+      repos: [inAcme, remoteRepo],
+      filterRepoIds: ['r-local']
+    })
+    const subscribe = vi.spyOn(useAppStore, 'subscribe')
+    render(<SidebarQuickFilterBar />)
+    // A second follower would be masked: zustand hands it the state the first one already rewrote.
+    expect(subscribe).toHaveBeenCalledTimes(1)
+    const setFilterRepoIds = vi.spyOn(useAppStore.getState(), 'setFilterRepoIds')
+    const joined = { ...remoteRepo, id: 'r-new', projectGroupId: 'acme' }
+    useAppStore.setState({ repos: [inAcme, remoteRepo, joined] })
+    expect(setFilterRepoIds).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps the chip row hidden while finding on one machine', () => {
+    useAppStore.setState({ repos: [localRepo] })
+    const { slot, field } = openFindFromHeaderSlot()
+    fireEvent.change(field, { target: { value: 'api' } })
+    expect(screen.queryByRole('button', { name: 'Live' })).toBeNull()
+    slot.remove()
+  })
+
+  it('returns focus to the sidebar row that opened find with Mod+F', () => {
+    useAppStore.setState({ repos: [localRepo] })
+    const sidebar = document.createElement('div')
+    sidebar.setAttribute('data-worktree-sidebar', '')
+    const row = document.createElement('button')
+    sidebar.append(row)
+    document.body.append(sidebar)
+    render(<SidebarQuickFilterBar />)
+    row.focus()
+    const isMac = navigator.userAgent.includes('Mac')
+    fireEvent.keyDown(row, { key: 'f', code: 'KeyF', ctrlKey: !isMac, metaKey: isMac })
+    const field = screen.getByRole('searchbox', { name: 'Find workspaces' })
+    expect(document.activeElement).toBe(field)
+    fireEvent.keyDown(field, { key: 'Escape' })
+    expect(screen.queryByRole('searchbox', { name: 'Find workspaces' })).toBeNull()
+    expect(document.activeElement).toBe(row)
+    sidebar.remove()
+  })
+
+  it('returns focus to the find button when its own click opened find', () => {
+    useAppStore.setState({ repos: [localRepo] })
+    const { slot, field } = openFindFromHeaderSlot()
+    fireEvent.keyDown(field, { key: 'Escape' })
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Find in sidebar' }))
+    slot.remove()
   })
 })
 

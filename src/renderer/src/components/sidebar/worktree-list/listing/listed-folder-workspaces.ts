@@ -12,7 +12,7 @@ import { worktreeHasRunningTerminal } from './desktop-workspace-row-facts'
 export function selectListedFolderWorkspaces(
   options: VisibleWorktreeOptions,
   args: {
-    folderWorkspaces: readonly FolderWorkspace[]
+    folders: readonly FolderWorkspace[]
     projectGroups: readonly ProjectGroup[]
     visibleHostIdSet: ReadonlySet<ExecutionHostId> | null
     /** The worktree rows listed under the same options; a folder above one stays to draw it. */
@@ -21,7 +21,7 @@ export function selectListedFolderWorkspaces(
 ): readonly FolderWorkspace[] {
   const needsYou = options.worktreeNeedsYou
   return selectVisibleFolderWorkspaces({
-    folderWorkspaces: args.folderWorkspaces,
+    folderWorkspaces: args.folders,
     projectGroups: args.projectGroups,
     filters: options,
     visibleHostIdSet: args.visibleHostIdSet,

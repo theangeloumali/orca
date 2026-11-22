@@ -90,6 +90,27 @@ describe('Client chip', () => {
     ])
   })
 
+  it('leaves archived projects out of a client so an all-archived one reads as empty', () => {
+    const archived = repos.map((entry) =>
+      entry.id === 'r-site' || entry.id === 'r-billing' ? { ...entry, hiddenAt: 1 } : entry
+    )
+    expect(
+      listClientChoices(groups, archived).map((choice) => [choice.group.id, choice.repoIds])
+    ).toEqual([
+      ['acme', ['r-api']],
+      ['globex', []]
+    ])
+    expect(findActiveClientGroupId(['r-api'], groups, archived)).toBe('acme')
+  })
+
+  it('lists a client once when several machines hold a copy of its group', () => {
+    const hostCopies = [...groups, { id: 'acme', parentGroupId: null }]
+    expect(listClientChoices(hostCopies, repos).map((choice) => choice.group.id)).toEqual([
+      'acme',
+      'globex'
+    ])
+  })
+
   it('follows the selected client when a project joins it later', () => {
     const joined = [...repos, { id: 'r-new', projectGroupId: 'acme-web' }]
     const before = { filterRepoIds: ['r-api', 'r-site'], projectGroups: groups, repos }
