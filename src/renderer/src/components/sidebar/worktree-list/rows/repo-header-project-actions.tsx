@@ -2,10 +2,10 @@ import { useTranslation } from 'react-i18next'
 import React, { use, useState } from 'react'
 import { useRepoSshGate } from '@/lib/workspace/catalog/use-repo-ssh-gate'
 import {
+  Archive,
   CircleX,
   Ellipsis,
   Eye,
-  EyeOff,
   FolderInput,
   FolderTree,
   Plus,
@@ -96,7 +96,7 @@ export const RepoHeaderProjectActionsMenu = React.memo(function RepoHeaderProjec
   actions
 }: {
   repo: Repo
-  /** A header spanning hosts: every copy it shows, which Hide hides together. */
+  /** A header spanning hosts: every copy it shows, which Archive archives together. */
   hostRepos?: ReadonlyMap<string, Repo>
   label: string
   projectGroups: readonly ProjectGroup[]
@@ -220,8 +220,8 @@ export const RepoHeaderProjectActionsMenu = React.memo(function RepoHeaderProjec
             void setProjectHidden(hostRepos ? [...hostRepos.values()] : [repo], true, label)
           }
         >
-          <EyeOff className="size-3.5" />
-          {t('sidebar.hiddenProjects.hideFromSidebar', 'Hide from Sidebar')}
+          <Archive className="size-3.5" />
+          {t('auto.components.sidebar.repoHeaderProjectActions.archive', 'Archive')}
         </DropdownMenuItem>
         <DropdownMenuItem variant="destructive" onSelect={() => actions.onRemoveProject(repo)}>
           <Trash2 className="size-3.5" />

@@ -27,6 +27,16 @@ async function writeHidden(
   return targets.filter((_, index) => results[index])
 }
 
+function restoreFailedMessage(name: string): string {
+  return translate(
+    'auto.components.sidebar.hiddenProjects.restoreFailed',
+    "Couldn't restore {{name}}.",
+    {
+      name
+    }
+  )
+}
+
 /** Undoes only this toast's hide: a copy shown since, or hidden again by a newer hide, is left alone. */
 async function undoHide(
   targets: readonly HiddenTarget[],
@@ -43,15 +53,13 @@ async function undoHide(
   }
   const present = targets.filter((_, index) => rows[index]?.hiddenAt === hiddenAt)
   if ((await writeHidden(present, null)).length < present.length) {
-    toast.error(
-      translate('sidebar.hiddenProjects.showFailed', "Couldn't show {{name}} again.", { name })
-    )
+    toast.error(restoreFailedMessage(name))
   }
 }
 
 /**
- * Hides or shows the given host copies of one project in the sidebar; terminals and agents keep
- * running. A header spanning hosts passes every copy it shows, so one action and one Undo cover all.
+ * Archives (hides) or restores the given host copies of one project; nothing is deleted, and terminals
+ * and agents keep running. A header spanning hosts passes every copy it shows, so one action and one Undo cover all.
  */
 export async function setProjectHidden(
   targets: readonly HiddenTarget[],
@@ -64,24 +72,27 @@ export async function setProjectHidden(
     toast.error(
       hidden
         ? translate(
-            'sidebar.hiddenProjects.hideFailed',
-            "Couldn't hide {{name}}. Its host may need an Orca update.",
+            'auto.components.sidebar.hiddenProjects.archiveFailed',
+            "Couldn't archive {{name}}. Its host may need an Orca update.",
             { name }
           )
-        : translate('sidebar.hiddenProjects.showFailed', "Couldn't show {{name}} again.", { name })
+        : restoreFailedMessage(name)
     )
   }
   if (hiddenAt !== null && written.length > 0) {
-    toast.success(translate('sidebar.hiddenProjects.hidden', '{{name}} hidden', { name }), {
-      description: translate(
-        'sidebar.hiddenProjects.hiddenDescription',
-        'Its terminals and agents keep running. Show it again from Hidden projects below the list.'
-      ),
-      action: {
-        label: translate('sidebar.hiddenProjects.undo', 'Undo'),
-        onClick: () => void undoHide(written, hiddenAt, name)
+    toast.success(
+      translate('auto.components.sidebar.hiddenProjects.archived', 'Archived {{name}}', { name }),
+      {
+        description: translate(
+          'auto.components.sidebar.hiddenProjects.archivedDescription',
+          'Nothing is deleted, and its terminals and agents keep running. Restore it from Archive below the list.'
+        ),
+        action: {
+          label: translate('sidebar.hiddenProjects.undo', 'Undo'),
+          onClick: () => void undoHide(written, hiddenAt, name)
+        }
       }
-    })
+    )
   }
   return written.length === targets.length
 }
