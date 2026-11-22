@@ -198,12 +198,14 @@ jobs:
 
   build:
     needs: [merge, verify, publish-main]
-    # Installers are built per merged fork change, per upstream release, or on force_release; never after a failed merge, verify or push.
+    # Installers are built per merged fork change, per upstream release, or on force_release; never after a failed verify or push.
+    # An upstream conflict still ships a merged fork change: main is built as it is, and the report job opens the issue.
     if: >-
       ${{ !cancelled() && needs.merge.result == 'success' &&
-      needs.merge.outputs.conflict != 'true' && needs.verify.result != 'failure' &&
-      needs.publish-main.result != 'failure' &&
-      (inputs.force_release || needs.merge.outputs.release_needed == 'true') }}
+      needs.verify.result != 'failure' && needs.publish-main.result != 'failure' &&
+      ((needs.merge.outputs.conflict != 'true' &&
+      (inputs.force_release || needs.merge.outputs.release_needed == 'true')) ||
+      (needs.merge.outputs.conflict == 'true' && (github.event_name == 'push' || inputs.force_release))) }}
     strategy:
       fail-fast: false
       matrix:
