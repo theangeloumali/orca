@@ -10,7 +10,7 @@ import {
 import { areAllProjectsCollapsed } from './project-collapse-all'
 import { getDistinctProjectGroups } from '../../../../../../shared/project/groups/project-groups'
 
-function getDescendantGroupIds(
+export function getDescendantGroupIds(
   groupId: string,
   projectGroups: readonly Pick<ProjectGroup, 'id' | 'parentGroupId'>[]
 ): Set<string> {
