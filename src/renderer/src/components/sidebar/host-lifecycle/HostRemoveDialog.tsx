@@ -95,11 +95,11 @@ function HostRemoveDialogBody({
     return [
       ...sshResolution.workspaceWorktreeIds.map((id) => ({ id, hostId })),
       ...projectRemovalTargets(
-        { worktreesByRepo, detectedWorktreesByRepo },
+        { repos, worktreesByRepo, detectedWorktreesByRepo },
         sshResolution.hostRepoIds.map((repoId) => ({ repoId, hostId }))
       )
     ]
-  }, [deleteWorkspaces, detectedWorktreesByRepo, sshResolution, worktreesByRepo])
+  }, [deleteWorkspaces, detectedWorktreesByRepo, repos, sshResolution, worktreesByRepo])
 
   const workspaceCount = sshResolution?.workspaceCount ?? 0
   const hasWorkspaces = workspaceCount > 0

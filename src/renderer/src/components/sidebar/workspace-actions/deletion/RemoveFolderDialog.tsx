@@ -71,18 +71,18 @@ const RemoveFolderDialog = React.memo(function RemoveFolderDialog() {
       )
   )
 
+  const repos = useAppStore((s) => s.repos)
   const worktreesByRepo = useAppStore((s) => selectWorktreesByRepo(s))
   const detectedWorktreesByRepo = useAppStore((s) => selectDetectedWorktreesByRepo(s))
   const unsavedTargets = useMemo(
     () =>
       projectRemovalTargets(
-        { worktreesByRepo, detectedWorktreesByRepo },
+        { repos, worktreesByRepo, detectedWorktreesByRepo },
         repoId ? [{ repoId, hostId }] : []
       ),
-    [detectedWorktreesByRepo, hostId, repoId, worktreesByRepo]
+    [detectedWorktreesByRepo, hostId, repoId, repos, worktreesByRepo]
   )
 
-  const repos = useAppStore((s) => s.repos)
   const linkedWorkspaceCount = useMemo(
     () => (hostId ? countLinkedRepoWorkspaces({ repos, worktreesByRepo }, repoId, hostId) : 0),
     [hostId, repoId, repos, worktreesByRepo]
