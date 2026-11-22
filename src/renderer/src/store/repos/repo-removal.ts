@@ -9,12 +9,12 @@ import {
 } from '@/lib/workspace/activation/worktree-visit-recency'
 import { omitSparsePresetsForRepos } from '../slices/worktrees/create/sparse-presets'
 import { repoMatchesHostIdentity } from './repo-host-identity'
-import { createRepoWorktreeHostMatcher, getKnownRepoWorktreeIds } from './repo-worktree-ownership'
+import { createRepoWorktreeHostMatcher, getOwnedRepoWorktreeIds } from './repo-worktree-ownership'
 import { callRuntimeRpc } from '../../runtime/rpc/calls/runtime-rpc-call'
 import { hasRuntimeRpcErrorCode } from '../../../../shared/remote-runtime/rpc/runtime-rpc-error-code'
 import { ipcOrRuntimeTargetForHostId } from '../../runtime/rpc/targets/runtime-client-target'
 // oxfmt-ignore
-import { getRepoExecutionHostId, LOCAL_EXECUTION_HOST_ID } from '../../../../shared/execution-host/execution-host'
+import { getRepoExecutionHostId, LOCAL_EXECUTION_HOST_ID, normalizeExecutionHostId } from '../../../../shared/execution-host/execution-host'
 import { destroyRecipeVmBeforeProjectRemoval } from './recipe-vm-project-removal'
 import { stopRuntimeProjectTerminalsBeforeRemoval } from './runtime-project-terminal-stop'
 import type { RepoSlice } from './repo-state'
@@ -57,12 +57,16 @@ export function createRepoRemovalActions(
           return
         }
         const ownerHostId = getRepoExecutionHostId(ownerRepo)
+        // Why snapshot: a repos:changed refetch during the awaits below can drop this row first.
+        const ownsWorktree = createRepoWorktreeHostMatcher(get().repos, projectId, ownerHostId)
+        const ownedWorktreeIds = (): string[] =>
+          getOwnedRepoWorktreeIds(get(), projectId, ownsWorktree)
         // Why only awaited for a VM: concurrent removals of one row must reach the host together.
         const vmDestroy = destroyRecipeVmBeforeProjectRemoval(
           get(),
           ownerRepo,
           ownerHostId,
-          getKnownRepoWorktreeIds(get(), projectId, ownerHostId)
+          ownedWorktreeIds()
         )
         const vmServerDestroyed = vmDestroy !== false && (await vmDestroy)
         // Why: derive the target from the owner row's host so an SSH host removal never routes repo.rm to the focused runtime.
@@ -70,7 +74,7 @@ export function createRepoRemovalActions(
         if (!target) {
           throw new Error('The project host is unresolved. Refresh and retry.')
         }
-        const knownWorktreeIds = getKnownRepoWorktreeIds(get(), projectId, ownerHostId)
+        const knownWorktreeIds = ownedWorktreeIds()
         // Why before the host call: its announcement can start a listing refresh that drops these tabs.
         const preCallTwins = collectRemovedHostTwins(get(), knownWorktreeIds, ownerHostId)
         const removedTwinEntityIds = new Set(
@@ -101,7 +105,7 @@ export function createRepoRemovalActions(
             target.environmentId,
             projectId,
             // Why re-read: the registration await can let a listing refresh add worktrees.
-            getKnownRepoWorktreeIds(get(), projectId, ownerHostId)
+            ownedWorktreeIds()
           )
         }
         try {
@@ -143,23 +147,27 @@ export function createRepoRemovalActions(
           await import('../../lib/workspace/catalog/repo-slug-index')
         clearRepoSlugCacheEntry(projectId)
 
+        // Live, no await until the set: with no other row left, unstamped leftovers have no owner.
+        const isLastRow = !get().repos.some(
+          (repo) => repo.id === projectId && !repoMatchesHostIdentity(repo, projectId, ownerHostId)
+        )
+        const removesWorktree = (worktree: { hostId?: string }): boolean =>
+          ownsWorktree(worktree) || (isLastRow && !normalizeExecutionHostId(worktree.hostId))
         const worktreeIds = [
           ...new Set([
             ...knownWorktreeIds,
-            ...getKnownRepoWorktreeIds(get(), projectId, ownerHostId)
+            ...getOwnedRepoWorktreeIds(get(), projectId, removesWorktree)
           ])
         ]
         // Why rechecked: a concurrent removal of the other copy leaves no survivor to share with.
         const twins = collectRemovedHostTwins(get(), worktreeIds, ownerHostId)
         const exclusiveWorktreeIds = worktreeIds.filter((id) => !twins.twinHostIds.has(id))
-        // Built before the set so the removed row still files its unstamped worktrees.
-        const ownsWorktree = createRepoWorktreeHostMatcher(get().repos, projectId, ownerHostId)
         const localAgentContextProjectIds =
           ownerHostId === LOCAL_EXECUTION_HOST_ID
             ? [
                 projectId,
                 ...(get().worktreesByRepo[projectId] ?? [])
-                  .filter(ownsWorktree)
+                  .filter(removesWorktree)
                   .flatMap((worktree) => (worktree.projectId ? [worktree.projectId] : []))
               ]
             : []
@@ -192,7 +200,7 @@ export function createRepoRemovalActions(
         set((s) => {
           const nextWorktrees = { ...s.worktreesByRepo }
           const remainingWorktrees = (nextWorktrees[projectId] ?? []).filter(
-            (worktree) => !ownsWorktree(worktree)
+            (worktree) => !removesWorktree(worktree)
           )
           if (remainingWorktrees.length > 0) {
             nextWorktrees[projectId] = remainingWorktrees
@@ -203,7 +211,7 @@ export function createRepoRemovalActions(
           const detected = nextDetectedWorktrees[projectId]
           if (detected) {
             const remainingDetected = detected.worktrees.filter(
-              (worktree) => !ownsWorktree(worktree)
+              (worktree) => !removesWorktree(worktree)
             )
             if (remainingDetected.length > 0) {
               nextDetectedWorktrees[projectId] = { ...detected, worktrees: remainingDetected }

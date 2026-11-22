@@ -13,13 +13,13 @@ type HostScopedWorktree = { hostId?: string }
 type HostScopedWorktreeRef = HostScopedWorktree & { id: string }
 
 /** The sidebar's filing rule: an unstamped worktree takes its repo row's host.
- * Unresolved ones (twins that disagree, or no repo list) stay legacy-local, as before. */
+ * Unresolved ones (twins that disagree, or no row) stay legacy-local, as before. */
 export function createRepoWorktreeHostMatcher(
-  repos: readonly ExecutionHostOwnerRow[] | undefined,
+  repos: readonly ExecutionHostOwnerRow[],
   repoId: string,
   hostId: string
 ): (worktree: HostScopedWorktree) => boolean {
-  const lookup = createRepoRowExecutionHostLookup(repos ?? [])
+  const lookup = createRepoRowExecutionHostLookup(repos)
   return (worktree) => {
     const owner = resolveWorktreeExecutionHost(lookup, { repoId, hostId: worktree.hostId })
     return owner.kind === 'resolved'
@@ -46,8 +46,8 @@ export function countLinkedRepoWorkspaces(
 }
 
 type RepoWorktreeCatalog = {
-  /** Absent only for legacy callers; it decides the host of unstamped worktrees. */
-  repos?: readonly ExecutionHostOwnerRow[]
+  /** Decides the host of unstamped worktrees. */
+  repos: readonly ExecutionHostOwnerRow[]
   worktreesByRepo: Readonly<Record<string, readonly HostScopedWorktreeRef[] | undefined>>
   detectedWorktreesByRepo: Readonly<
     Record<string, { worktrees: readonly HostScopedWorktreeRef[] } | undefined>
@@ -59,10 +59,20 @@ export function getKnownRepoWorktreeIds(
   projectId: string,
   hostId?: string
 ): string[] {
+  return getOwnedRepoWorktreeIds(
+    state,
+    projectId,
+    hostId ? createRepoWorktreeHostMatcher(state.repos, projectId, hostId) : () => true
+  )
+}
+
+/** Listed and detected worktree ids for the project that `ownsWorktree` accepts. */
+export function getOwnedRepoWorktreeIds(
+  state: Omit<RepoWorktreeCatalog, 'repos'>,
+  projectId: string,
+  ownsWorktree: (worktree: HostScopedWorktree) => boolean
+): string[] {
   const ids = new Set<string>()
-  const ownsWorktree = hostId
-    ? createRepoWorktreeHostMatcher(state.repos, projectId, hostId)
-    : () => true
   for (const worktree of selectWorktreesByRepo(state)[projectId] ?? []) {
     if (ownsWorktree(worktree)) {
       ids.add(worktree.id)

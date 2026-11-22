@@ -33,6 +33,12 @@ const unstamped = worktree('/remote/same/feature')
 const localStamped = worktree('/work/same/local', 'local')
 const sshStamped = worktree('/remote/same/ssh', SSH_HOST)
 const legacyUnstamped = worktree('/work/same/legacy')
+const secondSshRow: Repo = {
+  ...sshRow,
+  path: '/remote2/same',
+  connectionId: 'target-2',
+  executionHostId: 'ssh:target-2'
+}
 
 function catalog(repos: Repo[], worktrees: Worktree[]) {
   return {
@@ -86,6 +92,36 @@ describe('removeProject worktree ownership', () => {
   it('drops an unstamped worktree with its SSH project', async () => {
     const store = createTestStore()
     store.setState({ repos: [sshRow], worktreesByRepo: { [REPO_ID]: [unstamped] } })
+
+    await store.getState().removeProject(REPO_ID, { hostId: SSH_HOST })
+
+    expect(store.getState().repos).toEqual([])
+    expect(store.getState().worktreesByRepo[REPO_ID]).toBeUndefined()
+  })
+
+  it('keeps the removed row as owner when the repo list refetches during the host call', async () => {
+    const store = createTestStore()
+    store.setState({ repos: [sshRow], worktreesByRepo: { [REPO_ID]: [unstamped] } })
+    // A repos:changed refetch lands while removeForHost is in flight and already lacks the row.
+    vi.mocked(window.api.repos.removeForHost).mockImplementation(async () => {
+      store.setState({ repos: [] })
+    })
+
+    await store.getState().removeProject(REPO_ID, { hostId: SSH_HOST })
+
+    expect(store.getState().worktreesByRepo[REPO_ID]).toBeUndefined()
+  })
+
+  it('purges unstamped worktrees once the last row for the id is removed', async () => {
+    const store = createTestStore()
+    store.setState({
+      repos: [sshRow, secondSshRow],
+      worktreesByRepo: { [REPO_ID]: [unstamped] }
+    })
+    // The twin row leaves mid-call, so the start-of-removal snapshot owns the worktree on neither host.
+    vi.mocked(window.api.repos.removeForHost).mockImplementation(async () => {
+      store.setState({ repos: [sshRow] })
+    })
 
     await store.getState().removeProject(REPO_ID, { hostId: SSH_HOST })
 
