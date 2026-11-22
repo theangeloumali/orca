@@ -11988,7 +11988,10 @@
           "projectGroupRefreshSuccess_other": "Adicionados {{count}} projetos a {{group}}",
           "refreshProjectGroup": "Atualizar projetos",
           "projectGroupRefreshing": "Atualizando {{group}}…",
-          "projectGroupRefreshSuccess_many": "Adicionados {{count}} projetos a {{group}}"
+          "projectGroupRefreshSuccess_many": "Adicionados {{count}} projetos a {{group}}",
+          "collapseAllInGroup": "Recolher tudo em {{value0}}",
+          "expandAllInGroup": "Expandir tudo em {{value0}}",
+          "clickKeyLabel": "clique"
         },
         "WorktreeCardMeta": {
           "3e65e11cc6": "Metadados do espaço de trabalho",
@@ -12761,8 +12764,8 @@
         "SidebarHeader": {
           "92154beb7e": "Novo espaço de trabalho",
           "addProject": "Adicionar projeto",
-          "expandAllProjects": "Expandir todos os projetos",
-          "collapseAllProjects": "Recolher todos os projetos"
+          "collapseAll": "Recolher tudo",
+          "expandAll": "Expandir tudo"
         },
         "NewExternalWorktreesInboxLine": {
           "9f2d4c8b17": "Ocultar worktrees externas permanentemente para {{value0}}",
@@ -13319,6 +13322,18 @@
         },
         "moveToGroup": {
           "otherDevice": "Em outro dispositivo"
+        },
+        "activeOnly": {
+          "label": "Só ativos",
+          "tooltipOn": "Mostrar todos os workspaces",
+          "tooltipOff": "Mostrar só workspaces com um terminal em execução",
+          "filterAria": "Mostrar só workspaces com um terminal em execução",
+          "status": "Mostrando {{shown}} de {{total}} projetos",
+          "statusWorkspaces": "Mostrando {{shown}} de {{total}} workspaces",
+          "showAll": "Mostrar tudo",
+          "hiddenNeedsYou_one": "{{count}} oculto precisa de você",
+          "hiddenNeedsYou_other": "{{count}} ocultos precisam de você",
+          "hiddenNeedsYou_many": "{{count}} ocultos precisam de você"
         }
       },
       "editor": {

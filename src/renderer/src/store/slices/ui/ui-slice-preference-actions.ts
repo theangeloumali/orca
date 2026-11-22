@@ -113,6 +113,8 @@ export function createUiPreferenceActions(set: UISliceSet, get: UISliceGet): Par
     setHideWorkspacesFromOtherDevices: (v) => set({ hideWorkspacesFromOtherDevices: v }),
     alwaysShowDefaultBranchWorkspace: true,
     setAlwaysShowDefaultBranchWorkspace: (v) => set({ alwaysShowDefaultBranchWorkspace: v }),
+    showOnlyRunningTerminals: false,
+    setShowOnlyRunningTerminals: (v) => set({ showOnlyRunningTerminals: v }),
     ...createUiBotPreferenceActions(set, get),
 
     explorerDisplayRootByWorktree: {},

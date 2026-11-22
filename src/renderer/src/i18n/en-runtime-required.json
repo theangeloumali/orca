@@ -998,6 +998,10 @@
           "searchHiddenPlaceholder_one": "Search {{count}} worktree…",
           "searchHiddenPlaceholder_other": "Search {{count}} worktrees…"
         },
+        "activeOnly": {
+          "hiddenNeedsYou_one": "{{count}} hidden needs you",
+          "hiddenNeedsYou_other": "{{count}} hidden need you"
+        },
         "local": {
           "base": {
             "ref": {

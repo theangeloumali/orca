@@ -19,6 +19,7 @@ export function appendProjectGroupSections(
     folderWorkspaces: readonly RenderableFolderWorkspace[]
     projectOrderBy: ProjectOrderBy
     repoOrder: Map<string, number> | undefined
+    hideEmptyGroups?: boolean
   }
 ): void {
   const { result, collapsedGroups } = ctx
@@ -34,7 +35,8 @@ export function appendProjectGroupSections(
       projectGroups: args.projectGroups,
       folderCountByGroupId,
       projectOrderBy: args.projectOrderBy,
-      repoOrder: args.repoOrder
+      repoOrder: args.repoOrder,
+      hideEmptyGroups: args.hideEmptyGroups
     },
     {
       group: (projectGroup, depth, count) => {

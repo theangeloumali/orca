@@ -77,6 +77,7 @@ export function useVisibleSidebarWorktrees(args: {
     hideDetachedHeadWorkspaces,
     hideWorkspacesFromOtherDevices,
     alwaysShowDefaultBranchWorkspace,
+    showOnlyRunningTerminals,
     visibleWorkspaceHostIds,
     workspaceHostScope
   } = filterState
@@ -93,7 +94,9 @@ export function useVisibleSidebarWorktrees(args: {
   const pairedDeviceIdsByEnvironment = useAppStoreWithHostStatuses(selectPairedDevices)
   const lineageParentIdentities = useAppStoreWithHostStatuses(selectSidebarLineageParentIdentities)
 
-  const needsActivityMaps = !showSleepingWorkspaces || sortBy === 'smart'
+  // Active only reads live PTYs per tab, so it needs the same maps as the sleeping sweep.
+  const needsActivityMaps =
+    !showSleepingWorkspaces || sortBy === 'smart' || showOnlyRunningTerminals
   const tabsByWorktree = useAppStore((s) =>
     needsActivityMaps ? getVisibleWorktreeTerminalActivityTabs(s.tabsByWorktree) : null
   )
@@ -145,6 +148,7 @@ export function useVisibleSidebarWorktrees(args: {
       hideWorkspacesFromOtherDevices,
       pairedDeviceIdsByEnvironment,
       alwaysShowDefaultBranchWorkspace,
+      showOnlyRunningTerminals,
       repoMap,
       hiddenProjects: indexHiddenProjects(repos, defaultHostId),
       workspaceHostScope,
@@ -174,6 +178,7 @@ export function useVisibleSidebarWorktrees(args: {
     hideDetachedHeadWorkspaces,
     hideWorkspacesFromOtherDevices,
     alwaysShowDefaultBranchWorkspace,
+    showOnlyRunningTerminals,
     workspaceHostScope,
     visibleWorkspaceHostIds,
     defaultHostId,
@@ -193,5 +198,10 @@ export function useVisibleSidebarWorktrees(args: {
   // Reuse equal visibility results across epochs to avoid churning the entire row-model chain.
   const visibleWorktrees = useReusedArrayIdentity(recomputedVisibleWorktrees)
 
-  return { visibleWorktrees, pairedDeviceIdsByEnvironment, botListedWorktreeIdentities }
+  return {
+    visibleWorktrees,
+    pairedDeviceIdsByEnvironment,
+    botListedWorktreeIdentities,
+    lineageParentIdentities
+  }
 }

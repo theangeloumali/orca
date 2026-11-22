@@ -6627,7 +6627,9 @@
         },
         "SidebarHeader": {
           "92154beb7e": "Новое рабочее пространство",
-          "addProject": "Добавить проект"
+          "addProject": "Добавить проект",
+          "collapseAll": "Свернуть все",
+          "expandAll": "Развернуть все"
         },
         "SidebarNav": {
           "80611a8b10": "Поиск",
@@ -6975,7 +6977,10 @@
           "groupProjectsRemained_few": "Проектов группы, оставшихся после её удаления: {{remaining}} из {{count}}.",
           "groupProjectsRemained_many": "Проектов группы, оставшихся после её удаления: {{remaining}} из {{count}}.",
           "groupProjectsRemained_other": "Проектов группы, оставшихся после её удаления: {{remaining}} из {{count}}.",
-          "hostServerReplaced": "Другой сервер: забудьте его и подключитесь снова"
+          "hostServerReplaced": "Другой сервер: забудьте его и подключитесь снова",
+          "collapseAllInGroup": "Свернуть всё в {{value0}}",
+          "expandAllInGroup": "Развернуть всё в {{value0}}",
+          "clickKeyLabel": "щелчок"
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "Отмена",
@@ -7743,6 +7748,19 @@
         },
         "moveToGroup": {
           "otherDevice": "На другом устройстве"
+        },
+        "activeOnly": {
+          "label": "Только активные",
+          "tooltipOn": "Показать все рабочие области",
+          "tooltipOff": "Показывать только рабочие области с запущенным терминалом",
+          "filterAria": "Показывать только рабочие области с запущенным терминалом",
+          "status": "Показано {{shown}} из {{total}} проектов",
+          "statusWorkspaces": "Показано {{shown}} из {{total}} рабочих областей",
+          "showAll": "Показать все",
+          "hiddenNeedsYou_one": "{{count}} скрытый ждёт вас",
+          "hiddenNeedsYou_few": "{{count}} скрытых ждут вас",
+          "hiddenNeedsYou_many": "{{count}} скрытых ждут вас",
+          "hiddenNeedsYou_other": "{{count}} скрытых ждут вас"
         }
       },
       "shared": {

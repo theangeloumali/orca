@@ -6515,8 +6515,8 @@
         "SidebarHeader": {
           "92154beb7e": "新工作区",
           "addProject": "添加项目",
-          "expandAllProjects": "展开所有项目",
-          "collapseAllProjects": "折叠所有项目"
+          "collapseAll": "全部折叠",
+          "expandAll": "全部展开"
         },
         "SidebarNav": {
           "80611a8b10": "搜索",
@@ -6845,7 +6845,10 @@
           "hostVmSetupFailed": "配置失败",
           "hostVmSuspended": "已挂起",
           "hostVmWaking": "正在唤醒…",
-          "hostVmProvisioning": "正在预配…"
+          "hostVmProvisioning": "正在预配…",
+          "collapseAllInGroup": "折叠 {{value0}} 内的全部项目",
+          "expandAllInGroup": "展开 {{value0}} 内的全部项目",
+          "clickKeyLabel": "点按"
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "取消",
@@ -7629,6 +7632,16 @@
         "projectOrderSaveFailed": "无法保存完整的项目顺序",
         "moveToGroup": {
           "otherDevice": "在其他设备上"
+        },
+        "activeOnly": {
+          "label": "仅活动中",
+          "tooltipOn": "显示所有工作区",
+          "tooltipOff": "仅显示有运行中终端的工作区",
+          "filterAria": "仅显示有运行中终端的工作区",
+          "status": "显示 {{total}} 个项目中的 {{shown}} 个",
+          "statusWorkspaces": "显示 {{total}} 个工作区中的 {{shown}} 个",
+          "showAll": "全部显示",
+          "hiddenNeedsYou_other": "{{count}} 个已隐藏的工作区需要你"
         }
       },
       "shared": {

@@ -43,6 +43,7 @@ export function buildVisibleWorktreeOptionsFromState(
       ? getPairedDeviceIdsByEnvironment(state.runtimeEnvironments, statuses)
       : EMPTY_PAIRED_DEVICE_IDS_BY_ENVIRONMENT,
     alwaysShowDefaultBranchWorkspace: state.alwaysShowDefaultBranchWorkspace,
+    showOnlyRunningTerminals: state.showOnlyRunningTerminals,
     repoMap,
     hiddenProjects: indexHiddenProjects(state.repos, defaultHostId),
     workspaceHostScope: state.workspaceHostScope,

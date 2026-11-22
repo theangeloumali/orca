@@ -6234,8 +6234,8 @@
         "SidebarHeader": {
           "92154beb7e": "新規ワークスペース",
           "addProject": "プロジェクトを追加",
-          "expandAllProjects": "すべてのプロジェクトを展開",
-          "collapseAllProjects": "すべてのプロジェクトを折りたたむ"
+          "collapseAll": "すべて折りたたむ",
+          "expandAll": "すべて展開"
         },
         "SidebarNav": {
           "80611a8b10": "検索",
@@ -6564,7 +6564,10 @@
           "hostVmSetupFailed": "セットアップに失敗しました",
           "hostVmSuspended": "一時停止中",
           "hostVmWaking": "復帰中…",
-          "hostVmProvisioning": "プロビジョニング中…"
+          "hostVmProvisioning": "プロビジョニング中…",
+          "collapseAllInGroup": "{{value0}} 内をすべて折りたたむ",
+          "expandAllInGroup": "{{value0}} 内をすべて展開",
+          "clickKeyLabel": "クリック"
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "キャンセル",
@@ -7344,6 +7347,16 @@
         },
         "moveToGroup": {
           "otherDevice": "別のデバイス"
+        },
+        "activeOnly": {
+          "label": "アクティブのみ",
+          "tooltipOn": "すべてのワークスペースを表示",
+          "tooltipOff": "実行中のターミナルがあるワークスペースのみ表示",
+          "filterAria": "実行中のターミナルがあるワークスペースのみ表示",
+          "status": "{{total}} 件中 {{shown}} 件のプロジェクトを表示",
+          "statusWorkspaces": "{{total}} 件中 {{shown}} 件のワークスペースを表示",
+          "showAll": "すべて表示",
+          "hiddenNeedsYou_other": "非表示のうち {{count}} 件が対応待ち"
         }
       },
       "shared": {

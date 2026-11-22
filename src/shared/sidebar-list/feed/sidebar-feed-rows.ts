@@ -10,10 +10,7 @@ import { getLogicalRepoOrderRankById } from '../sections/project-section-order'
 import type { ProjectSectionModel } from '../sections/project-section-grouping'
 import type { Repo } from '../../repository/repo-types'
 import type { ProjectOrderBy } from '../../ui-chrome/ui-chrome-types'
-import {
-  filterFolderWorkspacesFromOtherDevices,
-  isWorkspaceOwnedBySomeoneElse
-} from '../../workspace-view/workspace-creator-visibility'
+import { isWorkspaceOwnedBySomeoneElse } from '../../workspace-view/workspace-creator-visibility'
 import type { WorkspaceRowFilters } from '../../workspace-view/workspace-row-filters'
 import { getWorktreeHostIdentity } from '../../worktree/host-qualified-identity'
 import { hiddenProjectRowFacts, indexHiddenProjects } from '../../project/catalog/hidden-projects'
@@ -31,18 +28,12 @@ import type { WorktreeLineage } from '../../worktree/lineage-types'
 import type { FolderWorkspace } from '../../folder-workspaces/folder-workspace-types'
 import { getEmptyProjectPlaceholderRepoIds } from '../catalog/empty-project-placeholder-repos'
 import {
-  filterFolderWorkspacesForVisibleHosts,
   filterProjectGroupsForVisibleHosts,
   filterReposForVisibleHosts,
   getVisibleSidebarHostIdSet
 } from '../hosts/host-filtering'
-import { deferHostSectionCollapse, scopeHostSectionCollapse } from '../hosts/host-section-collapse'
 import { orderHostSectionOptions } from '../hosts/host-section-order'
-import {
-  addHostSectionRows,
-  type HostSectionOption,
-  type HostSectionRow
-} from '../hosts/host-section-rows'
+import type { HostSectionOption, HostSectionRow } from '../hosts/host-section-rows'
 import type { PinnedWorktreeDisplayPolicy, Row, WorktreeGroupBy } from '../row-types'
 import type { SidebarFeedWindowExtras } from '../sidebar-feed-extras'
 import type { SidebarFeedDomains } from './sidebar-feed-domains'
@@ -51,10 +42,15 @@ import type { FeedLineagePolicy } from './sidebar-feed-lineage-parents'
 import type { WorkspaceSortBy as SortBy } from '../../workspace-view/workspace-row-sort'
 import {
   selectVisibleSidebarWorktrees,
-  withoutBotListedFolderWorkspaces,
   withoutBotListedWorktrees
 } from '../selection/visible-worktrees'
-import { isIdleWorkspaceActivity } from '../feed-facts/workspace-activity-facts'
+import { selectVisibleFolderWorkspaces } from '../folders/visible-folder-workspaces'
+import { renderSidebarFeedRows } from './sidebar-feed-render-rows'
+import { getFolderWorkspaceWorktree } from '../../folder-workspaces/folder-workspace-worktree'
+import {
+  activityHasRunningTerminal,
+  isIdleWorkspaceActivity
+} from '../feed-facts/workspace-activity-facts'
 import { prGroupOfReviewFact } from '../feed-facts/workspace-review-facts'
 
 /** The host's view settings a reader shows the list with; the host's own phone reads them off ui.get. */
@@ -143,6 +139,8 @@ export function planSidebarFeedRows(
   const retained = new Set(domains.retention?.retainedIds)
   const rankByIdentity = new Map(rankedIdentities.map((identity, rank) => [identity, rank]))
   const factsOf = (worktree: Worktree) => byIdentity.get(getWorktreeHostIdentity(worktree))?.facts
+  const runningAt = (row: Worktree) =>
+    activityHasRunningTerminal(domains.activity.get(getWorktreeHostIdentity(row)))
   const pairedDeviceIdsByEnvironment = feedPairedDeviceIdsByEnvironment(domains)
   const hiddenProjects = indexHiddenProjects(repos, defaultHostId)
 
@@ -164,6 +162,7 @@ export function planSidebarFeedRows(
       isCliCreated: (worktree) => factsOf(worktree)?.cliCreated === true,
       isDetachedHead: (worktree) => factsOf(worktree)?.detachedHead === true,
       isMainWorktree: (worktree) => worktree.isMainWorktree,
+      hasRunningTerminal: runningAt,
       isSleeping: (worktree) => {
         const identity = getWorktreeHostIdentity(worktree)
         const activity = domains.activity.get(identity)
@@ -177,23 +176,21 @@ export function planSidebarFeedRows(
     forcedVisibleWorktreeIds: extras.forcedVisibleWorktreeIds
   })
 
-  const visibleHostIdSet = getVisibleSidebarHostIdSet(
-    view.visibleWorkspaceHostIds,
-    view.workspaceHostScope
-  )
+  const { visibleWorkspaceHostIds, workspaceHostScope } = view
+  const visibleHostIdSet = getVisibleSidebarHostIdSet(visibleWorkspaceHostIds, workspaceHostScope)
   const visibleRepos = filterReposForVisibleHosts(repos, visibleHostIdSet, defaultHostId)
-  const hostVisibleFolderWorkspaces = filterFolderWorkspacesForVisibleHosts(
-    withoutBotListedFolderWorkspaces(folderWorkspaces, extras.botListedWorktreeIdentities),
+  const visibleFolderWorkspaces = selectVisibleFolderWorkspaces({
+    folderWorkspaces,
     projectGroups,
+    filters: view.filters,
     visibleHostIdSet,
-    defaultHostId
-  )
-  const visibleFolderWorkspaces = view.filters.hideWorkspacesFromOtherDevices
-    ? filterFolderWorkspacesFromOtherDevices(
-        hostVisibleFolderWorkspaces,
-        pairedDeviceIdsByEnvironment
-      )
-    : hostVisibleFolderWorkspaces
+    defaultHostId,
+    pairedDeviceIdsByEnvironment,
+    botListedIdentities: extras.botListedWorktreeIdentities,
+    hasRunningTerminal: (folder) => runningAt(getFolderWorkspaceWorktree(folder)),
+    listedWorktrees: visibleWorktrees,
+    lineageParentIdentities: index.lineageParentIdentities
+  })
   const visibleProjectGroups = filterProjectGroupsForVisibleHosts(
     projectGroups,
     visibleHostIdSet,
@@ -212,7 +209,9 @@ export function planSidebarFeedRows(
     worktreesByRepo,
     visibleWorktrees,
     filterRepoIds: view.filters.filterRepoIds,
-    hiddenProjects
+    hiddenProjects,
+    // The window list passes the same flag (use-empty-project-placeholders.ts).
+    hideEmptyProjects: view.filters.showOnlyRunningTerminals === true
   })
   const plan = planSidebarRows({
     groupBy,
@@ -237,6 +236,8 @@ export function planSidebarFeedRows(
     pendingCreations,
     projectGrouping: catalog.projectGrouping,
     folderWorkspaces: visibleFolderWorkspaces,
+    // The window list prunes empty groups the same way (use-section-rows.ts).
+    hideEmptyProjectGroups: view.filters.showOnlyRunningTerminals === true,
     hostLabelById: new Map(hostOptions.map((host) => [host.id, host.label])),
     defaultHostId,
     pinnedDisplayPolicy: view.pinnedDisplayPolicy,
@@ -260,35 +261,6 @@ export function planSidebarFeedRows(
       view.workspaceHostScope !== ALL_EXECUTION_HOSTS_SCOPE ||
       view.visibleWorkspaceHostIds !== null
   }
-}
-
-/** The planned rows under `collapsedGroups`, wrapped in host sections. */
-export function renderSidebarFeedRows(
-  planned: SidebarFeedPlan,
-  view: SidebarFeedView,
-  collapsedGroups: ReadonlySet<string>,
-  forceCollapseHosts = false
-): Pick<SidebarFeedRows, 'rows' | 'sectionRows'> {
-  const collapsed = new Set(collapsedGroups)
-  const rows = planned.plan.render(
-    planned.hostScoped ? deferHostSectionCollapse(collapsed) : collapsed
-  )
-  const sectioned = addHostSectionRows({
-    rows,
-    hostOptions: planned.orderedHostOptions,
-    workspaceHostScope: view.workspaceHostScope,
-    visibleWorkspaceHostIds: view.visibleWorkspaceHostIds,
-    defaultHostId: view.defaultHostId,
-    localHostLabel: view.localHostLabel,
-    collapsedHostKeys: collapsed,
-    forceCollapseHosts,
-    preferProjectGrouping: true,
-    showHostSections: view.showHostSections
-  })
-  const sectionRows = planned.hostScoped
-    ? scopeHostSectionCollapse({ rows: sectioned, collapsedGroups: collapsed })
-    : sectioned
-  return { rows, sectionRows }
 }
 
 /** Build from published host inputs through shared filters/grouping without a clock; transient window overlays/cards stay outside. */

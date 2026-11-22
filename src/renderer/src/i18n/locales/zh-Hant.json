@@ -6203,7 +6203,9 @@
         },
         "SidebarHeader": {
           "92154beb7e": "新工作區",
-          "addProject": "新增專案"
+          "addProject": "新增專案",
+          "collapseAll": "全部摺疊",
+          "expandAll": "全部展開"
         },
         "SidebarNav": {
           "80611a8b10": "搜尋",
@@ -6521,7 +6523,10 @@
           "hideChildWorkspaces_other": "隱藏 {{count}} 個子工作區",
           "childCount_other": "{{count}} 個子項目",
           "groupProjectsRemained_other": "刪除群組後，原先內含的 {{count}} 個專案中仍保留了 {{remaining}} 個。",
-          "hostServerReplaced": "伺服器不同：請先忘記，再連線"
+          "hostServerReplaced": "伺服器不同：請先忘記，再連線",
+          "collapseAllInGroup": "摺疊 {{value0}} 內的全部項目",
+          "expandAllInGroup": "展開 {{value0}} 內的全部項目",
+          "clickKeyLabel": "點按"
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "取消",
@@ -7245,6 +7250,16 @@
         },
         "moveToGroup": {
           "otherDevice": "在其他裝置上"
+        },
+        "activeOnly": {
+          "label": "僅活動中",
+          "tooltipOn": "顯示所有工作區",
+          "tooltipOff": "僅顯示有執行中終端機的工作區",
+          "filterAria": "僅顯示有執行中終端機的工作區",
+          "status": "顯示 {{total}} 個專案中的 {{shown}} 個",
+          "statusWorkspaces": "顯示 {{total}} 個工作區中的 {{shown}} 個",
+          "showAll": "全部顯示",
+          "hiddenNeedsYou_other": "{{count}} 個已隱藏的工作區需要你"
         }
       },
       "shared": {

@@ -1,4 +1,7 @@
 import { useMemo } from 'react'
+import { useAppStore } from '@/store/index'
+import { folderWorkspaceKey } from '../../../../../../shared/workspace/identity/workspace-scope'
+import { worktreeHasRunningTerminal } from './desktop-workspace-row-facts'
 import type { FolderWorkspace } from '../../../../../../shared/folder-workspaces/folder-workspace-types'
 import type { ProjectGroup } from '../../../../../../shared/project/groups/project-group-types'
 import type { Repo } from '../../../../../../shared/repository/repo-types'
@@ -7,13 +10,14 @@ import {
   type ExecutionHostId
 } from '../../../../../../shared/execution-host/execution-host'
 import type { SidebarWorktreeFilters } from './use-filters'
-import { filterFolderWorkspacesFromOtherDevices } from '../../../../../../shared/workspace-view/workspace-creator-visibility'
-import { withoutBotListedFolderWorkspaces } from '../../../../../../shared/sidebar-list/selection/visible-worktrees'
+import type { filterFolderWorkspacesFromOtherDevices } from '../../../../../../shared/workspace-view/workspace-creator-visibility'
 import {
-  filterFolderWorkspacesForVisibleHosts,
   filterProjectGroupsForVisibleHosts,
   getVisibleSidebarHostIdSet
 } from '../../../../../../shared/sidebar-list/hosts/host-filtering'
+import { selectVisibleFolderWorkspaces } from '../../../../../../shared/sidebar-list/folders/visible-folder-workspaces'
+import type { SidebarLineageParentIdentities } from '../../../../../../shared/sidebar-list/lineage/worktree-lineage-projection'
+import type { Worktree } from '../../../../../../shared/worktree/types'
 
 // Apply host/device scope consistently to repos, project groups and folder workspaces.
 export function useSidebarHostVisibleScope(args: {
@@ -25,10 +29,32 @@ export function useSidebarHostVisibleScope(args: {
   pairedDeviceIdsByEnvironment: Parameters<typeof filterFolderWorkspacesFromOtherDevices>[1]
   /** Listed under their bot instead (compute-visible-worktrees.ts). */
   botListedWorktreeIdentities?: ReadonlySet<string>
+  /** The rows the list keeps; Active only keeps an idle folder they nest under. */
+  listedWorktrees: readonly Worktree[]
+  lineageParentIdentities: SidebarLineageParentIdentities | undefined
 }) {
   const { filterState, defaultHostId, repos, projectGroups, folderWorkspaces } = args
-  const { visibleWorkspaceHostIds, workspaceHostScope, hideWorkspacesFromOtherDevices } =
-    filterState
+  const {
+    visibleWorkspaceHostIds,
+    workspaceHostScope,
+    hideWorkspacesFromOtherDevices,
+    showOnlyRunningTerminals
+  } = filterState
+  // A folder's tabs live under its folder: worktree id. A joined string keeps the selection stable.
+  const runningFolderIdList = useAppStore((s) =>
+    showOnlyRunningTerminals
+      ? folderWorkspaces
+          .filter((folder) =>
+            worktreeHasRunningTerminal(
+              s.tabsByWorktree,
+              s.ptyIdsByTabId,
+              folderWorkspaceKey(folder.id)
+            )
+          )
+          .map((folder) => folder.id)
+          .join('\n')
+      : ''
+  )
   const visibleHostIdSet = useMemo(
     () => getVisibleSidebarHostIdSet(visibleWorkspaceHostIds, workspaceHostScope),
     [visibleWorkspaceHostIds, workspaceHostScope]
@@ -47,27 +73,33 @@ export function useSidebarHostVisibleScope(args: {
     () => filterProjectGroupsForVisibleHosts(projectGroups, visibleHostIdSet, defaultHostId),
     [defaultHostId, projectGroups, visibleHostIdSet]
   )
+  // Only Active only reads the listed rows, so other list changes leave this memo alone.
+  const listedWorktrees = showOnlyRunningTerminals ? args.listedWorktrees : null
   const visibleFolderWorkspacesForRows = useMemo(() => {
-    const hostVisibleWorkspaces = filterFolderWorkspacesForVisibleHosts(
-      withoutBotListedFolderWorkspaces(folderWorkspaces, args.botListedWorktreeIdentities),
+    const runningFolderIds = new Set(runningFolderIdList.split('\n'))
+    return selectVisibleFolderWorkspaces({
+      folderWorkspaces,
       projectGroups,
+      filters: { hideWorkspacesFromOtherDevices, showOnlyRunningTerminals },
       visibleHostIdSet,
-      defaultHostId
-    )
-    if (!hideWorkspacesFromOtherDevices) {
-      return hostVisibleWorkspaces
-    }
-    return filterFolderWorkspacesFromOtherDevices(
-      hostVisibleWorkspaces,
-      args.pairedDeviceIdsByEnvironment
-    )
+      defaultHostId,
+      pairedDeviceIdsByEnvironment: args.pairedDeviceIdsByEnvironment,
+      botListedIdentities: args.botListedWorktreeIdentities,
+      hasRunningTerminal: (folder) => runningFolderIds.has(folder.id),
+      listedWorktrees: listedWorktrees ?? [],
+      lineageParentIdentities: args.lineageParentIdentities
+    })
   }, [
     args.botListedWorktreeIdentities,
+    args.lineageParentIdentities,
     args.pairedDeviceIdsByEnvironment,
     defaultHostId,
     folderWorkspaces,
     hideWorkspacesFromOtherDevices,
+    listedWorktrees,
     projectGroups,
+    runningFolderIdList,
+    showOnlyRunningTerminals,
     visibleHostIdSet
   ])
 

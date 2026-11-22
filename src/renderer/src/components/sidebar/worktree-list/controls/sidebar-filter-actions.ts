@@ -20,6 +20,7 @@ export type SidebarFilterState = {
   hideWorkspacesFromOtherDevices: boolean
   /** Keeps each project's main workspace out of the "Hide sleeping" sweep; absent means on. */
   alwaysShowDefaultBranchWorkspace?: boolean
+  showOnlyRunningTerminals: boolean
   visibleWorkspaceHostIds?: readonly ExecutionHostId[] | null
   workspaceHostScope?: ExecutionHostScope
 }
@@ -33,6 +34,7 @@ export function sidebarWorkspaceRowFilters(state: SidebarFilterState): Workspace
     hideCliCreatedWorkspaces: state.hideCliCreatedWorkspaces,
     hideDetachedHeadWorkspaces: state.hideDetachedHeadWorkspaces,
     hideWorkspacesFromOtherDevices: state.hideWorkspacesFromOtherDevices,
+    showOnlyRunningTerminals: state.showOnlyRunningTerminals,
     filterRepoIds: state.filterRepoIds,
     visibleHostIds: resolveVisibleWorkspaceHostIds(
       state.visibleWorkspaceHostIds,
@@ -54,6 +56,7 @@ export function selectSidebarFilterState(
     hideDetachedHeadWorkspaces: state.hideDetachedHeadWorkspaces,
     hideWorkspacesFromOtherDevices: state.hideWorkspacesFromOtherDevices,
     alwaysShowDefaultBranchWorkspace: state.alwaysShowDefaultBranchWorkspace,
+    showOnlyRunningTerminals: state.showOnlyRunningTerminals,
     visibleWorkspaceHostIds: state.visibleWorkspaceHostIds,
     workspaceHostScope: state.workspaceHostScope
   }
@@ -74,6 +77,7 @@ export type SidebarFilterSetters = Pick<
   | 'setHideWorkspacesFromOtherDevices'
   | 'setFilterRepoIds'
   | 'setVisibleWorkspaceHostIds'
+  | 'setShowOnlyRunningTerminals'
 >
 
 /** How each shared filter returns to its default; a new filter fails to compile until listed. */
@@ -102,7 +106,8 @@ const RESET_SIDEBAR_FILTER: Record<
       NO_WORKSPACE_ROW_FILTERS.hideWorkspacesFromOtherDevices
     ),
   filterRepoIds: (store) => store.setFilterRepoIds([...NO_WORKSPACE_ROW_FILTERS.filterRepoIds]),
-  visibleHostIds: (store) => store.setVisibleWorkspaceHostIds(null)
+  visibleHostIds: (store) => store.setVisibleWorkspaceHostIds(null),
+  showOnlyRunningTerminals: (store) => store.setShowOnlyRunningTerminals(false)
 }
 
 /** Reset only active filters so an unfiltered click performs no writes. */

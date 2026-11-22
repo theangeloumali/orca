@@ -1,14 +1,22 @@
 import type { AppState } from '@/store/types'
+import type { FolderWorkspace } from '../../../shared/folder-workspaces/folder-workspace-types'
 import type { RuntimeStatuses } from '@/store/slices/runtime-status/views/runtime-status-owner'
 import { getIndexedAllWorktrees } from '@/store/slices/worktrees/listing/worktree-catalog-index'
 import { getIndexedRepoMap } from '@/store/repos/repository-catalog-index'
 import { ALL_EXECUTION_HOSTS_SCOPE } from '../../../shared/execution-host/execution-host'
-import { parseWorkspaceKey } from '../../../shared/workspace/identity/workspace-scope'
+import {
+  folderWorkspaceKey,
+  parseWorkspaceKey
+} from '../../../shared/workspace/identity/workspace-scope'
 import { sidebarHasActiveFilters } from '@/components/sidebar/worktree-list/controls/sidebar-filter-actions'
-import { computeVisibleWorktreeIds } from '@/components/sidebar/worktree-list/listing/compute-visible-worktrees'
+import {
+  computeVisibleWorktrees,
+  type VisibleWorktreeOptions
+} from '@/components/sidebar/worktree-list/listing/compute-visible-worktrees'
+import { worktreeHasRunningTerminal } from '@/components/sidebar/worktree-list/listing/desktop-workspace-row-facts'
 import { buildVisibleWorktreeOptionsFromState } from '@/components/sidebar/worktree-list/listing/visible-worktree-options-from-state'
 import { NO_HIDDEN_PROJECTS } from '../../../shared/project/catalog/hidden-projects'
-import { isFolderWorkspaceFromOtherDevice } from '../../../shared/workspace-view/workspace-creator-visibility'
+import { selectVisibleFolderWorkspaces } from '../../../shared/sidebar-list/folders/visible-folder-workspaces'
 import {
   selectFolderWorkspaces,
   selectWorktreesByRepo
@@ -29,16 +37,18 @@ export function isWorkspaceNotificationMutedBySidebarFilters(
   ) {
     return false
   }
-  const repoMap = getIndexedRepoMap(state.repos)
-  const inputs = buildVisibleWorktreeOptionsFromState(state, statuses, repoMap)
+  const inputs: VisibleWorktreeOptions = {
+    ...buildVisibleWorktreeOptionsFromState(state, statuses, getIndexedRepoMap(state.repos)),
+    // Hiding a project is a view choice, never a mute: its workspaces notify as if listed.
+    hiddenProjects: NO_HIDDEN_PROJECTS,
+    filterRepoIds: [],
+    workspaceHostScope: ALL_EXECUTION_HOSTS_SCOPE,
+    visibleWorkspaceHostIds: null
+  }
   const scope = parseWorkspaceKey(workspaceId)
   if (scope?.type === 'folder') {
     const folder = selectFolderWorkspaces(state).find((item) => item.id === scope.folderWorkspaceId)
-    return (
-      folder !== undefined &&
-      inputs.hideWorkspacesFromOtherDevices &&
-      isFolderWorkspaceFromOtherDevice(folder, inputs.pairedDeviceIdsByEnvironment)
-    )
+    return folder !== undefined && !isFolderListed(state, inputs, folder)
   }
   const known = getIndexedAllWorktrees(selectWorktreesByRepo(state)).some(
     (worktree) => worktree.id === workspaceId && !worktree.isArchived
@@ -47,13 +57,32 @@ export function isWorkspaceNotificationMutedBySidebarFilters(
     return false
   }
   // Use the full sidebar pass (~0.2–0.3ms/1,000 workspaces) to preserve every rule that adds rows back.
-  const visibleIds = computeVisibleWorktreeIds(selectWorktreesByRepo(state), [], {
-    ...inputs,
-    // Hiding a project is a view choice, never a mute: its workspaces notify as if listed.
-    hiddenProjects: NO_HIDDEN_PROJECTS,
-    filterRepoIds: [],
-    workspaceHostScope: ALL_EXECUTION_HOSTS_SCOPE,
-    visibleWorkspaceHostIds: null
-  })
-  return !visibleIds.includes(workspaceId)
+  return !computeVisibleWorktrees(selectWorktreesByRepo(state), [], inputs).some(
+    (worktree) => worktree.id === workspaceId
+  )
+}
+
+// The list's own folder rule, so an idle folder Active only hides mutes like a hidden worktree.
+function isFolderListed(
+  state: AppState,
+  inputs: VisibleWorktreeOptions,
+  folder: FolderWorkspace
+): boolean {
+  return selectVisibleFolderWorkspaces({
+    folderWorkspaces: [folder],
+    projectGroups: state.projectGroups,
+    filters: inputs,
+    visibleHostIdSet: null,
+    defaultHostId: inputs.defaultHostId,
+    pairedDeviceIdsByEnvironment: inputs.pairedDeviceIdsByEnvironment,
+    botListedIdentities: inputs.botListedWorktreeIdentities,
+    hasRunningTerminal: (candidate) =>
+      worktreeHasRunningTerminal(
+        inputs.tabsByWorktree,
+        inputs.ptyIdsByTabId,
+        folderWorkspaceKey(candidate.id)
+      ),
+    listedWorktrees: computeVisibleWorktrees(selectWorktreesByRepo(state), [], inputs),
+    lineageParentIdentities: inputs.lineageParentIdentities
+  }).includes(folder)
 }

@@ -36,6 +36,8 @@ export function walkProjectGroupTree<V extends GroupedProjectEntry>(
     folderCountByGroupId: ReadonlyMap<string, number>
     projectOrderBy: ProjectOrderBy
     repoOrder: ReadonlyMap<string, number> | undefined
+    /** Drop groups with nothing listed under them (Active only). */
+    hideEmptyGroups?: boolean
   },
   visit: ProjectGroupTreeVisitor<V>
 ): void {
@@ -99,7 +101,8 @@ export function walkProjectGroupTree<V extends GroupedProjectEntry>(
 
   const walkProjectGroup = (projectGroup: ProjectGroup, depth: number): void => {
     const repoEntries = sortRepoEntriesWithinGroup(groupByProjectGroupId.get(projectGroup.id) ?? [])
-    if (visit.group(projectGroup, depth, getProjectGroupSubtreeCount(projectGroup.id))) {
+    const count = getProjectGroupSubtreeCount(projectGroup.id)
+    if (!(args.hideEmptyGroups && count === 0) && visit.group(projectGroup, depth, count)) {
       visit.projects(withRepoSectionDisplayLabels(repoEntries), depth + 1)
       for (const childGroup of childGroupsByParentId.get(projectGroup.id) ?? []) {
         walkProjectGroup(childGroup, depth + 1)

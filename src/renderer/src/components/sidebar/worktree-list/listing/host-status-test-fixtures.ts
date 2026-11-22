@@ -100,6 +100,7 @@ export const visibilityArgs: Parameters<typeof useVisibleSidebarWorktrees>[0] = 
     hideDetachedHeadWorkspaces: false,
     hideWorkspacesFromOtherDevices: false,
     alwaysShowDefaultBranchWorkspace: true,
+    showOnlyRunningTerminals: false,
     visibleWorkspaceHostIds: null,
     workspaceHostScope: 'all'
   },

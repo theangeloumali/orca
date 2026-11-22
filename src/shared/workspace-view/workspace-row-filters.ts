@@ -12,6 +12,8 @@ export type WorkspaceRowFilters = WorkspaceKindSwitches & {
   /** Keeps each project's main workspace out of the "Hide sleeping" sweep. Absent means on (#8873). */
   alwaysShowDefaultBranchWorkspace?: boolean
   hideWorkspacesFromOtherDevices: boolean
+  /** "Active only": keep just the workspaces with a live terminal. Absent means off. */
+  showOnlyRunningTerminals?: boolean
   filterRepoIds: readonly string[]
   /** The hosts shown; null shows every host. */
   visibleHostIds: readonly ExecutionHostId[] | null
@@ -26,6 +28,7 @@ export const WORKSPACE_ROW_FILTER_UI_FIELDS = {
   hideCliCreatedWorkspaces: 'hideCliCreatedWorkspaces',
   hideDetachedHeadWorkspaces: 'hideDetachedHeadWorkspaces',
   hideWorkspacesFromOtherDevices: 'hideWorkspacesFromOtherDevices',
+  showOnlyRunningTerminals: 'showOnlyRunningTerminals',
   filterRepoIds: 'filterRepoIds',
   visibleHostIds: 'visibleWorkspaceHostIds'
 } as const satisfies { [Key in keyof WorkspaceRowFilters]: keyof PersistedUIState }
@@ -44,18 +47,19 @@ export const NO_WORKSPACE_ROW_FILTERS: WorkspaceRowFilters = {
   hideCliCreatedWorkspaces: false,
   hideDetachedHeadWorkspaces: false,
   hideWorkspacesFromOtherDevices: false,
+  showOnlyRunningTerminals: false,
   filterRepoIds: [],
   visibleHostIds: null
 }
 
-/** Desktop derives facts from worktrees/tabs; mobile reads host-stamped facts. Missing older-host facts read false to keep rows visible. */
+/** Desktop derives facts from worktrees/tabs; mobile reads host-stamped facts. Missing older-host facts read so the row stays visible. */
 export type WorkspaceRowFactReader<Row> = {
   isArchived: (row: Row) => boolean
   /** The row's own host copy of its project is hidden; not a filter, so Clear filters never lifts it. */
   isInHiddenProject: (row: Row) => boolean
   /** Every copy of the project is hidden; a filter naming it selects nothing visible, so it is ignored. */
   isProjectHidden: (repoId: string) => boolean
-  /** A folder workspace follows only the host and other-client filters (useSidebarHostVisibleScope). */
+  /** A folder workspace follows only the host, other-client and Active only filters (useSidebarHostVisibleScope). */
   isFolderWorkspace: (row: Row) => boolean
   repoId: (row: Row) => string
   /** Null when the row's host cannot be resolved; a host filter then hides it. */
@@ -67,6 +71,8 @@ export type WorkspaceRowFactReader<Row> = {
   isDetachedHead: (row: Row) => boolean
   isMainWorktree: (row: Row) => boolean
   isSleeping: (row: Row) => boolean
+  /** Desktop reads local live PTYs; the feed and phone read the host's count, lost contact included. */
+  hasRunningTerminal: (row: Row) => boolean
 }
 
 /** Exempt the main checkout from sleeping sweeps, including detached/offline mains that may be a project’s only entry point (#8873). */
@@ -108,6 +114,10 @@ function buildWorkspaceRowPredicate<Row>(
         return false
       }
     }
+    // Before the folder exit: Active only hides idle folders and the main checkout too.
+    if (filters.showOnlyRunningTerminals && !read.hasRunningTerminal(row)) {
+      return false
+    }
     if (read.isFolderWorkspace(row)) {
       return true
     }
@@ -124,6 +134,44 @@ function buildWorkspaceRowPredicate<Row>(
       !read.isSleeping(row)
     )
   }
+}
+
+/** What Active only reads to judge a folder workspace and the lineage drawn beneath it. */
+export type FolderActiveOnlyReader<Folder> = {
+  hasRunningTerminal: (folder: Folder) => boolean
+  identityOf: (folder: Folder) => string
+  /** Host identities of the rows the list keeps. */
+  listedRowIdentities: Iterable<string>
+  parentIdentityOf: (identity: string) => string | undefined
+}
+
+/** Folder workspaces skip the row filters, so Active only drops the idle ones here; an idle folder
+ *  above a running row or folder stays, since the tree draws that row beneath it. */
+export function filterFolderWorkspacesForActiveOnly<Folder>(
+  folders: readonly Folder[],
+  filters: Pick<WorkspaceRowFilters, 'showOnlyRunningTerminals'>,
+  read: FolderActiveOnlyReader<Folder>
+): readonly Folder[] {
+  if (!filters.showOnlyRunningTerminals) {
+    return folders
+  }
+  const kept = new Set<string>()
+  // Stopping at a kept identity also ends a corrupt parent cycle.
+  const keepWithAncestors = (identity: string): void => {
+    for (let id: string | undefined = identity; id !== undefined && !kept.has(id);) {
+      kept.add(id)
+      id = read.parentIdentityOf(id)
+    }
+  }
+  for (const folder of folders) {
+    if (read.hasRunningTerminal(folder)) {
+      keepWithAncestors(read.identityOf(folder))
+    }
+  }
+  for (const identity of read.listedRowIdentities) {
+    keepWithAncestors(identity)
+  }
+  return folders.filter((folder) => kept.has(read.identityOf(folder)))
 }
 
 /** The rows the Workspace options filters keep, in their given order. */
@@ -159,8 +207,11 @@ function comparableFilterValue(
   filters: WorkspaceRowFilters,
   key: keyof WorkspaceRowFilters
 ): WorkspaceRowFilters[keyof WorkspaceRowFilters] {
-  return key === 'alwaysShowDefaultBranchWorkspace'
-    ? filters.alwaysShowDefaultBranchWorkspace !== false
+  if (key === 'alwaysShowDefaultBranchWorkspace') {
+    return filters.alwaysShowDefaultBranchWorkspace !== false
+  }
+  return key === 'showOnlyRunningTerminals'
+    ? filters.showOnlyRunningTerminals === true
     : filters[key]
 }
 

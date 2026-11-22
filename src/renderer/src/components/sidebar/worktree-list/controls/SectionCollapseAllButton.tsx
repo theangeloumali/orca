@@ -6,7 +6,7 @@ import type { ShortcutKeyComboDetails } from '@/lib/keyboard/useShortcutLabel'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/class-names'
 
-/** A section header's collapse-all toggle, shown while the header is hovered or holds focus. */
+/** A section header's collapse-all toggle, shown while hovered or focused unless always visible. */
 export function SectionCollapseAllButton({
   allCollapsed,
   onToggle,
@@ -14,6 +14,7 @@ export function SectionCollapseAllButton({
   expandLabel,
   shortcut,
   announcing = false,
+  alwaysVisible = false,
   toggleAttributes
 }: {
   allCollapsed: boolean
@@ -24,6 +25,8 @@ export function SectionCollapseAllButton({
   shortcut?: ShortcutKeyComboDetails
   /** A tour points at it, so it stays shown without hover. */
   announcing?: boolean
+  /** Shown at full width regardless of hover, for headers whose toggle is a primary control. */
+  alwaysVisible?: boolean
   /** Marks the wrapper for tours and tests, e.g. `{ 'data-projects-collapse-toggle': '' }`. */
   toggleAttributes?: Record<`data-${string}`, string>
 }): React.JSX.Element {
@@ -38,10 +41,12 @@ export function SectionCollapseAllButton({
           {...toggleAttributes}
           className={cn(
             'flex shrink-0 overflow-hidden text-muted-foreground',
-            'can-hover:w-0 can-hover:opacity-0',
-            'can-hover:group-hover/sidebar-header:w-6 can-hover:group-hover/sidebar-header:opacity-100',
-            'can-hover:focus-within:w-6 can-hover:focus-within:opacity-100',
-            announcing && 'can-hover:w-6 can-hover:opacity-100'
+            !alwaysVisible && [
+              'can-hover:w-0 can-hover:opacity-0',
+              'can-hover:group-hover/sidebar-header:w-6 can-hover:group-hover/sidebar-header:opacity-100',
+              'can-hover:focus-within:w-6 can-hover:focus-within:opacity-100',
+              announcing && 'can-hover:w-6 can-hover:opacity-100'
+            ]
           )}
         >
           <TooltipTrigger asChild>

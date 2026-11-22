@@ -7451,8 +7451,8 @@
         "SidebarHeader": {
           "92154beb7e": "New workspace",
           "addProject": "Add project",
-          "expandAllProjects": "Expand all projects",
-          "collapseAllProjects": "Collapse all projects"
+          "collapseAll": "Collapse all",
+          "expandAll": "Expand all"
         },
         "SidebarNav": {
           "80611a8b10": "Search",
@@ -7807,7 +7807,10 @@
           "subgroupCreateFailed": "Could not create subgroup",
           "groupMoveFailed": "Could not move group",
           "groupMoveFailedDesc": "A group can only move into a group on the same computer, and never into itself.",
-          "groupMoveNeedsUpdate": "Update this machine's Orca to nest groups"
+          "groupMoveNeedsUpdate": "Update this machine's Orca to nest groups",
+          "collapseAllInGroup": "Collapse all in {{value0}}",
+          "expandAllInGroup": "Expand all in {{value0}}",
+          "clickKeyLabel": "Click"
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "Cancel",
@@ -8568,6 +8571,17 @@
         },
         "moveToGroup": {
           "otherDevice": "On another device"
+        },
+        "activeOnly": {
+          "status": "Showing {{shown}} of {{total}} projects",
+          "statusWorkspaces": "Showing {{shown}} of {{total}} workspaces",
+          "showAll": "Show all",
+          "tooltipOn": "Show all workspaces",
+          "tooltipOff": "Show only workspaces with a running terminal",
+          "label": "Active only",
+          "filterAria": "Show only workspaces with a running terminal",
+          "hiddenNeedsYou_one": "{{count}} hidden needs you",
+          "hiddenNeedsYou_other": "{{count}} hidden need you"
         }
       },
       "shared": {

@@ -6438,7 +6438,9 @@
         },
         "SidebarHeader": {
           "92154beb7e": "Yeni çalışma alanı",
-          "addProject": "Proje ekle"
+          "addProject": "Proje ekle",
+          "collapseAll": "Tümünü daralt",
+          "expandAll": "Tümünü genişlet"
         },
         "SidebarNav": {
           "80611a8b10": "Ara",
@@ -6766,7 +6768,10 @@
           "childCount_one": "{{count}} alt öğe",
           "groupProjectsRemained_other": "Grup silindikten sonra içerdiği {{count}} projeden {{remaining}} tanesi kaldı.",
           "groupProjectsRemained_one": "Grup silindikten sonra içerdiği {{count}} projeden {{remaining}} tanesi kaldı.",
-          "hostServerReplaced": "Farklı sunucu: unutun, ardından bağlanın"
+          "hostServerReplaced": "Farklı sunucu: unutun, ardından bağlanın",
+          "collapseAllInGroup": "{{value0}} içindekilerin tümünü daralt",
+          "expandAllInGroup": "{{value0}} içindekilerin tümünü genişlet",
+          "clickKeyLabel": "tıklama"
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "İptal",
@@ -7500,6 +7505,17 @@
         },
         "moveToGroup": {
           "otherDevice": "Başka bir cihazda"
+        },
+        "activeOnly": {
+          "label": "Yalnızca etkin",
+          "tooltipOn": "Tüm çalışma alanlarını göster",
+          "tooltipOff": "Yalnızca terminali çalışan çalışma alanlarını göster",
+          "filterAria": "Yalnızca terminali çalışan çalışma alanlarını göster",
+          "status": "{{total}} projeden {{shown}} tanesi gösteriliyor",
+          "statusWorkspaces": "{{total}} çalışma alanından {{shown}} tanesi gösteriliyor",
+          "showAll": "Tümünü göster",
+          "hiddenNeedsYou_one": "{{count}} gizli çalışma alanı sizi bekliyor",
+          "hiddenNeedsYou_other": "{{count}} gizli çalışma alanı sizi bekliyor"
         }
       },
       "shared": {

@@ -5,9 +5,9 @@ import {
 
 export type AddRepoSkipFinalizationState = ProjectFilterRevealState & {
   activeRepoId: string | null
-  showActiveOnly: boolean
+  showOnlyRunningTerminals: boolean
   setActiveRepo: (repoId: string | null) => void
-  setShowActiveOnly: (value: boolean) => void
+  setShowOnlyRunningTerminals: (value: boolean) => void
 }
 
 export function finalizeImportedRepoAfterSkip(
@@ -19,7 +19,8 @@ export function finalizeImportedRepoAfterSkip(
     state.setActiveRepo(importedRepoId)
   }
   revealRepoInProjectFilter(state, importedRepoId)
-  if (state.showActiveOnly) {
-    state.setShowActiveOnly(false)
+  // A fresh import runs nothing yet, so Active only would hide it.
+  if (state.showOnlyRunningTerminals) {
+    state.setShowOnlyRunningTerminals(false)
   }
 }

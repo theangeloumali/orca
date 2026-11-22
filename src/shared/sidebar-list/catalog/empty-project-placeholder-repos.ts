@@ -17,8 +17,10 @@ export function getEmptyProjectPlaceholderRepoIds(args: {
   hiddenProjects: HiddenProjects
   /** Repos whose checkout a VM create in progress has not adopted; its pending row stands for them. */
   pendingVmRepoIds?: ReadonlySet<string>
+  /** Active only: an empty project has nothing running, so it gets no header. */
+  hideEmptyProjects?: boolean
 }): Set<string> {
-  if (args.groupBy !== 'repo') {
+  if (args.groupBy !== 'repo' || args.hideEmptyProjects) {
     return new Set()
   }
 
