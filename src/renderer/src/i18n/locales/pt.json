@@ -13251,7 +13251,8 @@
         },
         "repoHeaderProjectActions": {
           "hideNonOrcaWorktrees": "Ocultar worktrees que não são do Orca",
-          "showHiddenWorktrees": "Mostrar worktrees ocultas"
+          "showHiddenWorktrees": "Mostrar worktrees ocultas",
+          "archive": "Arquivar"
         },
         "useWorktreeCardLinkedDetails": {
           "issueUnavailable": "Detalhes da issue indisponíveis",
@@ -13355,6 +13356,37 @@
           "stayPut_one": "{{count}} em outra máquina fica",
           "stayPut_other": "{{count}} em outra máquina ficam",
           "stayPut_many": "{{count}} em outra máquina ficam"
+        },
+        "quickFilters": {
+          "client": "Cliente",
+          "anyClient": "Todos os clientes",
+          "findLabel": "Encontrar workspaces",
+          "findPlaceholder": "Nome, branch ou projeto…",
+          "clearFind": "Limpar busca",
+          "find": "Buscar na barra lateral",
+          "all": "Todos",
+          "live": "Ativos",
+          "needsYou": "Precisa de você",
+          "thisMachine": "Esta máquina",
+          "label": "Filtros rápidos"
+        },
+        "hiddenProjects": {
+          "archiveOnMachineTitle": "Arquivo · {{machine}} · {{count}}",
+          "archiveTitle": "Arquivo · {{count}}",
+          "archiveNote": "Nada é excluído.",
+          "idleAgeLabel": "Inativo há {{count}} dias",
+          "idleAge": "{{count}} d",
+          "restoreAriaLabel": "Restaurar {{name}}",
+          "restore": "Restaurar",
+          "projectCount": "{{count}} projetos",
+          "idleOne": "1 projeto inativo há 30+ dias",
+          "idleMany": "{{count}} projetos inativos há 30+ dias",
+          "archiveIdle": "Arquivar",
+          "dismissIdle": "Dispensar sugestão de projetos inativos",
+          "restoreFailed": "Não foi possível restaurar {{name}}.",
+          "archiveFailed": "Não foi possível arquivar {{name}}. O host pode precisar de uma atualização do Orca.",
+          "archived": "{{name}} arquivado",
+          "archivedDescription": "Nada é excluído e seus terminais e agentes continuam rodando. Restaure em Arquivo, abaixo da lista."
         }
       },
       "editor": {
@@ -23903,7 +23935,8 @@
       "1524825c2c": "Alternar Quadro do Espaço de Trabalho",
       "d286d1ab85": "Limpar Título do Painel",
       "botItemPrevious": "Item anterior",
-      "botItemNext": "Próximo item"
+      "botItemNext": "Próximo item",
+      "sidebarFind": "Buscar na barra lateral"
     },
     "group": {
       "global": "Global",

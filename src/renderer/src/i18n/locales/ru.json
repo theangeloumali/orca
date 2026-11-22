@@ -7682,7 +7682,8 @@
         },
         "repoHeaderProjectActions": {
           "hideNonOrcaWorktrees": "Скрыть рабочие деревья, созданные вне Orca",
-          "showHiddenWorktrees": "Показать скрытые рабочие деревья"
+          "showHiddenWorktrees": "Показать скрытые рабочие деревья",
+          "archive": "Архивировать"
         },
         "useWorktreeCardLinkedDetails": {
           "issueUnavailable": "Сведения о задаче недоступны",
@@ -7786,6 +7787,37 @@
           "stayPut_few": "{{count}} на другой машине останутся",
           "stayPut_many": "{{count}} на другой машине останутся",
           "stayPut_other": "{{count}} на другой машине останутся"
+        },
+        "quickFilters": {
+          "client": "Клиент",
+          "anyClient": "Все клиенты",
+          "findLabel": "Найти рабочие области",
+          "findPlaceholder": "Имя, ветка или проект…",
+          "clearFind": "Очистить поиск",
+          "find": "Поиск в боковой панели",
+          "all": "Все",
+          "live": "Активные",
+          "needsYou": "Ждут вас",
+          "thisMachine": "Эта машина",
+          "label": "Быстрые фильтры"
+        },
+        "hiddenProjects": {
+          "archiveOnMachineTitle": "Архив · {{machine}} · {{count}}",
+          "archiveTitle": "Архив · {{count}}",
+          "archiveNote": "Ничего не удаляется.",
+          "idleAgeLabel": "Не активен {{count}} дн.",
+          "idleAge": "{{count}} дн.",
+          "restoreAriaLabel": "Восстановить {{name}}",
+          "restore": "Восстановить",
+          "projectCount": "Проектов: {{count}}",
+          "idleOne": "1 проект не активен 30+ дней",
+          "idleMany": "Проектов без активности 30+ дней: {{count}}",
+          "archiveIdle": "Архивировать",
+          "dismissIdle": "Скрыть подсказку о неактивных проектах",
+          "restoreFailed": "Не удалось восстановить {{name}}.",
+          "archiveFailed": "Не удалось архивировать {{name}}. Возможно, хосту нужно обновить Orca.",
+          "archived": "{{name}} в архиве",
+          "archivedDescription": "Ничего не удаляется, терминалы и агенты продолжают работать. Восстановите в разделе «Архив» под списком."
         }
       },
       "shared": {
@@ -23737,7 +23769,8 @@
       "1524825c2c": "Показать или скрыть доску рабочих пространств",
       "d286d1ab85": "Очистить заголовок панели",
       "botItemPrevious": "Предыдущий элемент",
-      "botItemNext": "Следующий элемент"
+      "botItemNext": "Следующий элемент",
+      "sidebarFind": "Поиск в боковой панели"
     },
     "group": {
       "browser": "Браузер",

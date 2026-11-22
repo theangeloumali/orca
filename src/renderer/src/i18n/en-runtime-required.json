@@ -3182,18 +3182,6 @@
         "targetNotFolder": "\"{{name}}\" already exists at this location and is not a folder."
       }
     },
-    "hiddenProjects": {
-      "hidden": "{{name}} hidden",
-      "hiddenDescription": "Its terminals and agents keep running. Show it again from Hidden projects below the list.",
-      "hideFailed": "Couldn't hide {{name}}. Its host may need an Orca update.",
-      "hideFromSidebar": "Hide from Sidebar",
-      "listLabel": "Hidden projects",
-      "sectionTitle": "Hidden projects ({{count}})",
-      "show": "Show",
-      "showAriaLabel": "Show {{name}} in the sidebar",
-      "showFailed": "Couldn't show {{name}} again.",
-      "showOnHostAriaLabel": "Show {{name}} on {{host}} in the sidebar"
-    },
     "wslHosts": {
       "addErrors": {
         "alreadyAdded": "{{distro}} is already a host.",

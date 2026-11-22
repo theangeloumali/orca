@@ -6969,7 +6969,8 @@
         },
         "repoHeaderProjectActions": {
           "hideNonOrcaWorktrees": "Ocultar worktrees ajenos a Orca",
-          "showHiddenWorktrees": "Mostrar worktrees ocultos"
+          "showHiddenWorktrees": "Mostrar worktrees ocultos",
+          "archive": "Archivar"
         },
         "useWorktreeCardLinkedDetails": {
           "issueUnavailable": "Detalles del issue no disponibles",
@@ -7073,6 +7074,37 @@
           "stayPut_one": "{{count}} en otra máquina se queda",
           "stayPut_other": "{{count}} en otra máquina se quedan",
           "stayPut_many": "{{count}} en otra máquina se quedan"
+        },
+        "quickFilters": {
+          "client": "Cliente",
+          "anyClient": "Todos los clientes",
+          "findLabel": "Buscar espacios",
+          "findPlaceholder": "Nombre, rama o proyecto…",
+          "clearFind": "Borrar búsqueda",
+          "find": "Buscar en la barra lateral",
+          "all": "Todo",
+          "live": "Activos",
+          "needsYou": "Te necesita",
+          "thisMachine": "Esta máquina",
+          "label": "Filtros rápidos"
+        },
+        "hiddenProjects": {
+          "archiveOnMachineTitle": "Archivo · {{machine}} · {{count}}",
+          "archiveTitle": "Archivo · {{count}}",
+          "archiveNote": "No se borra nada.",
+          "idleAgeLabel": "Inactivo {{count}} días",
+          "idleAge": "{{count}} d",
+          "restoreAriaLabel": "Restaurar {{name}}",
+          "restore": "Restaurar",
+          "projectCount": "{{count}} proyectos",
+          "idleOne": "1 proyecto inactivo 30+ días",
+          "idleMany": "{{count}} proyectos inactivos 30+ días",
+          "archiveIdle": "Archivarlos",
+          "dismissIdle": "Descartar sugerencia de proyectos inactivos",
+          "restoreFailed": "No se pudo restaurar {{name}}.",
+          "archiveFailed": "No se pudo archivar {{name}}. Puede que su host necesite actualizar Orca.",
+          "archived": "{{name}} archivado",
+          "archivedDescription": "No se borra nada y sus terminales y agentes siguen funcionando. Restáuralo desde Archivo, debajo de la lista."
         }
       },
       "shared": {
@@ -23367,7 +23399,8 @@
       "1524825c2c": "Alternar tablero de espacios de trabajo",
       "d286d1ab85": "Borrar título del panel",
       "botItemPrevious": "Elemento anterior",
-      "botItemNext": "Elemento siguiente"
+      "botItemNext": "Elemento siguiente",
+      "sidebarFind": "Buscar en la barra lateral"
     },
     "group": {
       "global": "Global",

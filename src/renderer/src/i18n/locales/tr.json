@@ -7435,7 +7435,8 @@
         },
         "repoHeaderProjectActions": {
           "hideNonOrcaWorktrees": "Orca dışında oluşturulan worktree'leri gizle",
-          "showHiddenWorktrees": "Gizli worktree'leri göster"
+          "showHiddenWorktrees": "Gizli worktree'leri göster",
+          "archive": "Arşivle"
         },
         "useWorktreeCardLinkedDetails": {
           "issueUnavailable": "Sorun ayrıntıları kullanılamıyor",
@@ -7533,6 +7534,37 @@
           "selected": "Seçili",
           "stayPut_one": "Başka makinedeki {{count}} proje yerinde kalır",
           "stayPut_other": "Başka makinedeki {{count}} proje yerinde kalır"
+        },
+        "quickFilters": {
+          "client": "Müşteri",
+          "anyClient": "Tüm müşteriler",
+          "findLabel": "Çalışma alanı bul",
+          "findPlaceholder": "Ad, dal veya proje…",
+          "clearFind": "Aramayı temizle",
+          "find": "Kenar çubuğunda bul",
+          "all": "Tümü",
+          "live": "Etkin",
+          "needsYou": "Sizi bekliyor",
+          "thisMachine": "Bu makine",
+          "label": "Hızlı filtreler"
+        },
+        "hiddenProjects": {
+          "archiveOnMachineTitle": "Arşiv · {{machine}} · {{count}}",
+          "archiveTitle": "Arşiv · {{count}}",
+          "archiveNote": "Hiçbir şey silinmez.",
+          "idleAgeLabel": "{{count}} gündür boşta",
+          "idleAge": "{{count}} g",
+          "restoreAriaLabel": "{{name}} geri yükle",
+          "restore": "Geri yükle",
+          "projectCount": "{{count}} proje",
+          "idleOne": "1 proje 30+ gündür boşta",
+          "idleMany": "{{count}} proje 30+ gündür boşta",
+          "archiveIdle": "Arşivle",
+          "dismissIdle": "Boştaki projeler önerisini kapat",
+          "restoreFailed": "{{name}} geri yüklenemedi.",
+          "archiveFailed": "{{name}} arşivlenemedi. Host bir Orca güncellemesine ihtiyaç duyabilir.",
+          "archived": "{{name}} arşivlendi",
+          "archivedDescription": "Hiçbir şey silinmez; terminaller ve ajanlar çalışmaya devam eder. Listenin altındaki Arşiv bölümünden geri yükleyin."
         }
       },
       "shared": {
@@ -23103,7 +23135,8 @@
       "1524825c2c": "Çalışma alanı panosunu göster/gizle",
       "d286d1ab85": "Bölme başlığını temizle",
       "botItemPrevious": "Önceki öğe",
-      "botItemNext": "Sonraki öğe"
+      "botItemNext": "Sonraki öğe",
+      "sidebarFind": "Kenar çubuğunda bul"
     },
     "group": {
       "global": "Genel",

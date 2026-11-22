@@ -7545,7 +7545,8 @@
         },
         "repoHeaderProjectActions": {
           "hideNonOrcaWorktrees": "隐藏非 Orca 工作树",
-          "showHiddenWorktrees": "显示隐藏的工作树"
+          "showHiddenWorktrees": "显示隐藏的工作树",
+          "archive": "归档"
         },
         "useWorktreeCardLinkedDetails": {
           "issueUnavailable": "议题详情不可用",
@@ -7655,6 +7656,37 @@
           "groupCount": "将所选的 {{count}} 个分组…",
           "selected": "已选择",
           "stayPut_other": "其他机器上的 {{count}} 个保持不变"
+        },
+        "quickFilters": {
+          "client": "客户",
+          "anyClient": "所有客户",
+          "findLabel": "查找工作区",
+          "findPlaceholder": "名称、分支或项目…",
+          "clearFind": "清除查找",
+          "find": "在侧边栏中查找",
+          "all": "全部",
+          "live": "运行中",
+          "needsYou": "需要你",
+          "thisMachine": "本机",
+          "label": "快速筛选"
+        },
+        "hiddenProjects": {
+          "archiveOnMachineTitle": "归档 · {{machine}} · {{count}}",
+          "archiveTitle": "归档 · {{count}}",
+          "archiveNote": "不会删除任何内容。",
+          "idleAgeLabel": "闲置 {{count}} 天",
+          "idleAge": "{{count}}天",
+          "restoreAriaLabel": "恢复 {{name}}",
+          "restore": "恢复",
+          "projectCount": "{{count}} 个项目",
+          "idleOne": "1 个项目闲置 30 天以上",
+          "idleMany": "{{count}} 个项目闲置 30 天以上",
+          "archiveIdle": "全部归档",
+          "dismissIdle": "忽略闲置项目建议",
+          "restoreFailed": "无法恢复 {{name}}。",
+          "archiveFailed": "无法归档 {{name}}。其主机可能需要更新 Orca。",
+          "archived": "已归档 {{name}}",
+          "archivedDescription": "不会删除任何内容，其终端和代理会继续运行。可在列表下方的“归档”中恢复。"
         }
       },
       "shared": {
@@ -22898,26 +22930,16 @@
       "existingAccept": "添加到主机"
     },
     "hiddenProjects": {
-      "hidden": "已隐藏 {{name}}",
-      "hiddenDescription": "其终端和智能体会继续运行，可在列表下方的“已隐藏的项目”中重新显示",
       "undo": "撤销",
-      "hideFailed": "无法隐藏 {{name}}，其主机可能需要更新 Orca",
-      "showFailed": "无法重新显示 {{name}}",
-      "listLabel": "已隐藏的项目",
-      "show": "显示",
-      "showAriaLabel": "在侧边栏中显示 {{name}}",
       "settingsTitle": "在侧边栏中隐藏",
       "settingsDescription": "在侧边栏、项目选择器和工作区切换器中隐藏此主机上的项目副本，其终端、智能体和自动化会继续运行；在已配对的 Orca 服务器上，此操作会对连接到该服务器的所有人隐藏该项目",
       "settingsToggleLabel": "在侧边栏中隐藏 {{name}}",
       "keywordHide": "隐藏",
       "keywordHidden": "已隐藏",
       "keywordSidebar": "侧边栏",
-      "hideFromSidebar": "在侧边栏中隐藏",
-      "sectionTitle": "已隐藏的项目（{{count}}）",
       "allHidden": "所有项目都已隐藏，可从下方的“已隐藏的项目”中重新显示",
       "undoGone": "{{name}} 已从 Orca 中移除",
       "settingsGroup": "侧边栏",
-      "showOnHostAriaLabel": "在侧边栏中显示 {{host}} 上的 {{name}}",
       "keywordShow": "显示",
       "keywordUnhide": "取消隐藏"
     },
@@ -24843,7 +24865,8 @@
       "tabNewBrowserSplitRight": "在右侧拆分窗格中新建浏览器标签页",
       "5468defe61": "折叠/展开所有项目",
       "botItemPrevious": "上一个条目",
-      "botItemNext": "下一个条目"
+      "botItemNext": "下一个条目",
+      "sidebarFind": "在侧边栏中查找"
     },
     "group": {
       "global": "全局",
