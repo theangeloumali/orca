@@ -253,14 +253,14 @@ export function useProjectGroupDialogs(args: {
     () =>
       removeContainedProjects && deleteTargets
         ? projectRemovalTargets(
-            { worktreesByRepo, detectedWorktreesByRepo },
+            { repos, worktreesByRepo, detectedWorktreesByRepo },
             deleteTargets.projects.map((project) => ({
               repoId: project.id,
               hostId: project.hostId
             }))
           )
         : [],
-    [deleteTargets, detectedWorktreesByRepo, removeContainedProjects, worktreesByRepo]
+    [deleteTargets, detectedWorktreesByRepo, removeContainedProjects, repos, worktreesByRepo]
   )
 
   const handleDeleteProjectGroup = useCallback(

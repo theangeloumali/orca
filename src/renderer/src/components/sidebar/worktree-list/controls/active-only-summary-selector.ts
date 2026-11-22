@@ -2,7 +2,6 @@ import type { AppState } from '@/store/types'
 import type { Worktree } from '../../../../../../shared/worktree/types'
 import type { FolderWorkspace } from '../../../../../../shared/folder-workspaces/folder-workspace-types'
 import { getFolderWorkspaceWorktree } from '../../../../../../shared/folder-workspaces/folder-workspace-worktree'
-import { folderWorkspaceKey } from '../../../../../../shared/workspace/identity/workspace-scope'
 import {
   selectFolderWorkspaces,
   selectWorktreesByRepo
@@ -10,14 +9,12 @@ import {
 import { getIndexedRepoMap } from '@/store/repos/repository-catalog-index'
 import type { RuntimeStatuses } from '@/store/slices/runtime-status/views/runtime-status-owner'
 import { selectSidebarLineageParentIdentities } from '@/store/slices/worktrees/metadata/cross-store-lineage-parents'
-import { getProjectHostSetupProjectionFromState } from '@/store/projects/project-host-setup-selector'
 import {
   withoutHiddenVmWorktrees,
   type readHiddenVmCheckouts
 } from '@/runtime/ephemeral-vm/vm-create-hidden-checkouts'
 import { getProjectHeaderRevealTarget } from '../../../../../../shared/sidebar-list/sections/project-section-grouping'
 import { getFolderLaneSectionKey } from '../../../../../../shared/sidebar-list/folders/folder-workspace-occurrences'
-import { selectVisibleFolderWorkspaces } from '../../../../../../shared/sidebar-list/folders/visible-folder-workspaces'
 import {
   filterReposForVisibleHosts,
   getVisibleSidebarHostIdSet
@@ -34,8 +31,8 @@ import {
   getVisibleWorktreeTerminalActivityTabs,
   getWorktreeIdsWithStructuredChat
 } from '../listing/visible-worktree-activity-inputs'
-import { worktreeHasRunningTerminal } from '../listing/desktop-workspace-row-facts'
-import { getSidebarProjectGrouping } from '../listing/sidebar-project-grouping'
+import { selectListedFolderWorkspaces } from '../listing/listed-folder-workspaces'
+import { getSidebarProjectGroupingFromState } from '../listing/sidebar-project-grouping'
 import { selectSidebarFilterState } from './sidebar-filter-actions'
 import { summarizeActiveOnly, type ActiveOnlySummary } from './active-only-project-summary'
 
@@ -101,32 +98,20 @@ function buildOptions(state: AppState, context: ActiveOnlySummaryContext): Visib
 function listFolderRows(
   state: AppState,
   options: VisibleWorktreeOptions,
-  context: ActiveOnlySummaryContext,
   listed: { showOnlyRunningTerminals: boolean; worktrees: readonly Worktree[] }
 ): readonly FolderWorkspace[] {
-  return selectVisibleFolderWorkspaces({
-    folderWorkspaces: selectFolderWorkspaces(state) ?? NO_FOLDERS,
-    projectGroups: state.projectGroups,
-    filters: {
-      hideWorkspacesFromOtherDevices: state.hideWorkspacesFromOtherDevices,
-      showOnlyRunningTerminals: listed.showOnlyRunningTerminals
-    },
-    visibleHostIdSet: getVisibleSidebarHostIdSet(
-      state.visibleWorkspaceHostIds,
-      state.workspaceHostScope
-    ),
-    defaultHostId: options.defaultHostId,
-    pairedDeviceIdsByEnvironment: options.pairedDeviceIdsByEnvironment,
-    botListedIdentities: context.botListed,
-    hasRunningTerminal: (folder) =>
-      worktreeHasRunningTerminal(
-        options.tabsByWorktree,
-        options.ptyIdsByTabId,
-        folderWorkspaceKey(folder.id)
+  return selectListedFolderWorkspaces(
+    { ...options, showOnlyRunningTerminals: listed.showOnlyRunningTerminals },
+    {
+      folders: selectFolderWorkspaces(state) ?? NO_FOLDERS,
+      projectGroups: state.projectGroups,
+      visibleHostIdSet: getVisibleSidebarHostIdSet(
+        state.visibleWorkspaceHostIds,
+        state.workspaceHostScope
       ),
-    listedWorktrees: listed.worktrees,
-    lineageParentIdentities: options.lineageParentIdentities
-  })
+      listedWorktrees: listed.worktrees
+    }
+  )
 }
 
 // Empty-project headers drawn with Active only off, as use-empty-project-placeholders.ts lists them.
@@ -170,17 +155,12 @@ function computeSummary(
   // One cached row per folder, so a folder in both lists is the same row.
   const folderSectionByRow = new Map<Worktree, string>()
   const folderRowsFor = (showOnlyRunningTerminals: boolean, worktrees: readonly Worktree[]) =>
-    listFolderRows(state, options, context, { showOnlyRunningTerminals, worktrees }).map(
-      (folder) => {
-        const row = getFolderWorkspaceWorktree(folder)
-        folderSectionByRow.set(row, getFolderLaneSectionKey(folder.projectGroupId))
-        return row
-      }
-    )
-  const grouping = getSidebarProjectGrouping(
-    getProjectHostSetupProjectionFromState(state),
-    state.showWorkspaceHostSections
-  )
+    listFolderRows(state, options, { showOnlyRunningTerminals, worktrees }).map((folder) => {
+      const row = getFolderWorkspaceWorktree(folder)
+      folderSectionByRow.set(row, getFolderLaneSectionKey(folder.projectGroupId))
+      return row
+    })
+  const grouping = getSidebarProjectGroupingFromState(state)
   const sectionKeyOfRepo = (repoId: string): string =>
     getProjectHeaderRevealTarget(repoId, options.repoMap, grouping).key
   const { projection } = state.agentStatusByPaneKey

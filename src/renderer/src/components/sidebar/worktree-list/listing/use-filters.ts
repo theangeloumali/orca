@@ -37,8 +37,12 @@ import {
   isWorkspaceOwnedBySomeoneElse
 } from '../../../../../../shared/workspace-view/workspace-creator-visibility'
 import { createSleepingSweepHiddenCheck } from './sleeping-sweep-visibility'
-import { worktreeHasRunningTerminal } from './desktop-workspace-row-facts'
+import {
+  createWorktreeNeedsYouReader,
+  worktreeHasRunningTerminal
+} from './desktop-workspace-row-facts'
 import { selectFolderWorkspaces } from '@/store/workspaces/catalog/workspace-record-fields'
+import { clearSidebarFindHidingWorkspace } from './sidebar-find-reveal'
 
 export type SidebarWorktreeFilters = ReturnType<typeof useSidebarWorktreeFilters>
 
@@ -104,6 +108,12 @@ const REVEAL_WORKSPACE: Record<keyof WorkspaceRowFilters, (context: RevealContex
     if (!worktreeHasRunningTerminal(state.tabsByWorktree, state.ptyIdsByTabId, worktree.id)) {
       state.setShowOnlyRunningTerminals(false)
     }
+  },
+  showOnlyNeedsYou: ({ state, worktree }) => {
+    const needsYou = createWorktreeNeedsYouReader(state.agentStatusByPaneKey.projection, Date.now())
+    if (!needsYou(worktree)) {
+      state.setShowOnlyNeedsYou(false)
+    }
   }
 }
 
@@ -143,6 +153,7 @@ export function useSidebarWorktreeFilters() {
     for (const key of activeWorkspaceRowFilterKeys(sidebarWorkspaceRowFilters(state))) {
       REVEAL_WORKSPACE[key](context)
     }
+    clearSidebarFindHidingWorkspace(worktree)
   }, [])
 
   const clearFilters = useCallback(

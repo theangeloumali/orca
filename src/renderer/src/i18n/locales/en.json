@@ -281,26 +281,16 @@
       "existingAccept": "Add on host"
     },
     "hiddenProjects": {
-      "hidden": "{{name}} hidden",
-      "hiddenDescription": "Its terminals and agents keep running. Show it again from Hidden projects below the list.",
       "undo": "Undo",
-      "hideFailed": "Couldn't hide {{name}}. Its host may need an Orca update.",
-      "showFailed": "Couldn't show {{name}} again.",
-      "listLabel": "Hidden projects",
-      "show": "Show",
-      "showAriaLabel": "Show {{name}} in the sidebar",
       "settingsTitle": "Hide from sidebar",
       "settingsDescription": "Hides this host's copy of the project from the sidebar, project pickers and the workspace switcher. Its terminals, agents and automations keep running. On a paired Orca server, this hides it for everyone connected to that server.",
       "settingsToggleLabel": "Hide {{name}} from the sidebar",
       "keywordHide": "hide",
       "keywordHidden": "hidden",
       "keywordSidebar": "sidebar",
-      "hideFromSidebar": "Hide from Sidebar",
-      "sectionTitle": "Hidden projects ({{count}})",
       "allHidden": "Every project is hidden. Show one from Hidden projects below.",
       "undoGone": "{{name}} was removed from Orca.",
       "settingsGroup": "Sidebar",
-      "showOnHostAriaLabel": "Show {{name}} on {{host}} in the sidebar",
       "keywordShow": "show",
       "keywordUnhide": "unhide"
     },
@@ -8484,7 +8474,8 @@
         },
         "repoHeaderProjectActions": {
           "hideNonOrcaWorktrees": "Hide non-Orca worktrees",
-          "showHiddenWorktrees": "Show hidden worktrees"
+          "showHiddenWorktrees": "Show hidden worktrees",
+          "archive": "Archive"
         },
         "useWorktreeCardLinkedDetails": {
           "issueUnavailable": "Issue details unavailable",
@@ -8601,6 +8592,38 @@
           "newGroup": "New group…",
           "groupCount": "Group {{count}} selected…",
           "selected": "Selected"
+        },
+        "hiddenProjects": {
+          "archiveOnMachineTitle": "Archive · {{machine}} · {{count}}",
+          "archiveTitle": "Archive · {{count}}",
+          "archiveNote": "Nothing is deleted.",
+          "idleAgeLabel": "Idle {{count}} days",
+          "idleAge": "{{count}}d",
+          "restoreAriaLabel": "Restore {{name}}",
+          "restore": "Restore",
+          "projectCount": "{{count}} projects",
+          "idleOne": "1 project idle 30+ days",
+          "idleMany": "{{count}} projects idle 30+ days",
+          "archiveIdle": "Archive them",
+          "dismissIdle": "Dismiss idle projects suggestion",
+          "restoreFailed": "Couldn't restore {{name}}.",
+          "archiveFailed": "Couldn't archive {{name}}. Its host may need an Orca update.",
+          "archived": "Archived {{name}}",
+          "archivedDescription": "Nothing is deleted, and its terminals and agents keep running. Restore it from Archive below the list."
+        },
+        "quickFilters": {
+          "client": "Client",
+          "anyClient": "Every client",
+          "findLabel": "Find workspaces",
+          "findPlaceholder": "Name, branch or project…",
+          "clearFind": "Clear find",
+          "find": "Find in sidebar",
+          "all": "All",
+          "live": "Live",
+          "needsYou": "Needs you",
+          "thisMachine": "This machine",
+          "label": "Quick filters",
+          "emptyClient": "No projects yet"
         }
       },
       "shared": {
@@ -26194,7 +26217,8 @@
       "d286d1ab85": "Clear pane title",
       "botItemBack": "Back to items",
       "botItemPrevious": "Previous item",
-      "botItemNext": "Next item"
+      "botItemNext": "Next item",
+      "sidebarFind": "Find in sidebar"
     },
     "group": {
       "global": "Global",

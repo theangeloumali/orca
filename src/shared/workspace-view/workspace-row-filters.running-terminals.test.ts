@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   activeWorkspaceRowFilterKeys,
-  filterFolderWorkspacesForActiveOnly,
+  filterFolderWorkspacesForListingRules,
   filterWorkspaceRows,
   NO_WORKSPACE_ROW_FILTERS,
   type WorkspaceRowFactReader
@@ -101,7 +101,7 @@ describe('showOnlyRunningTerminals', () => {
   })
 })
 
-describe('filterFolderWorkspacesForActiveOnly', () => {
+describe('filterFolderWorkspacesForListingRules', () => {
   type Folder = { id: string; running: boolean }
   const folders: Folder[] = [
     { id: 'idle', running: false },
@@ -114,20 +114,36 @@ describe('filterFolderWorkspacesForActiveOnly', () => {
     parentIdentityOf: (identity: string): string | undefined => parents[identity]
   })
   const keep = (rows: readonly Folder[], read = lineage()): string[] =>
-    ids([...filterFolderWorkspacesForActiveOnly(rows, activeOnly, read)])
+    ids([...filterFolderWorkspacesForListingRules(rows, activeOnly, read)])
 
   it('keeps only folder workspaces with a running terminal while on', () => {
     expect(keep(folders)).toEqual(['live'])
   })
 
   it('keeps every folder workspace while off', () => {
-    expect(filterFolderWorkspacesForActiveOnly(folders, NO_WORKSPACE_ROW_FILTERS, lineage())).toBe(
-      folders
-    )
+    expect(
+      filterFolderWorkspacesForListingRules(folders, NO_WORKSPACE_ROW_FILTERS, lineage())
+    ).toBe(folders)
   })
 
   it('keeps an idle folder that a listed running row nests under', () => {
     expect(keep(folders, lineage(['wt-1'], { 'wt-1': 'idle' }))).toEqual(['idle', 'live'])
+  })
+
+  it('drops a folder that fails Needs you or find, keeping one a listed row nests under', () => {
+    const read = {
+      ...lineage(['wt-1'], { 'wt-1': 'idle' }),
+      needsYou: (folder: Folder) => folder.id !== 'live',
+      matchesFind: (folder: Folder) => folder.id !== 'idle'
+    }
+    const needsYouOn = { ...NO_WORKSPACE_ROW_FILTERS, showOnlyNeedsYou: true }
+    expect(ids([...filterFolderWorkspacesForListingRules(folders, needsYouOn, read)])).toEqual([
+      'idle'
+    ])
+    const findOnly = { ...read, listedRowIdentities: [], needsYou: undefined }
+    expect(
+      ids([...filterFolderWorkspacesForListingRules(folders, NO_WORKSPACE_ROW_FILTERS, findOnly)])
+    ).toEqual(['live'])
   })
 
   it('keeps an idle parent folder above a running child folder', () => {

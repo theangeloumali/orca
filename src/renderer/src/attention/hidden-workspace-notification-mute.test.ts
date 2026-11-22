@@ -48,4 +48,22 @@ describe('isWorkspaceNotificationMutedBySidebarFilters under Active only', () =>
   it('keeps notifying for a folder workspace with a running terminal', () => {
     expect(isMuted(runningKey)).toBe(false)
   })
+
+  it('never mutes a listed workspace because of a find query', () => {
+    useAppStore.setState((state) => ({
+      tabsByWorktree: {
+        ...state.tabsByWorktree,
+        [worktree.id]: [makeTab({ id: 'tab-2', worktreeId: worktree.id })]
+      },
+      ptyIdsByTabId: { ...state.ptyIdsByTabId, 'tab-2': ['pty-2'] },
+      sidebarFindQuery: 'matches-nothing'
+    }))
+    expect(isMuted(worktree.id)).toBe(false)
+    expect(isMuted(runningKey)).toBe(false)
+  })
+
+  it('still notifies a needs-you event while Needs you is on, before its status lands', () => {
+    useAppStore.setState({ showOnlyRunningTerminals: false, showOnlyNeedsYou: true })
+    expect(isMuted(worktree.id)).toBe(false)
+  })
 })

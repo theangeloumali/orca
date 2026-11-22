@@ -12,6 +12,7 @@ export type KeybindingScope =
   | 'chat'
   | 'settings'
   | 'botItem'
+  | 'worktreeList'
 
 export type KeybindingContext = 'app' | 'terminal' | 'browser'
 
@@ -54,6 +55,7 @@ export type KeybindingActionId =
   | 'sidebar.childWorkspaces.toggle'
   | 'sidebar.projects.toggleCollapse'
   | 'sidebar.focusWorktreeList'
+  | 'sidebar.find'
   | 'floatingTerminal.toggle'
   | 'floatingWorkspace.maximize'
   | 'floatingWorkspace.minimize'

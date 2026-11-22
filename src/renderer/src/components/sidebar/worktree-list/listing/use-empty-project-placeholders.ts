@@ -11,6 +11,7 @@ import {
   subscribeHiddenVmCheckouts
 } from '@/runtime/ephemeral-vm/vm-create-hidden-checkouts'
 import { selectWorktreesByRepo } from '@/store/workspaces/catalog/workspace-record-fields'
+import { selectHidesEmptyProjectGroups } from '../controls/sidebar-filter-actions'
 
 /** Repos that get an empty project header; hidden ones never do, and a filter naming only hidden ones is ignored. */
 export function useEmptyProjectPlaceholderRepoIds(args: {
@@ -25,7 +26,7 @@ export function useEmptyProjectPlaceholderRepoIds(args: {
   const { groupBy, repos, visibleRepos, visibleWorktrees, filterRepoIds, defaultHostId } = args
   const worktreesByRepo = useAppStore((s) => selectWorktreesByRepo(s))
   const hiddenVmCheckouts = useSyncExternalStore(subscribeHiddenVmCheckouts, readHiddenVmCheckouts)
-  const hideEmptyProjects = useAppStore((s) => s.showOnlyRunningTerminals)
+  const hideEmptyProjects = useAppStore(selectHidesEmptyProjectGroups)
   return useMemo(
     () =>
       getEmptyProjectPlaceholderRepoIds({

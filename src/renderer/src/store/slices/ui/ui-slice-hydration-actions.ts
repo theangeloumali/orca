@@ -157,6 +157,7 @@ export function createUiHydrationActions(set: UISliceSet, _get: UISliceGet): Par
           // precisely the ones showing the bug, so absence must mean "exempt".
           alwaysShowDefaultBranchWorkspace: ui.alwaysShowDefaultBranchWorkspace !== false,
           showOnlyRunningTerminals: ui.showOnlyRunningTerminals === true,
+          showOnlyNeedsYou: ui.showOnlyNeedsYou === true,
           ...sanitizePerWorktreePreferences(ui),
           gitGraphFiltersByWorktree: ui.gitGraphFiltersByWorktree ?? {},
           // Why: startup hydrates UI before repo catalogs, so defer repo-filter validation to the all-host refresh.

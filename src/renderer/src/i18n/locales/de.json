@@ -7351,7 +7351,8 @@
         },
         "repoHeaderProjectActions": {
           "hideNonOrcaWorktrees": "Nicht von Orca erstellte Worktrees ausblenden",
-          "showHiddenWorktrees": "Ausgeblendete Worktrees anzeigen"
+          "showHiddenWorktrees": "Ausgeblendete Worktrees anzeigen",
+          "archive": "Archivieren"
         },
         "useWorktreeCardLinkedDetails": {
           "issueUnavailable": "Issue-Details nicht verfügbar",
@@ -7449,6 +7450,38 @@
           "selected": "Ausgewählt",
           "stayPut_one": "{{count}} auf einem anderen Gerät bleibt",
           "stayPut_other": "{{count}} auf einem anderen Gerät bleiben"
+        },
+        "quickFilters": {
+          "client": "Kunde",
+          "anyClient": "Alle Kunden",
+          "findLabel": "Workspaces finden",
+          "findPlaceholder": "Name, Branch oder Projekt…",
+          "clearFind": "Suche leeren",
+          "find": "In Seitenleiste suchen",
+          "all": "Alle",
+          "live": "Aktiv",
+          "needsYou": "Braucht dich",
+          "thisMachine": "Dieses Gerät",
+          "label": "Schnellfilter",
+          "emptyClient": "Noch keine Projekte"
+        },
+        "hiddenProjects": {
+          "archiveOnMachineTitle": "Archiv · {{machine}} · {{count}}",
+          "archiveTitle": "Archiv · {{count}}",
+          "archiveNote": "Es wird nichts gelöscht.",
+          "idleAgeLabel": "{{count}} Tage inaktiv",
+          "idleAge": "{{count}} T",
+          "restoreAriaLabel": "{{name}} wiederherstellen",
+          "restore": "Wiederherstellen",
+          "projectCount": "{{count}} Projekte",
+          "idleOne": "1 Projekt seit 30+ Tagen inaktiv",
+          "idleMany": "{{count}} Projekte seit 30+ Tagen inaktiv",
+          "archiveIdle": "Archivieren",
+          "dismissIdle": "Hinweis auf inaktive Projekte ausblenden",
+          "restoreFailed": "{{name}} konnte nicht wiederhergestellt werden.",
+          "archiveFailed": "{{name}} konnte nicht archiviert werden. Der Host braucht eventuell ein Orca-Update.",
+          "archived": "{{name}} archiviert",
+          "archivedDescription": "Es wird nichts gelöscht, Terminals und Agents laufen weiter. Unter „Archiv“ unterhalb der Liste wiederherstellen."
         }
       },
       "shared": {
@@ -23141,7 +23174,8 @@
       "1524825c2c": "Arbeitsbereichsübersicht ein-/ausblenden",
       "d286d1ab85": "Bereichstitel leeren",
       "botItemPrevious": "Vorheriges Element",
-      "botItemNext": "Nächstes Element"
+      "botItemNext": "Nächstes Element",
+      "sidebarFind": "In Seitenleiste suchen"
     },
     "group": {
       "global": "Global",

@@ -35,6 +35,30 @@ export type DesktopWorkspaceRowFactInputs = {
   worktreeIdsWithStructuredChat?: ReadonlySet<string>
   /** Rows in a PTY-rebind grace window; read as unverifiable, never as asleep (#15996). */
   sleepingSweepExemptWorktreeIds?: ReadonlySet<string>
+  /** Wired only while Needs you is on; absent keeps every row. */
+  worktreeNeedsYou?: (worktree: Worktree) => boolean
+}
+
+/** The slice of the agent-status projection that ranks a workspace's attention. */
+export type WorktreeAttentionSource = {
+  attention: (worktreeId: string, lastActivityAt?: number, now?: number) => { cls: number }
+}
+
+// Smart sort's class 1 is the sidebar's own "needs you" (active-only-summary-selector.ts).
+const NEEDS_YOU_ATTENTION_CLASS = 1
+
+/** Reads a worktree or a folder: key; folders carry no lastActivityAt. */
+export type WorkspaceNeedsYouReader = (
+  workspace: Pick<Worktree, 'id'> & Partial<Pick<Worktree, 'lastActivityAt'>>
+) => boolean
+
+export function createWorktreeNeedsYouReader(
+  projection: WorktreeAttentionSource,
+  now: number
+): WorkspaceNeedsYouReader {
+  return (workspace) =>
+    projection.attention(workspace.id, workspace.lastActivityAt, now).cls ===
+    NEEDS_YOU_ATTENTION_CLASS
 }
 
 /** Whether any of the workspace's terminal tabs still has a live PTY. */
@@ -68,6 +92,7 @@ export function buildDesktopWorkspaceRowFactReader(
     isCliCreated: isCliCreatedWorkspace,
     isDetachedHead: isDetachedHeadWorkspace,
     isMainWorktree: (worktree) => worktree.isMainWorktree,
+    needsYou: inputs.worktreeNeedsYou,
     hasRunningTerminal: (worktree) =>
       worktreeHasRunningTerminal(inputs.tabsByWorktree, inputs.ptyIdsByTabId, worktree.id),
     isSleeping: (worktree) =>

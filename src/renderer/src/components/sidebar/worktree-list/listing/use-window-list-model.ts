@@ -16,7 +16,8 @@ export function useWindowSidebarListModel(args: SidebarListModelArgs): SidebarLi
     visibleWorktrees,
     pairedDeviceIdsByEnvironment,
     botListedWorktreeIdentities,
-    lineageParentIdentities
+    lineageParentIdentities,
+    workspaceNeedsYou
   } = useVisibleSidebarWorktrees({
     filterState,
     sortBy,
@@ -24,7 +25,8 @@ export function useWindowSidebarListModel(args: SidebarListModelArgs): SidebarLi
     repoMap,
     worktreeLineageById: args.worktreeLineageById,
     defaultHostId,
-    agentSendTargetWorktreeId: args.agentSendTargetWorktreeId
+    agentSendTargetWorktreeId: args.agentSendTargetWorktreeId,
+    projectGrouping: args.projectGrouping
   })
   const visibleScope = useSidebarHostVisibleScope({
     filterState,
@@ -35,7 +37,8 @@ export function useWindowSidebarListModel(args: SidebarListModelArgs): SidebarLi
     pairedDeviceIdsByEnvironment,
     botListedWorktreeIdentities,
     listedWorktrees: visibleWorktrees,
-    lineageParentIdentities
+    lineageParentIdentities,
+    workspaceNeedsYou
   })
   const externalWorktreeCards = useSidebarExternalWorktreeCards({
     repos,

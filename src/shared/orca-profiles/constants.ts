@@ -150,6 +150,7 @@ export function getDefaultUIState(): PersistedUIState {
     hideWorkspacesFromOtherDevices: false,
     alwaysShowDefaultBranchWorkspace: true,
     showOnlyRunningTerminals: false,
+    showOnlyNeedsYou: false,
     _explorerDisplayRootMigrated: true,
     explorerDisplayRootByWorktree: {},
     showDotfilesByWorktree: {},
@@ -206,6 +207,7 @@ export function getDefaultUIState(): PersistedUIState {
     mobileEmulatorTabIntroDismissed: false,
     mobileEmulatorAgentSetupDismissed: false,
     pluginsAlphaNoticeDismissed: false,
+    dismissedIdleProjectsKey: null,
     // Why: only upgraded profiles saw the old ordering, so only they get the one-time notice.
     projectOrderManualDefaultNoticeDismissed: true,
     // Why: only upgraded profiles saw the old default, so only they get the one-time change notice.

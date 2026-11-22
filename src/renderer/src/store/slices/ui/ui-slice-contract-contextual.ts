@@ -135,6 +135,8 @@ export type UISliceContextual = {
   dismissUsageEmptyState: () => void
   pluginsAlphaNoticeDismissed: boolean
   dismissPluginsAlphaNotice: () => void
+  dismissedIdleProjectsKey: string | null
+  dismissIdleProjects: (idleProjectsKey: string) => void
   codexTerminalServerIsolationNoticeSeen: boolean
   markCodexTerminalServerIsolationNoticeSeen: () => void
   codexSharedSettingsNoticeSeen: boolean

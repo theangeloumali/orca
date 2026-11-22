@@ -16,7 +16,16 @@ import {
 import type { SidebarLineageParentIdentities } from '../../../../../../shared/sidebar-list/lineage/worktree-lineage-projection'
 import { buildDesktopWorkspaceRowFactReader } from './desktop-workspace-row-facts'
 import { sidebarWorkspaceRowFilters } from '../controls/sidebar-filter-actions'
+import {
+  matchesFindQuery,
+  normalizeFindQuery
+} from '../../../../../../shared/workspace-view/workspace-find-query'
+import { branchRefLabel } from '../../../../../../shared/git/refs/branch-ref-label'
 import { getLineageAncestorIndex, getSortedWorktreeRankIndex } from './visible-worktree-indexes'
+import {
+  getProjectHeaderRevealTarget,
+  type ProjectGroupingModel
+} from '../../../../../../shared/sidebar-list/sections/project-section-grouping'
 
 // Separate store binding avoids attention-slice import cycles; shared builders retain the filter rules.
 
@@ -36,6 +45,12 @@ export type VisibleWorktreeOptions = {
   pairedDeviceIdsByEnvironment: ReadonlyMap<string, string>
   alwaysShowDefaultBranchWorkspace?: boolean
   showOnlyRunningTerminals: boolean
+  showOnlyNeedsYou?: boolean
+  worktreeNeedsYou?: (worktree: Worktree) => boolean
+  /** Transient sidebar find text over name, branch and project. */
+  findQuery?: string
+  /** The sidebar's grouping, so find matches the project header it displays. */
+  projectGrouping?: ProjectGroupingModel
   repoMap: Map<string, Repo>
   hiddenProjects: HiddenProjects
   workspaceHostScope: ExecutionHostScope
@@ -65,9 +80,12 @@ export function computeVisibleWorktrees(
     ? getWorktreeHostIdentity
     : (worktree: Worktree) => worktree.id
   return selectVisibleSidebarWorktrees({
-    rows: withoutBotListedWorktrees(
-      getIndexedAllWorktrees(worktreesByRepo),
-      opts.botListedWorktreeIdentities
+    rows: withFindQuery(
+      withoutBotListedWorktrees(
+        getIndexedAllWorktrees(worktreesByRepo),
+        opts.botListedWorktreeIdentities
+      ),
+      opts
     ),
     ancestorByIdentity: getLineageAncestorIndex(worktreesByRepo),
     rankOf: (worktree) => rankByKey.get(keyOf(worktree)),
@@ -80,6 +98,35 @@ export function computeVisibleWorktrees(
     preserveLineageParentOrder: opts.preserveLineageParentOrder,
     forcedVisibleWorktreeIds: opts.forcedVisibleWorktreeIds
   })
+}
+
+type FindOptions = Pick<VisibleWorktreeOptions, 'findQuery' | 'repoMap' | 'projectGrouping'>
+
+/** The one find rule the list and every reveal path share; a blank query matches everything. */
+export function worktreeMatchesSidebarFind(
+  worktree: Pick<Worktree, 'displayName' | 'branch' | 'repoId'>,
+  opts: FindOptions
+): boolean {
+  const query = normalizeFindQuery(opts.findQuery ?? '')
+  return (
+    !query ||
+    matchesFindQuery(
+      [
+        worktree.displayName,
+        branchRefLabel(worktree.branch),
+        opts.repoMap.get(worktree.repoId)?.displayName ?? '',
+        getProjectHeaderRevealTarget(worktree.repoId, opts.repoMap, opts.projectGrouping).label
+      ],
+      query
+    )
+  )
+}
+
+function withFindQuery(rows: readonly Worktree[], opts: FindOptions): readonly Worktree[] {
+  if (!normalizeFindQuery(opts.findQuery ?? '')) {
+    return rows
+  }
+  return rows.filter((worktree) => worktreeMatchesSidebarFind(worktree, opts))
 }
 
 export function computeVisibleWorktreeIds(

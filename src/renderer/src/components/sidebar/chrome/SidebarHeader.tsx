@@ -1,4 +1,4 @@
-import React, { useId } from 'react'
+import React, { useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAppStore } from '@/store/index'
 import { useTranslate } from '@/i18n/use-translate'
@@ -12,6 +12,7 @@ import { Sparkles, Bell } from 'lucide-react'
 import { cn } from '@/lib/class-names'
 import { ActiveOnlyToggle } from '../worktree-list/controls/ActiveOnlyToggle'
 import { ActiveOnlyStatusLine } from '../worktree-list/controls/ActiveOnlyStatusLine'
+import { SidebarQuickFilterBar } from '../worktree-list/controls/SidebarQuickFilterBar'
 
 type SidebarHeaderProps = {
   activityBadgeTarget?: React.Ref<HTMLSpanElement>
@@ -54,6 +55,7 @@ const SidebarHeader = React.memo(function SidebarHeader({
   )
   const toggleCollapsedGroup = useAppStore((s) => s.toggleCollapsedGroup)
   const showOnlyRunningTerminals = useAppStore((s) => s.showOnlyRunningTerminals)
+  const [findButtonSlot, setFindButtonSlot] = useState<HTMLDivElement | null>(null)
   const sidebarTitle =
     groupBy === 'repo'
       ? t('dashboard.sidebar.projects', 'Projects')
@@ -87,6 +89,12 @@ const SidebarHeader = React.memo(function SidebarHeader({
         titleAccessory={
           <>
             <ActiveOnlyToggle />
+            {/* Positioned so the portaled find button paints above the full-width fold button. */}
+            <div
+              ref={setFindButtonSlot}
+              className="relative flex shrink-0 items-center empty:hidden"
+              data-sidebar-header-actions=""
+            />
             <div
               ref={projectsCollapseTarget}
               className="relative flex shrink-0 items-center empty:hidden"
@@ -181,6 +189,7 @@ const SidebarHeader = React.memo(function SidebarHeader({
         }
       />
       {showOnlyRunningTerminals && !projectsCollapsed && <ActiveOnlyStatusLine />}
+      {!projectsCollapsed && <SidebarQuickFilterBar findButtonTarget={findButtonSlot} />}
     </>
   )
 })

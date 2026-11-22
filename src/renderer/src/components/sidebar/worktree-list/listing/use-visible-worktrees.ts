@@ -11,8 +11,10 @@ import { createLiveAgentWorktreeIdsSelector } from '@/lib/workspace/activity/wor
 import type { Repo } from '../../../../../../shared/repository/repo-types'
 import type { WorktreeLineage } from '../../../../../../shared/worktree/lineage-types'
 import type { ExecutionHostId } from '../../../../../../shared/execution-host/execution-host'
+import type { ProjectGroupingModel } from '../../../../../../shared/sidebar-list/sections/project-section-grouping'
 import './visible-worktrees'
 import { computeVisibleWorktrees } from './compute-visible-worktrees'
+import { useWorktreeNeedsYouReader } from './use-worktree-needs-you-reader'
 import {
   EMPTY_PAIRED_DEVICE_IDS_BY_ENVIRONMENT,
   getPairedDeviceIdsByEnvironment
@@ -66,6 +68,7 @@ export function useVisibleSidebarWorktrees(args: {
   /** Pass only focused host so unrelated settings writes cannot invalidate the full workspace scan. */
   defaultHostId: ExecutionHostId
   agentSendTargetWorktreeId: string | null
+  projectGrouping?: ProjectGroupingModel
 }) {
   const { filterState, sortBy, sortedIds, repoMap, worktreeLineageById, defaultHostId } = args
   const {
@@ -78,9 +81,12 @@ export function useVisibleSidebarWorktrees(args: {
     hideWorkspacesFromOtherDevices,
     alwaysShowDefaultBranchWorkspace,
     showOnlyRunningTerminals,
+    showOnlyNeedsYou,
     visibleWorkspaceHostIds,
     workspaceHostScope
   } = filterState
+  const findQuery = useAppStore((s) => s.sidebarFindQuery)
+  const worktreeNeedsYou = useWorktreeNeedsYouReader(showOnlyNeedsYou)
   const worktreesByRepo = useAppStore((s) => selectWorktreesByRepo(s))
   const botListedWorktreeIdentities = useBotListedWorktreeIdentities()
   const repos = useAppStore((s) => s.repos)
@@ -149,6 +155,10 @@ export function useVisibleSidebarWorktrees(args: {
       pairedDeviceIdsByEnvironment,
       alwaysShowDefaultBranchWorkspace,
       showOnlyRunningTerminals,
+      showOnlyNeedsYou,
+      worktreeNeedsYou,
+      findQuery,
+      projectGrouping: args.projectGrouping,
       repoMap,
       hiddenProjects: indexHiddenProjects(repos, defaultHostId),
       workspaceHostScope,
@@ -179,6 +189,10 @@ export function useVisibleSidebarWorktrees(args: {
     hideWorkspacesFromOtherDevices,
     alwaysShowDefaultBranchWorkspace,
     showOnlyRunningTerminals,
+    showOnlyNeedsYou,
+    worktreeNeedsYou,
+    findQuery,
+    args.projectGrouping,
     workspaceHostScope,
     visibleWorkspaceHostIds,
     defaultHostId,
@@ -202,6 +216,7 @@ export function useVisibleSidebarWorktrees(args: {
     visibleWorktrees,
     pairedDeviceIdsByEnvironment,
     botListedWorktreeIdentities,
-    lineageParentIdentities
+    lineageParentIdentities,
+    workspaceNeedsYou: worktreeNeedsYou
   }
 }

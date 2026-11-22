@@ -14,6 +14,8 @@ export type WorkspaceRowFilters = WorkspaceKindSwitches & {
   hideWorkspacesFromOtherDevices: boolean
   /** "Active only": keep just the workspaces with a live terminal. Absent means off. */
   showOnlyRunningTerminals?: boolean
+  /** "Needs you": keep just the workspaces whose agent waits on you. Absent means off. */
+  showOnlyNeedsYou?: boolean
   filterRepoIds: readonly string[]
   /** The hosts shown; null shows every host. */
   visibleHostIds: readonly ExecutionHostId[] | null
@@ -29,6 +31,7 @@ export const WORKSPACE_ROW_FILTER_UI_FIELDS = {
   hideDetachedHeadWorkspaces: 'hideDetachedHeadWorkspaces',
   hideWorkspacesFromOtherDevices: 'hideWorkspacesFromOtherDevices',
   showOnlyRunningTerminals: 'showOnlyRunningTerminals',
+  showOnlyNeedsYou: 'showOnlyNeedsYou',
   filterRepoIds: 'filterRepoIds',
   visibleHostIds: 'visibleWorkspaceHostIds'
 } as const satisfies { [Key in keyof WorkspaceRowFilters]: keyof PersistedUIState }
@@ -48,6 +51,7 @@ export const NO_WORKSPACE_ROW_FILTERS: WorkspaceRowFilters = {
   hideDetachedHeadWorkspaces: false,
   hideWorkspacesFromOtherDevices: false,
   showOnlyRunningTerminals: false,
+  showOnlyNeedsYou: false,
   filterRepoIds: [],
   visibleHostIds: null
 }
@@ -73,6 +77,8 @@ export type WorkspaceRowFactReader<Row> = {
   isSleeping: (row: Row) => boolean
   /** Desktop reads local live PTYs; the feed and phone read the host's count, lost contact included. */
   hasRunningTerminal: (row: Row) => boolean
+  /** Desktop reads the agent attention class; a reader without it (phone, feed, older host) keeps the row. */
+  needsYou?: (row: Row) => boolean
 }
 
 /** Exempt the main checkout from sleeping sweeps, including detached/offline mains that may be a project’s only entry point (#8873). */
@@ -121,6 +127,9 @@ function buildWorkspaceRowPredicate<Row>(
     if (read.isFolderWorkspace(row)) {
       return true
     }
+    if (filters.showOnlyNeedsYou && read.needsYou && !read.needsYou(row)) {
+      return false
+    }
     if (isHiddenByKindSwitch(filters, (kind) => KIND_READERS[kind](read, row))) {
       return false
     }
@@ -136,23 +145,32 @@ function buildWorkspaceRowPredicate<Row>(
   }
 }
 
-/** What Active only reads to judge a folder workspace and the lineage drawn beneath it. */
-export type FolderActiveOnlyReader<Folder> = {
+/** What the listing rules read to judge a folder workspace and the lineage drawn beneath it. */
+export type FolderListingReader<Folder> = {
   hasRunningTerminal: (folder: Folder) => boolean
+  /** Wired only while Needs you is on; absent keeps every folder, as for rows. */
+  needsYou?: (folder: Folder) => boolean
+  /** Wired only while a find query is typed. */
+  matchesFind?: (folder: Folder) => boolean
   identityOf: (folder: Folder) => string
   /** Host identities of the rows the list keeps. */
   listedRowIdentities: Iterable<string>
   parentIdentityOf: (identity: string) => string | undefined
 }
 
-/** Folder workspaces skip the row filters, so Active only drops the idle ones here; an idle folder
- *  above a running row or folder stays, since the tree draws that row beneath it. */
-export function filterFolderWorkspacesForActiveOnly<Folder>(
+/** Folder workspaces skip the row filters, so Active only, Needs you and find drop them here; a folder
+ *  above a listed row or folder stays, since the tree draws that row beneath it. */
+export function filterFolderWorkspacesForListingRules<Folder>(
   folders: readonly Folder[],
-  filters: Pick<WorkspaceRowFilters, 'showOnlyRunningTerminals'>,
-  read: FolderActiveOnlyReader<Folder>
+  filters: Pick<WorkspaceRowFilters, 'showOnlyRunningTerminals' | 'showOnlyNeedsYou'>,
+  read: FolderListingReader<Folder>
 ): readonly Folder[] {
-  if (!filters.showOnlyRunningTerminals) {
+  const rules = [
+    filters.showOnlyRunningTerminals ? read.hasRunningTerminal : undefined,
+    filters.showOnlyNeedsYou ? read.needsYou : undefined,
+    read.matchesFind
+  ].filter((rule) => rule !== undefined)
+  if (rules.length === 0) {
     return folders
   }
   const kept = new Set<string>()
@@ -164,7 +182,7 @@ export function filterFolderWorkspacesForActiveOnly<Folder>(
     }
   }
   for (const folder of folders) {
-    if (read.hasRunningTerminal(folder)) {
+    if (rules.every((rule) => rule(folder))) {
       keepWithAncestors(read.identityOf(folder))
     }
   }
@@ -210,8 +228,8 @@ function comparableFilterValue(
   if (key === 'alwaysShowDefaultBranchWorkspace') {
     return filters.alwaysShowDefaultBranchWorkspace !== false
   }
-  return key === 'showOnlyRunningTerminals'
-    ? filters.showOnlyRunningTerminals === true
+  return key === 'showOnlyRunningTerminals' || key === 'showOnlyNeedsYou'
+    ? filters[key] === true
     : filters[key]
 }
 

@@ -10,7 +10,9 @@ import {
   getPairedDeviceIdsByEnvironment
 } from '../../../../../../shared/workspace-view/workspace-creator-visibility'
 import type { VisibleWorktreeOptions } from './compute-visible-worktrees'
+import { createWorktreeNeedsYouReader } from './desktop-workspace-row-facts'
 import { indexHiddenProjects } from '../../../../../../shared/project/catalog/hidden-projects'
+import { getSidebarProjectGroupingFromState } from './sidebar-project-grouping'
 
 /** Isolate store reads so sidebar, palette and keyboard shortcuts can share the pure visibility filter. */
 export function buildVisibleWorktreeOptionsFromState(
@@ -44,6 +46,12 @@ export function buildVisibleWorktreeOptionsFromState(
       : EMPTY_PAIRED_DEVICE_IDS_BY_ENVIRONMENT,
     alwaysShowDefaultBranchWorkspace: state.alwaysShowDefaultBranchWorkspace,
     showOnlyRunningTerminals: state.showOnlyRunningTerminals,
+    showOnlyNeedsYou: state.showOnlyNeedsYou,
+    worktreeNeedsYou: state.showOnlyNeedsYou
+      ? createWorktreeNeedsYouReader(state.agentStatusByPaneKey.projection, Date.now())
+      : undefined,
+    findQuery: state.sidebarFindQuery,
+    projectGrouping: getSidebarProjectGroupingFromState(state),
     repoMap,
     hiddenProjects: indexHiddenProjects(state.repos, defaultHostId),
     workspaceHostScope: state.workspaceHostScope,

@@ -1,5 +1,7 @@
 import { isLocalExecutionHost } from '../../../../../../shared/execution-host/execution-host'
 import type { ProjectGroupingModel } from '../../../../../../shared/sidebar-list/sections/project-section-grouping'
+import { getProjectHostSetupProjectionFromState } from '@/store/projects/project-host-setup-selector'
+import type { AppState } from '@/store/types'
 
 type ProjectSetups = ProjectGroupingModel['projectHostSetups']
 
@@ -31,4 +33,14 @@ export function getSidebarProjectGrouping(
   }
   machineSectionGroupingBySetups.set(projection.setups, grouping)
   return grouping
+}
+
+/** The grouping the sidebar renders, read from store state. */
+export function getSidebarProjectGroupingFromState(
+  state: Pick<AppState, 'repos' | 'projects' | 'projectHostSetups' | 'showWorkspaceHostSections'>
+): ProjectGroupingModel {
+  return getSidebarProjectGrouping(
+    getProjectHostSetupProjectionFromState(state),
+    state.showWorkspaceHostSections
+  )
 }

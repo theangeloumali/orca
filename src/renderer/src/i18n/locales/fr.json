@@ -7238,7 +7238,8 @@
         },
         "repoHeaderProjectActions": {
           "hideNonOrcaWorktrees": "Masquer les worktrees hors Orca",
-          "showHiddenWorktrees": "Afficher les worktrees masqués"
+          "showHiddenWorktrees": "Afficher les worktrees masqués",
+          "archive": "Archiver"
         },
         "useWorktreeCardLinkedDetails": {
           "issueUnavailable": "Détails de l'issue indisponibles",
@@ -7342,6 +7343,38 @@
           "stayPut_one": "{{count}} sur une autre machine reste",
           "stayPut_other": "{{count}} sur une autre machine restent",
           "stayPut_many": "{{count}} sur une autre machine restent"
+        },
+        "quickFilters": {
+          "client": "Client",
+          "anyClient": "Tous les clients",
+          "findLabel": "Rechercher des espaces",
+          "findPlaceholder": "Nom, branche ou projet…",
+          "clearFind": "Effacer la recherche",
+          "find": "Rechercher dans la barre latérale",
+          "all": "Tout",
+          "live": "Actifs",
+          "needsYou": "Vous attend",
+          "thisMachine": "Cette machine",
+          "label": "Filtres rapides",
+          "emptyClient": "Aucun projet pour l’instant"
+        },
+        "hiddenProjects": {
+          "archiveOnMachineTitle": "Archive · {{machine}} · {{count}}",
+          "archiveTitle": "Archive · {{count}}",
+          "archiveNote": "Rien n’est supprimé.",
+          "idleAgeLabel": "Inactif depuis {{count}} jours",
+          "idleAge": "{{count}} j",
+          "restoreAriaLabel": "Restaurer {{name}}",
+          "restore": "Restaurer",
+          "projectCount": "{{count}} projets",
+          "idleOne": "1 projet inactif depuis 30+ jours",
+          "idleMany": "{{count}} projets inactifs depuis 30+ jours",
+          "archiveIdle": "Les archiver",
+          "dismissIdle": "Ignorer la suggestion de projets inactifs",
+          "restoreFailed": "Impossible de restaurer {{name}}.",
+          "archiveFailed": "Impossible d’archiver {{name}}. Son hôte a peut-être besoin d’une mise à jour d’Orca.",
+          "archived": "{{name}} archivé",
+          "archivedDescription": "Rien n’est supprimé, ses terminaux et agents continuent. Restaurez-le depuis Archive sous la liste."
         }
       },
       "shared": {
@@ -23388,7 +23421,8 @@
       "1524825c2c": "Afficher/masquer le tableau des espaces de travail",
       "d286d1ab85": "Effacer le titre du volet",
       "botItemPrevious": "Élément précédent",
-      "botItemNext": "Élément suivant"
+      "botItemNext": "Élément suivant",
+      "sidebarFind": "Rechercher dans la barre latérale"
     },
     "group": {
       "global": "Global",

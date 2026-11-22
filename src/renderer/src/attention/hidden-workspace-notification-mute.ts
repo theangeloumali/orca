@@ -43,7 +43,11 @@ export function isWorkspaceNotificationMutedBySidebarFilters(
     hiddenProjects: NO_HIDDEN_PROJECTS,
     filterRepoIds: [],
     workspaceHostScope: ALL_EXECUTION_HOSTS_SCOPE,
-    visibleWorkspaceHostIds: null
+    visibleWorkspaceHostIds: null,
+    // Typing a find is a lookup, not a mute; and an arriving event is what Needs you surfaces, even before its status lands.
+    findQuery: '',
+    showOnlyNeedsYou: false,
+    worktreeNeedsYou: undefined
   }
   const scope = parseWorkspaceKey(workspaceId)
   if (scope?.type === 'folder') {

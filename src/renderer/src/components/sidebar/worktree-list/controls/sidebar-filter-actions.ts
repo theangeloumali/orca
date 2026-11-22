@@ -3,6 +3,7 @@ import {
   NO_WORKSPACE_ROW_FILTERS,
   type WorkspaceRowFilters
 } from '../../../../../../shared/workspace-view/workspace-row-filters'
+import { normalizeFindQuery } from '../../../../../../shared/workspace-view/workspace-find-query'
 import { resolveVisibleWorkspaceHostIds } from '../../../../../../shared/workspace-view/workspace-host-visibility'
 import type { AppState } from '../../../../store/types'
 import type {
@@ -21,8 +22,10 @@ export type SidebarFilterState = {
   /** Keeps each project's main workspace out of the "Hide sleeping" sweep; absent means on. */
   alwaysShowDefaultBranchWorkspace?: boolean
   showOnlyRunningTerminals: boolean
+  showOnlyNeedsYou?: boolean
   visibleWorkspaceHostIds?: readonly ExecutionHostId[] | null
   workspaceHostScope?: ExecutionHostScope
+  sidebarFindQuery?: string
 }
 
 export function sidebarWorkspaceRowFilters(state: SidebarFilterState): WorkspaceRowFilters {
@@ -35,6 +38,7 @@ export function sidebarWorkspaceRowFilters(state: SidebarFilterState): Workspace
     hideDetachedHeadWorkspaces: state.hideDetachedHeadWorkspaces,
     hideWorkspacesFromOtherDevices: state.hideWorkspacesFromOtherDevices,
     showOnlyRunningTerminals: state.showOnlyRunningTerminals,
+    showOnlyNeedsYou: state.showOnlyNeedsYou,
     filterRepoIds: state.filterRepoIds,
     visibleHostIds: resolveVisibleWorkspaceHostIds(
       state.visibleWorkspaceHostIds,
@@ -57,13 +61,24 @@ export function selectSidebarFilterState(
     hideWorkspacesFromOtherDevices: state.hideWorkspacesFromOtherDevices,
     alwaysShowDefaultBranchWorkspace: state.alwaysShowDefaultBranchWorkspace,
     showOnlyRunningTerminals: state.showOnlyRunningTerminals,
+    showOnlyNeedsYou: state.showOnlyNeedsYou,
     visibleWorkspaceHostIds: state.visibleWorkspaceHostIds,
-    workspaceHostScope: state.workspaceHostScope
+    workspaceHostScope: state.workspaceHostScope,
+    sidebarFindQuery: state.sidebarFindQuery
   }
 }
 
-export function sidebarHasActiveFilters(state: SidebarFilterState): boolean {
+/** Find is no row filter, but it hides rows, so clearing and recovery treat it as one. */
+export function sidebarFindIsActive(state: Pick<SidebarFilterState, 'sidebarFindQuery'>): boolean {
+  return normalizeFindQuery(state.sidebarFindQuery ?? '') !== ''
+}
+
+export function sidebarHasActiveRowFilters(state: SidebarFilterState): boolean {
   return activeWorkspaceRowFilterKeys(sidebarWorkspaceRowFilters(state)).length > 0
+}
+
+export function sidebarHasActiveFilters(state: SidebarFilterState): boolean {
+  return sidebarHasActiveRowFilters(state) || sidebarFindIsActive(state)
 }
 
 export type SidebarFilterSetters = Pick<
@@ -78,6 +93,8 @@ export type SidebarFilterSetters = Pick<
   | 'setFilterRepoIds'
   | 'setVisibleWorkspaceHostIds'
   | 'setShowOnlyRunningTerminals'
+  | 'setShowOnlyNeedsYou'
+  | 'setSidebarFindQuery'
 >
 
 /** How each shared filter returns to its default; a new filter fails to compile until listed. */
@@ -107,12 +124,23 @@ const RESET_SIDEBAR_FILTER: Record<
     ),
   filterRepoIds: (store) => store.setFilterRepoIds([...NO_WORKSPACE_ROW_FILTERS.filterRepoIds]),
   visibleHostIds: (store) => store.setVisibleWorkspaceHostIds(null),
-  showOnlyRunningTerminals: (store) => store.setShowOnlyRunningTerminals(false)
+  showOnlyRunningTerminals: (store) => store.setShowOnlyRunningTerminals(false),
+  showOnlyNeedsYou: (store) => store.setShowOnlyNeedsYou(false)
+}
+
+/** Filters that list only matching rows, so a project left with none would be a bare header. */
+export function selectHidesEmptyProjectGroups(
+  state: Pick<AppState, 'showOnlyRunningTerminals' | 'showOnlyNeedsYou' | 'sidebarFindQuery'>
+): boolean {
+  return state.showOnlyRunningTerminals || state.showOnlyNeedsYou || sidebarFindIsActive(state)
 }
 
 /** Reset only active filters so an unfiltered click performs no writes. */
 export function clearSidebarFilters(state: SidebarFilterState, store: SidebarFilterSetters): void {
   for (const key of activeWorkspaceRowFilterKeys(sidebarWorkspaceRowFilters(state))) {
     RESET_SIDEBAR_FILTER[key](store)
+  }
+  if (sidebarFindIsActive(state)) {
+    store.setSidebarFindQuery('')
   }
 }

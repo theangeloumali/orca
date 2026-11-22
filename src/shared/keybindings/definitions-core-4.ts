@@ -33,6 +33,16 @@ export const KEYBINDING_DEFINITION_CORE_4: readonly KeybindingDefinition[] = [
     }
   },
   {
+    id: 'sidebar.find',
+    title: 'Find in sidebar',
+    group: 'Global',
+    scope: 'worktreeList',
+    // Why: global and tab chords run first wherever focus is, so a rebind there would shadow this.
+    conflictGroups: ['global', 'tabs', 'worktreeList'],
+    searchKeywords: ['shortcut', 'sidebar', 'find', 'search', 'filter', 'workspaces'],
+    defaultBindings: platformBindings(['Mod+F'])
+  },
+  {
     id: 'chat.find',
     title: 'Find in chat',
     group: 'Chat',

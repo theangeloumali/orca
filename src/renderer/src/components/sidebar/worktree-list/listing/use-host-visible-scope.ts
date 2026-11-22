@@ -1,7 +1,11 @@
 import { useMemo } from 'react'
 import { useAppStore } from '@/store/index'
 import { folderWorkspaceKey } from '../../../../../../shared/workspace/identity/workspace-scope'
-import { worktreeHasRunningTerminal } from './desktop-workspace-row-facts'
+import {
+  worktreeHasRunningTerminal,
+  type WorkspaceNeedsYouReader
+} from './desktop-workspace-row-facts'
+import { selectHidesEmptyProjectGroups } from '../controls/sidebar-filter-actions'
 import type { FolderWorkspace } from '../../../../../../shared/folder-workspaces/folder-workspace-types'
 import type { ProjectGroup } from '../../../../../../shared/project/groups/project-group-types'
 import type { Repo } from '../../../../../../shared/repository/repo-types'
@@ -32,14 +36,19 @@ export function useSidebarHostVisibleScope(args: {
   /** The rows the list keeps; Active only keeps an idle folder they nest under. */
   listedWorktrees: readonly Worktree[]
   lineageParentIdentities: SidebarLineageParentIdentities | undefined
+  /** Set only while Needs you is on. */
+  workspaceNeedsYou?: WorkspaceNeedsYouReader
 }) {
   const { filterState, defaultHostId, repos, projectGroups, folderWorkspaces } = args
   const {
     visibleWorkspaceHostIds,
     workspaceHostScope,
     hideWorkspacesFromOtherDevices,
-    showOnlyRunningTerminals
+    showOnlyRunningTerminals,
+    showOnlyNeedsYou
   } = filterState
+  const findQuery = useAppStore((s) => s.sidebarFindQuery)
+  const { workspaceNeedsYou } = args
   // A folder's tabs live under its folder: worktree id. A joined string keeps the selection stable.
   const runningFolderIdList = useAppStore((s) =>
     showOnlyRunningTerminals
@@ -73,19 +82,29 @@ export function useSidebarHostVisibleScope(args: {
     () => filterProjectGroupsForVisibleHosts(projectGroups, visibleHostIdSet, defaultHostId),
     [defaultHostId, projectGroups, visibleHostIdSet]
   )
-  // Only Active only reads the listed rows, so other list changes leave this memo alone.
-  const listedWorktrees = showOnlyRunningTerminals ? args.listedWorktrees : null
+  // Only the listing rules read the listed rows, so other list changes leave this memo alone.
+  const listedWorktrees = selectHidesEmptyProjectGroups({
+    showOnlyRunningTerminals,
+    showOnlyNeedsYou: showOnlyNeedsYou === true,
+    sidebarFindQuery: findQuery
+  })
+    ? args.listedWorktrees
+    : null
   const visibleFolderWorkspacesForRows = useMemo(() => {
     const runningFolderIds = new Set(runningFolderIdList.split('\n'))
     return selectVisibleFolderWorkspaces({
       folderWorkspaces,
       projectGroups,
-      filters: { hideWorkspacesFromOtherDevices, showOnlyRunningTerminals },
+      filters: { hideWorkspacesFromOtherDevices, showOnlyRunningTerminals, showOnlyNeedsYou },
       visibleHostIdSet,
       defaultHostId,
       pairedDeviceIdsByEnvironment: args.pairedDeviceIdsByEnvironment,
       botListedIdentities: args.botListedWorktreeIdentities,
       hasRunningTerminal: (folder) => runningFolderIds.has(folder.id),
+      needsYou: workspaceNeedsYou
+        ? (folder) => workspaceNeedsYou({ id: folderWorkspaceKey(folder.id) })
+        : undefined,
+      findQuery,
       listedWorktrees: listedWorktrees ?? [],
       lineageParentIdentities: args.lineageParentIdentities
     })
@@ -94,13 +113,16 @@ export function useSidebarHostVisibleScope(args: {
     args.lineageParentIdentities,
     args.pairedDeviceIdsByEnvironment,
     defaultHostId,
+    findQuery,
     folderWorkspaces,
     hideWorkspacesFromOtherDevices,
     listedWorktrees,
     projectGroups,
     runningFolderIdList,
+    showOnlyNeedsYou,
     showOnlyRunningTerminals,
-    visibleHostIdSet
+    visibleHostIdSet,
+    workspaceNeedsYou
   ])
 
   return { visibleReposForRows, visibleProjectGroupsForRows, visibleFolderWorkspacesForRows }

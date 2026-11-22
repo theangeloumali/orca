@@ -7264,7 +7264,8 @@
         },
         "repoHeaderProjectActions": {
           "hideNonOrcaWorktrees": "Orca 以外のワークツリーを非表示にする",
-          "showHiddenWorktrees": "非表示のワークツリーを表示する"
+          "showHiddenWorktrees": "非表示のワークツリーを表示する",
+          "archive": "アーカイブ"
         },
         "useWorktreeCardLinkedDetails": {
           "issueUnavailable": "Issue の詳細を表示できません",
@@ -7370,6 +7371,38 @@
           "groupCount": "選択した {{count}} 件をグループ化…",
           "selected": "選択済み",
           "stayPut_other": "別のマシンの {{count}} 件はそのまま"
+        },
+        "quickFilters": {
+          "client": "クライアント",
+          "anyClient": "すべてのクライアント",
+          "findLabel": "ワークスペースを検索",
+          "findPlaceholder": "名前、ブランチ、プロジェクト…",
+          "clearFind": "検索をクリア",
+          "find": "サイドバーで検索",
+          "all": "すべて",
+          "live": "稼働中",
+          "needsYou": "対応待ち",
+          "thisMachine": "このマシン",
+          "label": "クイックフィルター",
+          "emptyClient": "プロジェクトはまだありません"
+        },
+        "hiddenProjects": {
+          "archiveOnMachineTitle": "アーカイブ · {{machine}} · {{count}}",
+          "archiveTitle": "アーカイブ · {{count}}",
+          "archiveNote": "何も削除されません。",
+          "idleAgeLabel": "{{count}} 日間アイドル",
+          "idleAge": "{{count}}日",
+          "restoreAriaLabel": "{{name}} を復元",
+          "restore": "復元",
+          "projectCount": "{{count}} 件のプロジェクト",
+          "idleOne": "1 件のプロジェクトが 30 日以上アイドル",
+          "idleMany": "{{count}} 件のプロジェクトが 30 日以上アイドル",
+          "archiveIdle": "アーカイブする",
+          "dismissIdle": "アイドルプロジェクトの提案を閉じる",
+          "restoreFailed": "{{name}} を復元できませんでした。",
+          "archiveFailed": "{{name}} をアーカイブできませんでした。ホストの Orca の更新が必要かもしれません。",
+          "archived": "{{name}} をアーカイブしました",
+          "archivedDescription": "何も削除されず、ターミナルと Agent は動き続けます。リスト下のアーカイブから復元できます。"
         }
       },
       "shared": {
@@ -22314,26 +22347,16 @@
       "existingAccept": "ホストに追加"
     },
     "hiddenProjects": {
-      "hidden": "{{name}} を非表示にしました",
-      "hiddenDescription": "ターミナルと Agent は実行を続けます。一覧の下にある「非表示のプロジェクト」から再表示できます。",
       "undo": "元に戻す",
-      "hideFailed": "{{name}} を非表示にできませんでした。ホストの Orca を更新する必要がある可能性があります。",
-      "showFailed": "{{name}} を再表示できませんでした。",
-      "listLabel": "非表示のプロジェクト",
-      "show": "表示",
-      "showAriaLabel": "{{name}} をサイドバーに表示",
       "settingsTitle": "サイドバーから非表示",
       "settingsDescription": "このホスト上のこのプロジェクトを、サイドバー、プロジェクト選択、ワークスペースの切り替えから非表示にします。ターミナル、Agent、オートメーションは実行を続けます。ペアリング済みの Orca サーバーでは、そのサーバーに接続しているすべてのユーザーに対して非表示になります。",
       "settingsToggleLabel": "{{name}} をサイドバーから非表示",
       "keywordHide": "非表示にする",
       "keywordHidden": "非表示",
       "keywordSidebar": "サイドバー",
-      "hideFromSidebar": "サイドバーから非表示",
-      "sectionTitle": "非表示のプロジェクト ({{count}})",
       "allHidden": "すべてのプロジェクトが非表示になっています。下の「非表示のプロジェクト」から表示してください。",
       "undoGone": "{{name}} は Orca から削除されました。",
       "settingsGroup": "サイドバー",
-      "showOnHostAriaLabel": "{{host}} の {{name}} をサイドバーに表示",
       "keywordShow": "表示",
       "keywordUnhide": "再表示"
     },
@@ -24175,7 +24198,8 @@
       "1524825c2c": "ワークスペースボードの切り替え",
       "d286d1ab85": "ペインのタイトルをクリア",
       "botItemPrevious": "前の項目",
-      "botItemNext": "次の項目"
+      "botItemNext": "次の項目",
+      "sidebarFind": "サイドバーで検索"
     },
     "group": {
       "global": "グローバル",

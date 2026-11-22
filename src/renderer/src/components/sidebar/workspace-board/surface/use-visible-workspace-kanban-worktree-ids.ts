@@ -18,6 +18,7 @@ import { getStructuredChatWorktreeIds } from '../../worktree-list/listing/visibl
 import { getWorktreeHostIdentity } from '../../../../../../shared/worktree/host-qualified-identity'
 import { selectWorktreesByRepo } from '@/store/workspaces/catalog/workspace-record-fields'
 import { indexHiddenProjects } from '../../../../../../shared/project/catalog/hidden-projects'
+import { useWorktreeNeedsYouReader } from '../../worktree-list/listing/use-worktree-needs-you-reader'
 
 type UseVisibleWorkspaceKanbanWorktreeIdsParams = {
   allWorktrees: readonly Worktree[]
@@ -52,6 +53,8 @@ export function useVisibleWorkspaceKanbanWorktreeIds({
   const settings = useAppStore((s) => s.settings)
   const filterRepoIds = useAppStore((s) => s.filterRepoIds)
   const showOnlyRunningTerminals = useAppStore((s) => s.showOnlyRunningTerminals)
+  const showOnlyNeedsYou = useAppStore((s) => s.showOnlyNeedsYou)
+  const worktreeNeedsYou = useWorktreeNeedsYouReader(showOnlyNeedsYou)
   const needsTerminalMaps = !showSleepingWorkspaces || showOnlyRunningTerminals
   const tabsByWorktree = useAppStore((s) => (needsTerminalMaps ? s.tabsByWorktree : null))
   const ptyIdsByTabId = useAppStore((s) => (needsTerminalMaps ? s.ptyIdsByTabId : null))
@@ -99,6 +102,8 @@ export function useVisibleWorkspaceKanbanWorktreeIds({
           : EMPTY_PAIRED_DEVICE_IDS_BY_ENVIRONMENT,
         alwaysShowDefaultBranchWorkspace,
         showOnlyRunningTerminals,
+        showOnlyNeedsYou,
+        worktreeNeedsYou,
         repoMap,
         hiddenProjects: indexHiddenProjects(repos, defaultHostId),
         workspaceHostScope,
@@ -127,11 +132,13 @@ export function useVisibleWorkspaceKanbanWorktreeIds({
     repos,
     runtimeEnvironments,
     runtimeStatusByEnvironmentId,
+    showOnlyNeedsYou,
     showOnlyRunningTerminals,
     showSleepingWorkspaces,
     tabsByWorktree,
     worktreeIdsWithLiveAgent,
     worktreeIdsWithStructuredChat,
+    worktreeNeedsYou,
     worktreesByRepo
   ])
 }

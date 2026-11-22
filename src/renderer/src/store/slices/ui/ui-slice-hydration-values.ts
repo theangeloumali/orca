@@ -145,6 +145,7 @@ export function hydrateOneShotNoticesSeen(
   UISlice,
   | 'usageEmptyStateDismissed'
   | 'pluginsAlphaNoticeDismissed'
+  | 'dismissedIdleProjectsKey'
   | 'codexTerminalServerIsolationNoticeSeen'
   | 'codexSharedSettingsNoticeSeen'
   | 'worktreeCardsUpdateNoticeSeen'
@@ -155,6 +156,8 @@ export function hydrateOneShotNoticesSeen(
     // Default false so existing users still see the usage CTA.
     usageEmptyStateDismissed: ui.usageEmptyStateDismissed === true,
     pluginsAlphaNoticeDismissed: ui.pluginsAlphaNoticeDismissed === true,
+    dismissedIdleProjectsKey:
+      typeof ui.dismissedIdleProjectsKey === 'string' ? ui.dismissedIdleProjectsKey : null,
     codexTerminalServerIsolationNoticeSeen: ui.codexTerminalServerIsolationNoticeSeen === true,
     codexSharedSettingsNoticeSeen: ui.codexSharedSettingsNoticeSeen === true,
     worktreeCardsUpdateNoticeSeen: ui.worktreeCardsUpdateNoticeSeen === true,
