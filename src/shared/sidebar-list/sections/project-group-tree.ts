@@ -16,6 +16,7 @@ import {
 } from './project-section-order'
 import { compareRootProjectEntries } from './root-project-order'
 import { compareCodePoints, compareSidebarText } from '../sorting/text-order'
+import { isRepoHidden } from '../../project/catalog/hidden-projects'
 
 type GroupedProjectEntry = ProjectSectionEntry<
   ActivityItem,
@@ -151,4 +152,14 @@ export function walkProjectGroupTree<V extends GroupedProjectEntry>(
       visit.projects([entry.repoEntry], 0)
     }
   }
+}
+
+/** Projects filed anywhere in a group's subtree; folder workspaces are not projects, hidden ones never list. */
+export function countProjectGroupSubtreeProjects(
+  subtreeGroupIds: ReadonlySet<string>,
+  repos: readonly Partial<Pick<Repo, 'projectGroupId' | 'hiddenAt'>>[]
+): number {
+  return repos.filter(
+    (repo) => !isRepoHidden(repo) && repo.projectGroupId && subtreeGroupIds.has(repo.projectGroupId)
+  ).length
 }
