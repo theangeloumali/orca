@@ -153,8 +153,10 @@ export function createUiTrustActions(set: UISliceSet, get: UISliceGet): Partial<
       }),
     dismissedIdleProjectsKey: null,
     dismissIdleProjects: (idleProjectsKey) => {
-      set({ dismissedIdleProjectsKey: idleProjectsKey })
-      window.api.ui.set({ dismissedIdleProjectsKey: idleProjectsKey }).catch(console.error)
+      // Union like main does, so this window and the saved profile agree before a restart.
+      const merged = unionDismissalKeys(get().dismissedIdleProjectsKey, idleProjectsKey)
+      set({ dismissedIdleProjectsKey: merged })
+      window.api.ui.set({ dismissedIdleProjectsKey: merged }).catch(console.error)
     },
     dismissedClientSuggestionsKey: null,
     dismissClientSuggestions: (suggestionsKey) => {

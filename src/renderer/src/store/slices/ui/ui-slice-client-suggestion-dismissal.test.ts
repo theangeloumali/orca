@@ -52,3 +52,19 @@ describe('dismissClientSuggestions persistence', () => {
     expect(store.getState().dismissedClientSuggestionsKey).toBe('local\u0000repo-a')
   })
 })
+
+describe('dismissIdleProjects', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('keeps earlier idle dismissals in this window, as the saved profile does', () => {
+    const persisted = stubPersistedUI()
+    const store = createUIStore()
+    store.getState().dismissIdleProjects('local\u0000repo-a\nlocal\u0000repo-b')
+    store.getState().dismissIdleProjects('local\u0000repo-c')
+    const expected = 'local\u0000repo-a\nlocal\u0000repo-b\nlocal\u0000repo-c'
+    expect(store.getState().dismissedIdleProjectsKey).toBe(expected)
+    expect(persisted.current.dismissedIdleProjectsKey).toBe(expected)
+  })
+})
