@@ -2,6 +2,7 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { readdir, writeFile } from 'node:fs/promises'
 import type * as fsPromises from 'node:fs/promises'
 import type * as os from 'node:os'
+import type * as repositoryRef from './repository-ref'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -28,19 +29,16 @@ vi.mock('node:fs/promises', async (actual) => {
   }
 })
 
-const repoHost = vi.hoisted(() => ({ value: 'git.example.test' }))
+// The real parser turns this remote into the repo ref, so SSH and scp remotes are exercised too.
+const DEFAULT_REMOTE = 'https://git.example.test/angelo/orca.git'
+const remote = vi.hoisted(() => ({ url: '' }))
 vi.mock('../source-control/hosted-review-execution-host', () => ({
   hostedReviewSshConnectionId: () => null
 }))
-vi.mock('./repository-ref', () => ({
-  getGiteaRepoRef: async () => ({
-    host: repoHost.value,
-    owner: 'angelo',
-    repo: 'orca',
-    apiBaseUrl: `https://${repoHost.value}/api/v1`,
-    webBaseUrl: `https://${repoHost.value}`
-  })
-}))
+vi.mock('./repository-ref', async (actual) => {
+  const real = await actual<typeof repositoryRef>()
+  return { ...real, getGiteaRepoRef: async () => real.parseGiteaRepoRef(remote.url) }
+})
 
 const { connectGitea, disconnectGitea, getGiteaConnectionStatus } =
   await import('./credential-connection')
@@ -48,6 +46,7 @@ const { _resetGiteaCredentialCache } = await import('./credential-store')
 const { resolveGiteaAuthForRepo } = await import('./resolve-auth')
 const { getGiteaAuthStatus } = await import('./auth-status')
 const { getGiteaPullRequest } = await import('./client')
+const { parseGiteaRepoRef } = await import('./repository-ref')
 const { createGiteaPullRequest, isGiteaReviewCreationAuthenticated } =
   await import('./pull-request-creation')
 
@@ -86,6 +85,18 @@ function apiBaseFor(origin: string): string {
   return `${origin}/api/v1`
 }
 
+function httpsRepo(apiBaseUrl: string): { apiBaseUrl: string; isSshRemote: boolean } {
+  return { apiBaseUrl, isSshRemote: false }
+}
+
+function repoFor(remoteUrl: string): repositoryRef.GiteaRepoRef {
+  const repo = parseGiteaRepoRef(remoteUrl)
+  if (!repo) {
+    throw new Error(`not a Gitea remote: ${remoteUrl}`)
+  }
+  return repo
+}
+
 async function orcaFiles(): Promise<string[]> {
   return readdir(join(home.dir, '.orca')).catch(() => [])
 }
@@ -93,6 +104,7 @@ async function orcaFiles(): Promise<string[]> {
 beforeEach(() => {
   home.dir = mkdtempSync(join(tmpdir(), 'gitea-credential-'))
   fetchCalls = []
+  remote.url = DEFAULT_REMOTE
   unlinkFailure.pathSuffix = ''
   vi.stubEnv('ORCA_GITEA_TOKEN', '')
   vi.stubEnv('ORCA_GITEA_API_BASE_URL', '')
@@ -291,7 +303,7 @@ describe('stored Gitea auth resolution', () => {
 
   it('uses the stored token for a repo on the same host', async () => {
     await connectStored()
-    expect(await resolveGiteaAuthForRepo(API_BASE_URL)).toEqual({
+    expect(await resolveGiteaAuthForRepo(httpsRepo(API_BASE_URL))).toEqual({
       apiBaseUrl: API_BASE_URL,
       token: FAKE_TOKEN
     })
@@ -299,7 +311,9 @@ describe('stored Gitea auth resolution', () => {
 
   it('sends no token to a repo on another host', async () => {
     await connectStored()
-    expect(await resolveGiteaAuthForRepo(apiBaseFor('https://gitea.other.test'))).toEqual({
+    expect(
+      await resolveGiteaAuthForRepo(httpsRepo(apiBaseFor('https://gitea.other.test')))
+    ).toEqual({
       apiBaseUrl: null,
       token: null
     })
@@ -309,15 +323,14 @@ describe('stored Gitea auth resolution', () => {
     await connectStored()
     stubFetch(() => new Response('{}', { status: 404 }))
     await getGiteaPullRequest('/repo', 1)
-    repoHost.value = 'gitea.other.test'
+    remote.url = 'https://gitea.other.test/angelo/orca.git'
     await getGiteaPullRequest('/repo', 1)
-    repoHost.value = 'git.example.test'
     expect(fetchCalls.map((call) => call.authorization)).toEqual([`token ${FAKE_TOKEN}`, null])
   })
 
   it('creates pull requests with the stored token', async () => {
     await connectStored()
-    expect(await isGiteaReviewCreationAuthenticated()).toBe(true)
+    expect(await isGiteaReviewCreationAuthenticated('/repo', 'local')).toBe(true)
     stubFetch(() => new Response('{}', { status: 401 }))
     const result = await createGiteaPullRequest(
       '/repo',
@@ -335,7 +348,7 @@ describe('stored Gitea auth resolution', () => {
     await connectStored()
     vi.stubEnv('ORCA_GITEA_TOKEN', 'fake-env-token')
     vi.stubEnv('ORCA_GITEA_API_BASE_URL', SERVER_URL)
-    expect(await resolveGiteaAuthForRepo(API_BASE_URL)).toEqual({
+    expect(await resolveGiteaAuthForRepo(httpsRepo(API_BASE_URL))).toEqual({
       apiBaseUrl: API_BASE_URL,
       token: 'fake-env-token'
     })
@@ -358,7 +371,7 @@ describe('stored Gitea auth resolution', () => {
     await disconnectGitea()
     expect(await orcaFiles()).toEqual([])
     expect((await getGiteaConnectionStatus()).configured).toBe(false)
-    expect(await resolveGiteaAuthForRepo(API_BASE_URL)).toEqual({
+    expect(await resolveGiteaAuthForRepo(httpsRepo(API_BASE_URL))).toEqual({
       apiBaseUrl: null,
       token: null
     })
@@ -368,7 +381,7 @@ describe('stored Gitea auth resolution', () => {
     ['a different scheme', 'http://git.example.test']
   ])('sends no token to a repo on %s', async (_case, origin) => {
     await connectStored()
-    expect(await resolveGiteaAuthForRepo(apiBaseFor(origin))).toEqual({
+    expect(await resolveGiteaAuthForRepo(httpsRepo(apiBaseFor(origin)))).toEqual({
       apiBaseUrl: null,
       token: null
     })
@@ -376,7 +389,7 @@ describe('stored Gitea auth resolution', () => {
 
   it('matches the saved host case-insensitively', async () => {
     await connectStored()
-    expect(await resolveGiteaAuthForRepo('https://GIT.Example.test/api/v1')).toEqual({
+    expect(await resolveGiteaAuthForRepo(httpsRepo('https://GIT.Example.test/api/v1'))).toEqual({
       apiBaseUrl: API_BASE_URL,
       token: FAKE_TOKEN
     })
@@ -384,18 +397,23 @@ describe('stored Gitea auth resolution', () => {
 
   it('never sends an env token when no env base URL is set', async () => {
     vi.stubEnv('ORCA_GITEA_TOKEN', 'fake-env-token')
-    expect(await resolveGiteaAuthForRepo(API_BASE_URL)).toEqual({ apiBaseUrl: null, token: null })
-    expect(await isGiteaReviewCreationAuthenticated()).toBe(false)
+    expect(await resolveGiteaAuthForRepo(httpsRepo(API_BASE_URL))).toEqual({
+      apiBaseUrl: null,
+      token: null
+    })
+    expect(await isGiteaReviewCreationAuthenticated('/repo', 'local')).toBe(false)
   })
 
   it('sends an env token only to the env base URL origin', async () => {
     vi.stubEnv('ORCA_GITEA_TOKEN', 'fake-env-token')
     vi.stubEnv('ORCA_GITEA_API_BASE_URL', SERVER_URL)
-    expect(await resolveGiteaAuthForRepo(apiBaseFor('https://gitea.other.test'))).toEqual({
+    expect(
+      await resolveGiteaAuthForRepo(httpsRepo(apiBaseFor('https://gitea.other.test')))
+    ).toEqual({
       apiBaseUrl: null,
       token: null
     })
-    expect(await isGiteaReviewCreationAuthenticated()).toBe(true)
+    expect(await isGiteaReviewCreationAuthenticated('/repo', 'local')).toBe(true)
   })
 
   it('overrides only matching repos when just the env base URL is set', async () => {
@@ -404,11 +422,13 @@ describe('stored Gitea auth resolution', () => {
       source: 'environment',
       baseUrl: 'https://git.example.test/forge/api/v1'
     })
-    expect(await resolveGiteaAuthForRepo(API_BASE_URL)).toEqual({
+    expect(await resolveGiteaAuthForRepo(httpsRepo(API_BASE_URL))).toEqual({
       apiBaseUrl: 'https://git.example.test/forge/api/v1',
       token: null
     })
-    expect(await resolveGiteaAuthForRepo(apiBaseFor('https://gitea.other.test'))).toEqual({
+    expect(
+      await resolveGiteaAuthForRepo(httpsRepo(apiBaseFor('https://gitea.other.test')))
+    ).toEqual({
       apiBaseUrl: null,
       token: null
     })
@@ -435,7 +455,10 @@ describe('stored Gitea auth resolution', () => {
       },
       describeProtectionGap: () => null
     })
-    expect(await resolveGiteaAuthForRepo(API_BASE_URL)).toEqual({ apiBaseUrl: null, token: null })
+    expect(await resolveGiteaAuthForRepo(httpsRepo(API_BASE_URL))).toEqual({
+      apiBaseUrl: null,
+      token: null
+    })
     const status = await getGiteaConnectionStatus()
     expect(status).toMatchObject({ configured: true, source: 'stored' })
     expect(status.credentialError).toEqual(expect.any(String))
@@ -459,5 +482,73 @@ describe('stored Gitea auth resolution', () => {
     stubFetch(() => jsonResponse({ number: 1 }))
     await getGiteaPullRequest('/repo', 1)
     expect((await getGiteaConnectionStatus()).checkedSinceRestart).toBe(true)
+  })
+})
+
+describe('Gitea auth for SSH remotes', () => {
+  const SAVED_ON_PORT = 'https://git.example.test:3000'
+
+  async function connectOnPort(): Promise<void> {
+    stubFetch(userResponse)
+    await connectGitea({ baseUrl: SAVED_ON_PORT, token: FAKE_TOKEN })
+    _resetGiteaCredentialCache()
+    fetchCalls = []
+  }
+
+  it.each([
+    ['an ssh:// remote', 'ssh://git@git.example.test:2222/angelo/orca.git'],
+    ['an scp-style remote', 'git@git.example.test:angelo/orca.git']
+  ])('sends the token to the saved API port for %s on the saved host', async (_case, url) => {
+    await connectOnPort()
+    expect(await resolveGiteaAuthForRepo(repoFor(url))).toEqual({
+      apiBaseUrl: apiBaseFor(SAVED_ON_PORT),
+      token: FAKE_TOKEN
+    })
+    remote.url = url
+    stubFetch(() => jsonResponse({}, 404))
+    await getGiteaPullRequest('/repo', 1)
+    expect(fetchCalls[0]).toEqual({
+      url: `${apiBaseFor(SAVED_ON_PORT)}/repos/angelo/orca/pulls/1`,
+      authorization: `token ${FAKE_TOKEN}`
+    })
+  })
+
+  it('sends no token to an SSH remote on another host', async () => {
+    await connectOnPort()
+    const repo = repoFor('ssh://git@gitea.other.test:2222/angelo/orca.git')
+    expect(await resolveGiteaAuthForRepo(repo)).toEqual({ apiBaseUrl: null, token: null })
+  })
+
+  it('still sends no token to an https remote on another port', async () => {
+    await connectOnPort()
+    const repo = repoFor('https://git.example.test:8443/angelo/orca.git')
+    expect(await resolveGiteaAuthForRepo(repo)).toEqual({ apiBaseUrl: null, token: null })
+  })
+
+  it('matches an env base URL to an SSH remote by hostname', async () => {
+    vi.stubEnv('ORCA_GITEA_TOKEN', 'fake-env-token')
+    vi.stubEnv('ORCA_GITEA_API_BASE_URL', SAVED_ON_PORT)
+    const repo = repoFor('git@GIT.example.test:angelo/orca.git')
+    expect(await resolveGiteaAuthForRepo(repo)).toEqual({
+      apiBaseUrl: apiBaseFor(SAVED_ON_PORT),
+      token: 'fake-env-token'
+    })
+  })
+})
+
+describe('Gitea review creation eligibility', () => {
+  it('reports a repo on another server as not authenticated with a stored token', async () => {
+    stubFetch(userResponse)
+    await connectGitea({ baseUrl: SERVER_URL, token: FAKE_TOKEN })
+    expect(await isGiteaReviewCreationAuthenticated('/repo', 'local')).toBe(true)
+    remote.url = 'https://gitea.other.test/angelo/orca.git'
+    expect(await isGiteaReviewCreationAuthenticated('/repo', 'local')).toBe(false)
+  })
+
+  it('reports a repo on another server as not authenticated with an env token', async () => {
+    vi.stubEnv('ORCA_GITEA_TOKEN', 'fake-env-token')
+    vi.stubEnv('ORCA_GITEA_API_BASE_URL', SERVER_URL)
+    remote.url = 'https://gitea.other.test/angelo/orca.git'
+    expect(await isGiteaReviewCreationAuthenticated('/repo', 'local')).toBe(false)
   })
 })

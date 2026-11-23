@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { useMountedRef } from '@/hooks/useMountedRef'
 import { readIpcErrorMessage } from '@/runtime/errors/ipc-error'
 import { openAppHttpLink } from '@/lib/browser/navigation/app-http-link-open'
+import { isWebClientLocation } from '@/app-shell/platform/web-client-location'
 import { useTranslate } from '@/i18n/use-translate'
 import {
   IntegrationCardDetails,
@@ -20,9 +21,9 @@ import { giteaConnectedSummary } from './gitea-card-summary'
 
 const TOKEN_DOCS_URL = 'https://docs.gitea.com/next/development/api-usage'
 
-// The gitea bridge is preload-only; web and mobile clients render this card without it.
+// Desktop only: web clients get a fallback window.api whose gitea namespace cannot reach the app.
 function desktopGiteaApi(): Window['api']['gitea'] | null {
-  return window.api?.gitea ?? null
+  return isWebClientLocation() ? null : (window.api?.gitea ?? null)
 }
 
 export function GiteaIntegrationCard(): React.JSX.Element {
@@ -84,9 +85,13 @@ export function GiteaIntegrationCard(): React.JSX.Element {
   }
 
   const handleDisconnect = (): void => {
+    const giteaApi = desktopGiteaApi()
+    if (!giteaApi) {
+      return
+    }
     setDisconnecting(true)
     setDisconnectError(null)
-    void window.api.gitea
+    void giteaApi
       .disconnect()
       .catch((error: unknown) => {
         // Surface deletion failures; otherwise disconnect silently repaints as still connected.

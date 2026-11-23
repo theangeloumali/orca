@@ -16,18 +16,26 @@ import { readHostedPullRequestTemplate } from '../source-control/pull-request-te
 import { getGiteaPullRequestForBranch, invalidateGiteaPullRequestScanForRepo } from './client'
 import { mapGiteaPullRequest, type RawGiteaPullRequest } from './pull-request-mappers'
 import { getGiteaRepoRef, type GiteaRepoRef } from './repository-ref'
-import { hasStoredGiteaCredential } from './credential-store'
-import { getEnvGiteaAuthConfig, hasEnvGiteaAuth, resolveGiteaAuthForRepo } from './resolve-auth'
+import { hasGiteaCredentialForRepo, resolveGiteaAuthForRepo } from './resolve-auth'
+import {
+  getHostedReviewLocalGitOptions,
+  type HostedReviewExecutionOptions
+} from '../source-control/hosted-review-git-options'
 
 const CREATE_REQUEST_TIMEOUT_MS = 60_000
 
 // Sidebar eligibility must avoid keychain prompts; creation validates the actual credential.
-export async function isGiteaReviewCreationAuthenticated(): Promise<boolean> {
-  const env = getEnvGiteaAuthConfig()
-  // An env token without its base URL is never sent, so it cannot create reviews.
-  return hasEnvGiteaAuth(env)
-    ? env.token !== null && env.apiBaseUrl !== null
-    : hasStoredGiteaCredential()
+export async function isGiteaReviewCreationAuthenticated(
+  repoPath: string,
+  executionHostId: ExecutionHostId,
+  options: HostedReviewExecutionOptions = {}
+): Promise<boolean> {
+  const repo = await getGiteaRepoRef(
+    repoPath,
+    hostedReviewSshConnectionId(executionHostId),
+    getHostedReviewLocalGitOptions(options)
+  )
+  return repo !== null && hasGiteaCredentialForRepo(repo)
 }
 
 function encodedRepoPath(repo: GiteaRepoRef): string {
@@ -166,7 +174,7 @@ export async function createGiteaPullRequest(
     ...(input.draft ? { draft: true } : {})
   }
 
-  const auth = await resolveGiteaAuthForRepo(repo.apiBaseUrl)
+  const auth = await resolveGiteaAuthForRepo(repo)
   const apiBaseUrl = (auth.apiBaseUrl ?? repo.apiBaseUrl).replace(/\/+$/, '')
   try {
     const raw = await requestHostedReviewJson<RawGiteaPullRequest>(

@@ -7,6 +7,8 @@ export type GiteaRepoRef = {
   repo: string
   apiBaseUrl: string
   webBaseUrl: string
+  // SSH and scp remotes carry the SSH port, so their derived https origin has no API port.
+  isSshRemote: boolean
 }
 
 type LocalGitExecOptions = {
@@ -60,7 +62,12 @@ function apiBaseUrlFromWebBase(webBaseUrl: string): string {
   return `${webBaseUrl.replace(/\/+$/, '')}/api/v1`
 }
 
-function makeRepoRef(host: string, path: string, webOrigin: string): GiteaRepoRef | null {
+function makeRepoRef(
+  host: string,
+  path: string,
+  webOrigin: string,
+  isSshRemote: boolean
+): GiteaRepoRef | null {
   const normalizedHost = host.toLowerCase()
   const owner = getPublicForgeProviderForHost(normalizedHost)
   if (!normalizedHost || (owner && owner !== 'gitea')) {
@@ -81,7 +88,8 @@ function makeRepoRef(host: string, path: string, webOrigin: string): GiteaRepoRe
     owner: parsed.owner,
     repo: parsed.repo,
     apiBaseUrl: apiBaseUrlFromWebBase(webBaseUrl),
-    webBaseUrl
+    webBaseUrl,
+    isSshRemote
   }
 }
 
@@ -92,7 +100,7 @@ export function parseGiteaRepoRef(remoteUrl: string): GiteaRepoRef | null {
     if (scpLike) {
       const host = scpLike[1]
       const path = scpLike[2]
-      return makeRepoRef(host, path, `https://${host.toLowerCase()}`)
+      return makeRepoRef(host, path, `https://${host.toLowerCase()}`, true)
     }
   }
 
@@ -108,11 +116,11 @@ export function parseGiteaRepoRef(remoteUrl: string): GiteaRepoRef | null {
       return null
     }
 
-    const webOrigin =
-      protocol === 'http:' || protocol === 'https:'
-        ? `${protocol}//${url.host}`
-        : `https://${url.hostname.toLowerCase()}`
-    return makeRepoRef(url.hostname, url.pathname, webOrigin)
+    const isSshRemote = protocol !== 'http:' && protocol !== 'https:'
+    const webOrigin = isSshRemote
+      ? `https://${url.hostname.toLowerCase()}`
+      : `${protocol}//${url.host}`
+    return makeRepoRef(url.hostname, url.pathname, webOrigin, isSshRemote)
   } catch {
     return null
   }

@@ -39,14 +39,25 @@ beforeEach(() => {
 afterEach(() => {
   cleanup()
   Reflect.deleteProperty(window, 'api')
+  Reflect.deleteProperty(window, '__ORCA_WEB_CLIENT__')
 })
 
 describe('GiteaIntegrationCard', () => {
-  it('points browser clients at the desktop app instead of calling a missing bridge', async () => {
-    Reflect.set(window, 'api', {})
+  // Web clients get a fallback window.api whose gitea namespace exists but cannot reach the desktop.
+  it('points web clients at the desktop app even though a fallback bridge exists', async () => {
+    Reflect.set(window, '__ORCA_WEB_CLIENT__', true)
     render(<GiteaIntegrationCard />)
     expect(await screen.findByText('Connect Gitea / Forgejo from the desktop app')).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'Connect' })).toBeNull()
+    expect(status).not.toHaveBeenCalled()
+  })
+
+  it('reads the connection through the desktop bridge in the Electron app', async () => {
+    status.mockResolvedValue(STORED)
+    render(<GiteaIntegrationCard />)
+    expect(await screen.findByRole('button', { name: 'Disconnect Gitea / Forgejo' })).toBeTruthy()
+    expect(status).toHaveBeenCalled()
+    expect(screen.queryByText('Connect Gitea / Forgejo from the desktop app')).toBeNull()
   })
 
   it('shows a decryption error and still offers Disconnect', async () => {

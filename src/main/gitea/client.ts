@@ -35,7 +35,7 @@ function authHeaders(token: string | null): Record<string, string> {
 }
 
 function configuredApiBaseUrl(repo: GiteaRepoRef): string {
-  return envGiteaApiBaseUrlFor(repo.apiBaseUrl) ?? repo.apiBaseUrl
+  return envGiteaApiBaseUrlFor(repo) ?? repo.apiBaseUrl
 }
 
 function apiUrl(baseUrl: string, path: string, searchParams?: RequestOptions['searchParams']): URL {
@@ -87,7 +87,7 @@ async function requestJson<T>(
   options: RequestOptions = {},
   throwOnFailure = false
 ): Promise<T | null> {
-  const auth = await resolveGiteaAuthForRepo(repo.apiBaseUrl)
+  const auth = await resolveGiteaAuthForRepo(repo)
   const result = await requestJsonAtBase<T>(
     auth.apiBaseUrl ?? repo.apiBaseUrl,
     auth.token,

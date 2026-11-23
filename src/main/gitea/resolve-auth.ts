@@ -1,4 +1,9 @@
-import { getStoredGiteaMetadata, loadStoredGiteaSecret } from './credential-store'
+import {
+  getStoredGiteaMetadata,
+  hasStoredGiteaCredential,
+  loadStoredGiteaSecret
+} from './credential-store'
+import type { GiteaRepoRef } from './repository-ref'
 
 export type GiteaAuthConfig = {
   apiBaseUrl: string | null
@@ -29,43 +34,58 @@ export function hasEnvGiteaAuth(config: GiteaAuthConfig): boolean {
 
 const NO_AUTH: GiteaAuthConfig = { apiBaseUrl: null, token: null }
 
+type GiteaRepoServer = Pick<GiteaRepoRef, 'apiBaseUrl' | 'isSshRemote'>
+
 // URL.origin lowercases the host and drops default ports, so it compares scheme + host + port.
-function originOf(url: string): string | null {
+function urlPart(url: string, part: 'origin' | 'hostname'): string | null {
   try {
-    return new URL(url).origin
+    return new URL(url)[part]
   } catch {
     return null
   }
 }
 
-export function isSameGiteaOrigin(left: string, right: string): boolean {
-  const leftOrigin = originOf(left)
-  return leftOrigin !== null && leftOrigin === originOf(right)
+// An SSH remote's port is the SSH port, so only its hostname can identify the API server.
+function servesRepo(baseUrl: string, repo: GiteaRepoServer): boolean {
+  const part = repo.isSshRemote ? 'hostname' : 'origin'
+  const configured = urlPart(baseUrl, part)
+  return configured !== null && configured === urlPart(repo.apiBaseUrl, part)
 }
 
-/** The env base URL, only when it serves this repo's origin. */
-export function envGiteaApiBaseUrlFor(repoApiBaseUrl: string): string | null {
+/** The env base URL, only when it serves this repo's server. */
+export function envGiteaApiBaseUrlFor(repo: GiteaRepoServer): string | null {
   const { apiBaseUrl } = getEnvGiteaAuthConfig()
-  return apiBaseUrl && isSameGiteaOrigin(apiBaseUrl, repoApiBaseUrl) ? apiBaseUrl : null
+  return apiBaseUrl && servesRepo(apiBaseUrl, repo) ? apiBaseUrl : null
 }
 
-// Env vars win, but either token only goes to the server origin it was configured for.
-export async function resolveGiteaAuthForRepo(repoApiBaseUrl: string): Promise<GiteaAuthConfig> {
+// Env vars win, but a token only goes to the base URL it was configured with, never the remote's.
+export async function resolveGiteaAuthForRepo(repo: GiteaRepoServer): Promise<GiteaAuthConfig> {
   const env = getEnvGiteaAuthConfig()
   if (hasEnvGiteaAuth(env)) {
-    return envGiteaApiBaseUrlFor(repoApiBaseUrl) ? env : NO_AUTH
+    return envGiteaApiBaseUrlFor(repo) ? env : NO_AUTH
   }
   const metadata = await getStoredGiteaMetadata()
-  if (!metadata || !isSameGiteaOrigin(metadata.baseUrl, repoApiBaseUrl)) {
+  if (!metadata || !servesRepo(metadata.baseUrl, repo)) {
     return NO_AUTH
   }
   try {
     const secret = await loadStoredGiteaSecret({ force: true })
-    return secret && isSameGiteaOrigin(secret.baseUrl, repoApiBaseUrl)
+    return secret && servesRepo(secret.baseUrl, repo)
       ? { apiBaseUrl: secret.baseUrl, token: secret.token }
       : NO_AUTH
   } catch {
     // An undecryptable token still leaves public repositories readable.
     return NO_AUTH
   }
+}
+
+// Same rule as resolveGiteaAuthForRepo, but reads metadata only so it never prompts the keychain.
+export async function hasGiteaCredentialForRepo(repo: GiteaRepoServer): Promise<boolean> {
+  const env = getEnvGiteaAuthConfig()
+  if (hasEnvGiteaAuth(env)) {
+    // An env token without its base URL is never sent, so it cannot authenticate.
+    return env.token !== null && envGiteaApiBaseUrlFor(repo) !== null
+  }
+  const metadata = await getStoredGiteaMetadata()
+  return metadata !== null && servesRepo(metadata.baseUrl, repo) && hasStoredGiteaCredential()
 }

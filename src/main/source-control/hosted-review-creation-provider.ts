@@ -125,13 +125,13 @@ export async function isProviderAuthenticated(
     return isAzureDevOpsReviewCreationAuthenticated()
   }
   if (provider === 'gitea') {
-    return isGiteaReviewCreationAuthenticated()
+    return isGiteaReviewCreationAuthenticated(repoPath, executionHostId, options)
   }
   if (provider === 'bitbucket') {
     // Bitbucket authentication must not fall through to GitHub login requirements.
     return isBitbucketReviewCreationAuthenticated()
   }
-  // Only CLI-backed providers need host-routed Git reads; their CLIs run here. Token-backed providers do not touch the repo.
+  // CLI-backed providers run their CLIs here against host-routed Git reads.
   const connectionId = hostedReviewSshConnectionId(executionHostId)
   if (provider === 'gitlab') {
     return isGitLabAuthenticated(repoPath, connectionId, options)
