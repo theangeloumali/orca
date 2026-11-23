@@ -7751,9 +7751,7 @@
           "workspaceCount_one": "{{count}} рабочее пространство",
           "workspaceCount_few": "{{count}} рабочих пространства",
           "workspaceCount_many": "{{count}} рабочих пространств",
-          "workspaceCount_other": "{{count}} рабочего пространства",
-          "agentsNeedYou": "Ждут вас: {{count}}",
-          "agentsWorking": "В работе: {{count}}"
+          "workspaceCount_other": "{{count}} рабочего пространства"
         },
         "titleDerivedAgentRows": {
           "needsInput": "Требуется ввод",
@@ -7870,7 +7868,9 @@
           "workspacesWithTerminals_one": "{{count}} с открытым терминалом",
           "workspacesWithTerminals_few": "{{count}} с открытыми терминалами",
           "workspacesWithTerminals_many": "{{count}} с открытыми терминалами",
-          "workspacesWithTerminals_other": "{{count}} с открытыми терминалами"
+          "workspacesWithTerminals_other": "{{count}} с открытыми терминалами",
+          "agentsNeedYou": "Ждут вас: {{count}}",
+          "agentsWorking": "В работе: {{count}}"
         }
       },
       "shared": {

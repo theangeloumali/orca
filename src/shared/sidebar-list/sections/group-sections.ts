@@ -51,10 +51,13 @@ export type SectionAppendContext = {
   folderPairByIdentity?: ReadonlyMap<string, RenderableFolderWorkspace>
 }
 
+/** The workspaces a project header draws, per machine; split hosts also get each registration. */
 function getProjectHeaderHostScope(
   ctx: SectionAppendContext,
   group: WorktreeGroupEntry
-): Pick<GroupHeaderRow, 'hostRepos' | 'hostWorktreeCounts' | 'hostWorktreeIds'> {
+): Pick<GroupHeaderRow, 'hostRepos' | 'hostWorktreeCounts' | 'hostWorktreeIds' | 'worktreeIds'> {
+  const hostWorktreeIds = getHostWorktreeIds(group.items, ctx.repoOf, ctx.defaultHostId)
+  const drawn = { hostWorktreeIds, worktreeIds: group.items.map((worktree) => worktree.id) }
   const hostRepos = getProjectHeaderHostRepos({
     group,
     repoMap: ctx.repoMap,
@@ -68,15 +71,14 @@ function getProjectHeaderHostScope(
     defaultHostId: ctx.defaultHostId
   })
   if (!hostRepos) {
-    return {}
+    return drawn
   }
-  const hostWorktreeIds = getHostWorktreeIds(group.items, ctx.repoOf, ctx.defaultHostId)
   return {
+    ...drawn,
     hostRepos,
     hostWorktreeCounts: hostWorktreeIds
       ? new Map([...hostWorktreeIds].map(([hostId, ids]) => [hostId, ids.length]))
-      : undefined,
-    hostWorktreeIds
+      : undefined
   }
 }
 

@@ -7767,9 +7767,7 @@
           "loadingPr": "正在加载 PR…"
         },
         "HostSectionHeader": {
-          "workspaceCount_other": "{{count}} 个工作区",
-          "agentsNeedYou": "需要你处理：{{count}}",
-          "agentsWorking": "工作中：{{count}}"
+          "workspaceCount_other": "{{count}} 个工作区"
         },
         "titleDerivedAgentRows": {
           "needsInput": "需要输入",
@@ -7878,7 +7876,9 @@
           "offer_other": "将 {{count}} 个未分组项目按客户分组…"
         },
         "AgentActivityBadges": {
-          "workspacesWithTerminals_other": "终端已打开：{{count}}"
+          "workspacesWithTerminals_other": "终端已打开：{{count}}",
+          "agentsNeedYou": "需要你处理：{{count}}",
+          "agentsWorking": "工作中：{{count}}"
         }
       },
       "shared": {

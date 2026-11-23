@@ -1,96 +1,61 @@
-// @vitest-environment happy-dom
-
-import { act, cleanup, renderHook } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { useAppStore } from '@/store'
-import { makeTab } from '@/store/terminals/testing/terminal-tab.test-fixture'
+import { describe, expect, it } from 'vitest'
+import type { AgentStatusEntry } from '../../../../../../shared/agent-status/contracts/agent-status-types'
+import type { Repo } from '../../../../../../shared/repository/repo-types'
 import { repo, worktree } from '../grouping/worktree-list-groups-test-fixtures'
-import type * as HostActivityModule from '../../../../../../shared/sidebar-list/hosts/host-agent-activity'
-import { collectRepoRegistrationWorkspaceIds } from './use-project-group-agent-activity-counts'
-import { countProjectActivity, useProjectActivityCounts } from './use-project-activity-counts'
+import { countHeaderActivity } from './use-project-activity-counts'
 
-const counting = vi.hoisted(() => ({ calls: 0 }))
-vi.mock(
-  '../../../../../../shared/sidebar-list/hosts/host-agent-activity',
-  async (importOriginal) => {
-    const actual = await importOriginal<typeof HostActivityModule>()
-    return {
-      ...actual,
-      countHostAgentActivity: (
-        ...args: Parameters<typeof actual.countHostAgentActivity>
-      ): ReturnType<typeof actual.countHostAgentActivity> => {
-        counting.calls += 1
-        return actual.countHostAgentActivity(...args)
-      }
-    }
-  }
-)
+const NOW = 1_000_000
+const remoteRepo: Repo = {
+  ...repo,
+  id: 'repo-gpu',
+  connectionId: 'gpu-vm',
+  executionHostId: 'ssh:gpu-vm'
+}
+const shared = { ...worktree, id: 'wt-shared' }
+const paneState = {
+  repos: [repo, remoteRepo],
+  worktreesByRepo: {
+    [repo.id]: [{ ...shared, repoId: repo.id, hostId: 'local' as const }],
+    [remoteRepo.id]: [{ ...shared, repoId: remoteRepo.id, hostId: 'ssh:gpu-vm' as const }]
+  },
+  unifiedTabsByWorktree: {},
+  terminalLayoutsByTabId: {},
+  ptyIdsByTabId: {}
+}
+const remoteAgent: AgentStatusEntry = {
+  paneKey: 'tab-remote:leaf-1',
+  worktreeId: shared.id,
+  connectionId: 'gpu-vm',
+  state: 'waiting',
+  prompt: '',
+  updatedAt: NOW,
+  stateStartedAt: NOW,
+  stateHistory: []
+}
 
-describe('collectRepoRegistrationWorkspaceIds', () => {
-  it("keeps only the registration's own-host workspaces, not its twin on another machine", () => {
-    const local = { id: 'r-twin' }
-    const remote = { id: 'r-twin', connectionId: 'gpu-vm' }
-    const sources = {
-      repos: [local, remote],
-      workspacesByRepoId: {
-        'r-twin': [
-          { id: 'wt-local', hostId: 'local' as const },
-          { id: 'wt-remote', hostId: 'ssh:gpu-vm' as const }
-        ]
-      }
-    }
-    expect(collectRepoRegistrationWorkspaceIds(local, sources)).toEqual(['wt-local'])
-    expect(collectRepoRegistrationWorkspaceIds(remote, sources)).toEqual(['wt-remote'])
-  })
-})
-
-describe('countProjectActivity', () => {
-  it('counts needs-you, working and workspaces whose terminal PTY is still live', () => {
-    const live = new Map([
-      ['wt-ask', 'permission' as const],
-      ['wt-run', 'working' as const],
-      ['wt-elsewhere', 'working' as const]
-    ])
-    const terminalTabs = {
-      'wt-run': [{ id: 'tab-live' }],
-      'wt-dead': [{ id: 'tab-dead' }]
-    }
-    const ptyIdsByTabId = { 'tab-live': ['pty-1'], 'tab-dead': [] }
+describe('countHeaderActivity', () => {
+  it("credits an agent only to its own machine's copy of a shared workspace id", () => {
+    const count = (scope: Map<'local' | 'ssh:gpu-vm', string[]>) =>
+      countHeaderActivity(
+        paneState,
+        new Map([[remoteAgent.paneKey, remoteAgent]]),
+        scope,
+        {},
+        {},
+        NOW
+      )
+    expect(count(new Map([['local', [shared.id]]]))).toEqual({
+      needsYou: 0,
+      working: 0,
+      terminals: 0
+    })
     expect(
-      countProjectActivity(['wt-ask', 'wt-run', 'wt-dead'], live, terminalTabs, ptyIdsByTabId)
-    ).toEqual({ needsYou: 1, working: 1, terminals: 1 })
-  })
-})
-
-describe('useProjectActivityCounts', () => {
-  afterEach(() => {
-    cleanup()
-    useAppStore.setState(useAppStore.getInitialState(), true)
-  })
-
-  it('recounts on a PTY change but not on a terminal title write', () => {
-    useAppStore.setState({
-      repos: [repo],
-      worktreesByRepo: { [repo.id]: [worktree] },
-      tabsByWorktree: { [worktree.id]: [makeTab({ id: 'tab-1', worktreeId: worktree.id })] },
-      ptyIdsByTabId: {}
-    })
-    const { result } = renderHook(() => useProjectActivityCounts(repo))
-    expect(result.current).toEqual({ needsYou: 0, working: 0, terminals: 0 })
-    const callsAfterMount = counting.calls
-
-    act(() => {
-      useAppStore.setState({
-        tabsByWorktree: {
-          [worktree.id]: [makeTab({ id: 'tab-1', worktreeId: worktree.id, title: 'vim' })]
-        }
-      })
-    })
-    expect(counting.calls).toBe(callsAfterMount)
-
-    act(() => {
-      useAppStore.setState({ ptyIdsByTabId: { 'tab-1': ['pty-1'] } })
-    })
-    expect(result.current.terminals).toBe(1)
+      count(
+        new Map([
+          ['local', [shared.id]],
+          ['ssh:gpu-vm', [shared.id]]
+        ])
+      )
+    ).toEqual({ needsYou: 1, working: 0, terminals: 0 })
   })
 })

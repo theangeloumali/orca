@@ -7244,9 +7244,7 @@
           "loadingPr": "正在載入 PR…"
         },
         "HostSectionHeader": {
-          "workspaceCount_other": "{{count}} 個工作區",
-          "agentsNeedYou": "需要你處理：{{count}}",
-          "agentsWorking": "工作中：{{count}}"
+          "workspaceCount_other": "{{count}} 個工作區"
         },
         "titleDerivedAgentRows": {
           "needsInput": "需要輸入",
@@ -7339,7 +7337,9 @@
           "offer_other": "將 {{count}} 個未分組專案依客戶分組…"
         },
         "AgentActivityBadges": {
-          "workspacesWithTerminals_other": "終端機已開啟：{{count}}"
+          "workspacesWithTerminals_other": "終端機已開啟：{{count}}",
+          "agentsNeedYou": "需要你處理：{{count}}",
+          "agentsWorking": "工作中：{{count}}"
         }
       },
       "shared": {

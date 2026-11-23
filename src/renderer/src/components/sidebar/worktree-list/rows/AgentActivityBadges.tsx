@@ -26,7 +26,7 @@ export function AgentActivityBadges({
           role="img"
           className="flex items-center gap-0.5 text-agent-question"
           aria-label={t(
-            'auto.components.sidebar.HostSectionHeader.agentsNeedYou',
+            'auto.components.sidebar.AgentActivityBadges.agentsNeedYou',
             '{{count}} need you',
             {
               count: needsYou
@@ -42,7 +42,7 @@ export function AgentActivityBadges({
           role="img"
           className="flex items-center gap-0.5 text-muted-foreground"
           aria-label={t(
-            'auto.components.sidebar.HostSectionHeader.agentsWorking',
+            'auto.components.sidebar.AgentActivityBadges.agentsWorking',
             '{{count}} working',
             {
               count: working

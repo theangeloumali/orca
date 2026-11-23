@@ -7502,9 +7502,7 @@
         },
         "HostSectionHeader": {
           "workspaceCount_other": "{{count}} çalışma alanı",
-          "workspaceCount_one": "{{count}} çalışma alanı",
-          "agentsNeedYou": "Sizi bekleyen: {{count}}",
-          "agentsWorking": "Çalışan: {{count}}"
+          "workspaceCount_one": "{{count}} çalışma alanı"
         },
         "titleDerivedAgentRows": {
           "needsInput": "Girdi gerekiyor",
@@ -7605,7 +7603,9 @@
         },
         "AgentActivityBadges": {
           "workspacesWithTerminals_one": "Açık terminalli: {{count}}",
-          "workspacesWithTerminals_other": "Açık terminalli: {{count}}"
+          "workspacesWithTerminals_other": "Açık terminalli: {{count}}",
+          "agentsNeedYou": "Sizi bekleyen: {{count}}",
+          "agentsWorking": "Çalışan: {{count}}"
         }
       },
       "shared": {

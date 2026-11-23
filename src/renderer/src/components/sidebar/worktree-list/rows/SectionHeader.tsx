@@ -338,7 +338,7 @@ export function renderWorktreeSectionHeaderRow(
                   status={projectGroupPathStatus}
                   groupId={projectGroupIdForHeader}
                 />
-                {isRepoHeader ? <RepoHeaderTitleExtras repo={row.repo!} /> : null}
+                {isRepoHeader ? <RepoHeaderTitleExtras row={row} /> : null}
               </div>
             </div>
           </div>

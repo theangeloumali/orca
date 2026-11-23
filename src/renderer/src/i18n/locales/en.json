@@ -8557,9 +8557,7 @@
         },
         "HostSectionHeader": {
           "workspaceCount_one": "{{count}} workspace",
-          "workspaceCount_other": "{{count}} workspaces",
-          "agentsNeedYou": "{{count}} need you",
-          "agentsWorking": "{{count}} working"
+          "workspaceCount_other": "{{count}} workspaces"
         },
         "titleDerivedAgentRows": {
           "needsInput": "Needs input",
@@ -8677,7 +8675,9 @@
         },
         "AgentActivityBadges": {
           "workspacesWithTerminals_one": "{{count}} with an open terminal",
-          "workspacesWithTerminals_other": "{{count}} with open terminals"
+          "workspacesWithTerminals_other": "{{count}} with open terminals",
+          "agentsNeedYou": "{{count}} need you",
+          "agentsWorking": "{{count}} working"
         }
       },
       "shared": {

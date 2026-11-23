@@ -7031,9 +7031,7 @@
         "HostSectionHeader": {
           "workspaceCount_one": "{{count}} espacio de trabajo",
           "workspaceCount_other": "{{count}} espacios de trabajo",
-          "workspaceCount_many": "{{count}} espacios de trabajo",
-          "agentsNeedYou": "Te necesitan: {{count}}",
-          "agentsWorking": "Trabajando: {{count}}"
+          "workspaceCount_many": "{{count}} espacios de trabajo"
         },
         "titleDerivedAgentRows": {
           "needsInput": "Requiere intervención",
@@ -7142,7 +7140,9 @@
         "AgentActivityBadges": {
           "workspacesWithTerminals_one": "{{count}} con una terminal abierta",
           "workspacesWithTerminals_many": "{{count}} con terminales abiertas",
-          "workspacesWithTerminals_other": "{{count}} con terminales abiertas"
+          "workspacesWithTerminals_other": "{{count}} con terminales abiertas",
+          "agentsNeedYou": "Te necesitan: {{count}}",
+          "agentsWorking": "Trabajando: {{count}}"
         }
       },
       "shared": {

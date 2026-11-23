@@ -1,20 +1,25 @@
-import React from 'react'
-import type { Repo } from '../../../../../../shared/repository/repo-types'
+import React, { useMemo } from 'react'
+import type { GroupHeaderRow } from '../../../../../../shared/sidebar-list/row-types'
 import { RepoScanUnavailableIndicator } from './RepoScanUnavailableIndicator'
 import { AgentActivityBadges } from './AgentActivityBadges'
-import { useProjectActivityCounts } from './use-project-activity-counts'
+import { getHeaderWorkspaceScope, useProjectActivityCounts } from './use-project-activity-counts'
 
-function RepoActivityBadges({ repo }: { repo: Repo }): React.JSX.Element | null {
-  const counts = useProjectActivityCounts(repo)
-  return <AgentActivityBadges {...counts} />
+function HeaderActivityBadges({ row }: { row: GroupHeaderRow }): React.JSX.Element | null {
+  const { hostId, hostWorktreeIds, worktreeIds } = row
+  // Keyed on the row's id arrays so the store selector sees a stable scope between plans.
+  const scope = useMemo(
+    () => getHeaderWorkspaceScope({ hostId, hostWorktreeIds, worktreeIds }),
+    [hostId, hostWorktreeIds, worktreeIds]
+  )
+  return <AgentActivityBadges {...useProjectActivityCounts(scope)} />
 }
 
-/** A repo header's title-row extras: the scan warning, then live activity for this registration. */
-export function RepoHeaderTitleExtras({ repo }: { repo: Repo }): React.JSX.Element {
+/** A repo header's title-row extras: the scan warning, then live activity for the workspaces it draws. */
+export function RepoHeaderTitleExtras({ row }: { row: GroupHeaderRow }): React.JSX.Element {
   return (
     <>
-      <RepoScanUnavailableIndicator repo={repo} />
-      <RepoActivityBadges repo={repo} />
+      {row.repo ? <RepoScanUnavailableIndicator repo={row.repo} /> : null}
+      <HeaderActivityBadges row={row} />
     </>
   )
 }

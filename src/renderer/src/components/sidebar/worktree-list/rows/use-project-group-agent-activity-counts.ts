@@ -22,8 +22,7 @@ import { getDescendantGroupIds } from '../listing/project-group-subtree-collapse
 import { getRepoExecutionHostId } from '../../../../../../shared/execution-host/execution-host'
 import {
   createRepoRowExecutionHostLookup,
-  resolveWorktreeExecutionHost,
-  type RepoRowExecutionHostLookup
+  resolveWorktreeExecutionHost
 } from '../../../../../../shared/execution-host/worktree-execution-host-resolution'
 
 type ProjectGroupWorkspaceSources = {
@@ -42,29 +41,6 @@ export function useProjectGroupSubtreeIds(groupId: string): ReadonlySet<string> 
   )
 }
 
-type RepoRegistration = ProjectGroupWorkspaceSources['repos'][number]
-
-/** One registration's own workspaces, read from the catalog so collapsed rows still count. */
-export function collectRepoRegistrationWorkspaceIds(
-  repo: RepoRegistration,
-  sources: Pick<ProjectGroupWorkspaceSources, 'repos' | 'workspacesByRepoId'>,
-  ownerLookup: RepoRowExecutionHostLookup<RepoRegistration> = createRepoRowExecutionHostLookup(
-    sources.repos
-  )
-): string[] {
-  // Why per host: another machine's copy shares the id; an unstamped worktree takes its repo's host.
-  const hostId = getRepoExecutionHostId(repo)
-  return (sources.workspacesByRepoId[repo.id] ?? [])
-    .filter((worktree) => {
-      const owner = resolveWorktreeExecutionHost(ownerLookup, {
-        repoId: repo.id,
-        hostId: worktree.hostId
-      })
-      return owner.kind === 'resolved' && owner.hostId === hostId
-    })
-    .map((worktree) => worktree.id)
-}
-
 /** Workspace ids under a group subtree, read from the catalog so folded rows still count. */
 export function collectProjectGroupWorkspaceIds(
   subtreeGroupIds: ReadonlySet<string>,
@@ -74,7 +50,17 @@ export function collectProjectGroupWorkspaceIds(
   const ownerLookup = createRepoRowExecutionHostLookup(sources.repos)
   for (const repo of sources.repos) {
     if (!isRepoHidden(repo) && repo.projectGroupId && subtreeGroupIds.has(repo.projectGroupId)) {
-      ids.push(...collectRepoRegistrationWorkspaceIds(repo, sources, ownerLookup))
+      // Why per host: another machine's copy shares the id; an unstamped worktree takes its repo's host.
+      const hostId = getRepoExecutionHostId(repo)
+      for (const worktree of sources.workspacesByRepoId[repo.id] ?? []) {
+        const owner = resolveWorktreeExecutionHost(ownerLookup, {
+          repoId: repo.id,
+          hostId: worktree.hostId
+        })
+        if (owner.kind === 'resolved' && owner.hostId === hostId) {
+          ids.push(worktree.id)
+        }
+      }
     }
   }
   for (const folderWorkspace of sources.folderEntries) {

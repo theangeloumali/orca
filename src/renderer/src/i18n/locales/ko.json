@@ -7632,9 +7632,7 @@
         },
         "HostSectionHeader": {
           "workspaceCount_one": "워크스페이스 {{count}}개",
-          "workspaceCount_other": "워크스페이스 {{count}}개",
-          "agentsNeedYou": "응답 필요: {{count}}",
-          "agentsWorking": "작업 중: {{count}}"
+          "workspaceCount_other": "워크스페이스 {{count}}개"
         },
         "titleDerivedAgentRows": {
           "needsInput": "입력 필요",
@@ -7739,7 +7737,9 @@
           "offer_other": "그룹 없는 {{count}}개를 클라이언트별로 그룹화…"
         },
         "AgentActivityBadges": {
-          "workspacesWithTerminals_other": "터미널 열림: {{count}}"
+          "workspacesWithTerminals_other": "터미널 열림: {{count}}",
+          "agentsNeedYou": "응답 필요: {{count}}",
+          "agentsWorking": "작업 중: {{count}}"
         }
       },
       "shared": {
