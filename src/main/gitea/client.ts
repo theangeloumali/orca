@@ -14,7 +14,7 @@ import {
   type HostedReviewExecutionOptions
 } from '../source-control/hosted-review-git-options'
 import { cancelUnreadResponseBody } from '../lib/unread-response-body'
-import { envGiteaApiBaseUrlFor, resolveGiteaAuthForRepo } from './resolve-auth'
+import { resolveGiteaAuthForRepo } from './resolve-auth'
 import { noteGiteaTokenWorked } from './credential-store'
 
 const REQUEST_TIMEOUT_MS = 5000
@@ -32,10 +32,6 @@ type RequestOptions = {
 
 function authHeaders(token: string | null): Record<string, string> {
   return token ? { Authorization: `token ${token}` } : {}
-}
-
-function configuredApiBaseUrl(repo: GiteaRepoRef): string {
-  return envGiteaApiBaseUrlFor(repo) ?? repo.apiBaseUrl
 }
 
 function apiUrl(baseUrl: string, path: string, searchParams?: RequestOptions['searchParams']): URL {
@@ -105,13 +101,15 @@ function encodedRepoPath(repo: GiteaRepoRef): string {
   return `${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.repo)}`
 }
 
-function giteaPullRequestScanKey(repo: GiteaRepoRef): string {
-  return `${configuredApiBaseUrl(repo)}/${encodedRepoPath(repo)}`
+// Keyed by the base URL requests actually use, so a changed saved endpoint never reuses a listing.
+async function giteaPullRequestScanKey(repo: GiteaRepoRef): Promise<string> {
+  const { apiBaseUrl } = await resolveGiteaAuthForRepo(repo)
+  return `${apiBaseUrl ?? repo.apiBaseUrl}/${encodedRepoPath(repo)}`
 }
 
 /** Invalidate after creation so card refreshes cannot reuse a cached miss. */
-export function invalidateGiteaPullRequestScanForRepo(repo: GiteaRepoRef): void {
-  const repoKey = giteaPullRequestScanKey(repo)
+export async function invalidateGiteaPullRequestScanForRepo(repo: GiteaRepoRef): Promise<void> {
+  const repoKey = await giteaPullRequestScanKey(repo)
   invalidateGiteaPullRequestScan(repoKey)
   invalidateGiteaPullRequestScan(`${repoKey}::strict`)
 }
@@ -191,9 +189,10 @@ export async function getGiteaPullRequestForBranch(
   }
 
   if (branchName) {
+    const scanKey = await giteaPullRequestScanKey(repo)
     const pullRequests = await scanGiteaPullRequests(
       // Strict scans must not inherit an empty result produced by a failed lenient scan.
-      throwOnFailure ? `${giteaPullRequestScanKey(repo)}::strict` : giteaPullRequestScanKey(repo),
+      throwOnFailure ? `${scanKey}::strict` : scanKey,
       (page) =>
         requestJson<RawGiteaPullRequest[]>(
           repo,

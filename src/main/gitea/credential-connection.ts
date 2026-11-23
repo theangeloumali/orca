@@ -1,4 +1,5 @@
 import { fetchGiteaUserResult } from './user-request'
+import { invalidateAllGiteaPullRequestScans } from './pull-request-scan-cache'
 import { getEnvGiteaAuthConfig, hasEnvGiteaAuth, normalizeGiteaApiBaseUrl } from './resolve-auth'
 import {
   clearStoredGiteaCredential,
@@ -56,11 +57,18 @@ export async function connectGitea(input: GiteaConnectArgs): Promise<GiteaConnec
     return giteaConnectFailure(result.reason)
   }
   await saveGiteaCredential({ baseUrl: apiBaseUrl, token, account: result.account })
+  // Listings fetched without this token, or with an older one, must not be reused.
+  invalidateAllGiteaPullRequestScans()
   return { ok: true, account: result.account }
 }
 
 export async function disconnectGitea(): Promise<void> {
-  await clearStoredGiteaCredential()
+  try {
+    await clearStoredGiteaCredential()
+  } finally {
+    // Even a partial clear must not leave private listings visible.
+    invalidateAllGiteaPullRequestScans()
+  }
 }
 
 // Status reads must avoid keychain prompts.

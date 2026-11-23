@@ -35,9 +35,23 @@ const remote = vi.hoisted(() => ({ url: '' }))
 vi.mock('../source-control/hosted-review-execution-host', () => ({
   hostedReviewSshConnectionId: () => null
 }))
+// Stands in for ssh -G: maps a Host alias to its HostName, or throws to simulate a failed probe.
+const sshConfig = vi.hoisted(() => ({ aliases: new Map<string, string>(), fails: false }))
+async function fakeSshHostnameResolver(host: string): Promise<{ hostname: string | null }> {
+  if (sshConfig.fails) {
+    throw new Error('ssh -G failed')
+  }
+  return { hostname: sshConfig.aliases.get(host) ?? null }
+}
 vi.mock('./repository-ref', async (actual) => {
   const real = await actual<typeof repositoryRef>()
-  return { ...real, getGiteaRepoRef: async () => real.parseGiteaRepoRef(remote.url) }
+  return {
+    ...real,
+    getGiteaRepoRef: async () => {
+      const parsed = real.parseGiteaRepoRef(remote.url)
+      return parsed && real.resolveGiteaSshHostname(parsed, {}, fakeSshHostnameResolver)
+    }
+  }
 })
 
 const { connectGitea, disconnectGitea, getGiteaConnectionStatus } =
@@ -45,7 +59,9 @@ const { connectGitea, disconnectGitea, getGiteaConnectionStatus } =
 const { _resetGiteaCredentialCache } = await import('./credential-store')
 const { resolveGiteaAuthForRepo } = await import('./resolve-auth')
 const { getGiteaAuthStatus } = await import('./auth-status')
-const { getGiteaPullRequest } = await import('./client')
+const { getGiteaPullRequest, getGiteaPullRequestForBranch } = await import('./client')
+const { _resetGiteaPullRequestScanCache } = await import('./pull-request-scan-cache')
+const { saveGiteaCredential } = await import('./credential-store')
 const { parseGiteaRepoRef } = await import('./repository-ref')
 const { createGiteaPullRequest, isGiteaReviewCreationAuthenticated } =
   await import('./pull-request-creation')
@@ -85,8 +101,8 @@ function apiBaseFor(origin: string): string {
   return `${origin}/api/v1`
 }
 
-function httpsRepo(apiBaseUrl: string): { apiBaseUrl: string; isSshRemote: boolean } {
-  return { apiBaseUrl, isSshRemote: false }
+function httpsRepo(apiBaseUrl: string): { apiBaseUrl: string; sshHostname: null } {
+  return { apiBaseUrl, sshHostname: null }
 }
 
 function repoFor(remoteUrl: string): repositoryRef.GiteaRepoRef {
@@ -105,6 +121,9 @@ beforeEach(() => {
   home.dir = mkdtempSync(join(tmpdir(), 'gitea-credential-'))
   fetchCalls = []
   remote.url = DEFAULT_REMOTE
+  sshConfig.aliases.clear()
+  sshConfig.fails = false
+  _resetGiteaPullRequestScanCache()
   unlinkFailure.pathSuffix = ''
   vi.stubEnv('ORCA_GITEA_TOKEN', '')
   vi.stubEnv('ORCA_GITEA_API_BASE_URL', '')
@@ -533,6 +552,88 @@ describe('Gitea auth for SSH remotes', () => {
       apiBaseUrl: apiBaseFor(SAVED_ON_PORT),
       token: 'fake-env-token'
     })
+  })
+})
+
+describe('Gitea auth for SSH host aliases', () => {
+  const SAVED_ON_PORT = 'https://git.example.test:3000'
+  const ALIAS_REMOTE = 'git@nas:angelo/orca.git'
+
+  async function prAuthorizationFor(url: string): Promise<FetchCall | undefined> {
+    stubFetch(userResponse)
+    await connectGitea({ baseUrl: SAVED_ON_PORT, token: FAKE_TOKEN })
+    _resetGiteaCredentialCache()
+    fetchCalls = []
+    remote.url = url
+    stubFetch(() => jsonResponse({}, 404))
+    await getGiteaPullRequest('/repo', 1)
+    return fetchCalls[0]
+  }
+
+  it('sends the token to the saved URL for an alias that resolves to the saved host', async () => {
+    sshConfig.aliases.set('nas', 'GIT.example.test')
+    expect(await prAuthorizationFor(ALIAS_REMOTE)).toEqual({
+      url: `${apiBaseFor(SAVED_ON_PORT)}/repos/angelo/orca/pulls/1`,
+      authorization: `token ${FAKE_TOKEN}`
+    })
+  })
+
+  it('sends no token for an alias that resolves to another host', async () => {
+    sshConfig.aliases.set('nas', 'gitea.other.test')
+    expect((await prAuthorizationFor(ALIAS_REMOTE))?.authorization).toBeNull()
+  })
+
+  it('falls back to the literal host when alias resolution fails', async () => {
+    sshConfig.fails = true
+    expect((await prAuthorizationFor(ALIAS_REMOTE))?.authorization).toBeNull()
+    expect((await prAuthorizationFor('git@git.example.test:angelo/orca.git'))?.authorization).toBe(
+      `token ${FAKE_TOKEN}`
+    )
+  })
+})
+
+describe('Gitea pull request scan cache', () => {
+  function pullListCalls(): FetchCall[] {
+    return fetchCalls.filter((call) => call.url.includes('/pulls?'))
+  }
+
+  it('scans again when the saved endpoint changes', async () => {
+    remote.url = 'git@git.example.test:angelo/orca.git'
+    await saveGiteaCredential({
+      baseUrl: apiBaseFor('https://git.example.test:3000'),
+      token: FAKE_TOKEN,
+      account: 'angelo'
+    })
+    stubFetch(() => jsonResponse([]))
+    await getGiteaPullRequestForBranch('/repo', 'feature')
+    await saveGiteaCredential({
+      baseUrl: apiBaseFor('https://git.example.test:4000'),
+      token: FAKE_TOKEN,
+      account: 'angelo'
+    })
+    _resetGiteaCredentialCache()
+    await getGiteaPullRequestForBranch('/repo', 'feature')
+    expect(pullListCalls().map((call) => new URL(call.url).port)).toEqual(['3000', '4000'])
+  })
+
+  it('drops cached scans on disconnect', async () => {
+    stubFetch(userResponse)
+    await connectGitea({ baseUrl: SERVER_URL, token: FAKE_TOKEN })
+    stubFetch(() => jsonResponse([]))
+    await getGiteaPullRequestForBranch('/repo', 'feature')
+    await disconnectGitea()
+    await getGiteaPullRequestForBranch('/repo', 'feature')
+    expect(pullListCalls().map((call) => call.authorization)).toEqual([`token ${FAKE_TOKEN}`, null])
+  })
+
+  it('drops cached scans on connect', async () => {
+    stubFetch(() => jsonResponse([]))
+    await getGiteaPullRequestForBranch('/repo', 'feature')
+    stubFetch(userResponse)
+    await connectGitea({ baseUrl: SERVER_URL, token: FAKE_TOKEN })
+    stubFetch(() => jsonResponse([]))
+    await getGiteaPullRequestForBranch('/repo', 'feature')
+    expect(pullListCalls().map((call) => call.authorization)).toEqual([null, `token ${FAKE_TOKEN}`])
   })
 })
 

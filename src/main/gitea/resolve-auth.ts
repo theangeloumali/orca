@@ -34,7 +34,7 @@ export function hasEnvGiteaAuth(config: GiteaAuthConfig): boolean {
 
 const NO_AUTH: GiteaAuthConfig = { apiBaseUrl: null, token: null }
 
-type GiteaRepoServer = Pick<GiteaRepoRef, 'apiBaseUrl' | 'isSshRemote'>
+type GiteaRepoServer = Pick<GiteaRepoRef, 'apiBaseUrl' | 'sshHostname'>
 
 // URL.origin lowercases the host and drops default ports, so it compares scheme + host + port.
 function urlPart(url: string, part: 'origin' | 'hostname'): string | null {
@@ -47,9 +47,11 @@ function urlPart(url: string, part: 'origin' | 'hostname'): string | null {
 
 // An SSH remote's port is the SSH port, so only its hostname can identify the API server.
 function servesRepo(baseUrl: string, repo: GiteaRepoServer): boolean {
-  const part = repo.isSshRemote ? 'hostname' : 'origin'
-  const configured = urlPart(baseUrl, part)
-  return configured !== null && configured === urlPart(repo.apiBaseUrl, part)
+  if (repo.sshHostname !== null) {
+    return urlPart(baseUrl, 'hostname') === repo.sshHostname
+  }
+  const configured = urlPart(baseUrl, 'origin')
+  return configured !== null && configured === urlPart(repo.apiBaseUrl, 'origin')
 }
 
 /** The env base URL, only when it serves this repo's server. */

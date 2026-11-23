@@ -109,7 +109,7 @@ async function findExistingPullRequest(
   // A create attempt may already have mutated the remote; discard pre-POST listings.
   const repo = await getGiteaRepoRef(repoPath, connectionId)
   if (repo) {
-    invalidateGiteaPullRequestScanForRepo(repo)
+    await invalidateGiteaPullRequestScanForRepo(repo)
   }
   const existing = await getGiteaPullRequestForBranch(repoPath, head, null, connectionId)
   return existing ? { number: existing.number, url: existing.url } : null
@@ -192,7 +192,7 @@ export async function createGiteaPullRequest(
     )
     const created = mapGiteaPullRequest(raw, 'neutral')
     if (created) {
-      invalidateGiteaPullRequestScanForRepo(repo)
+      await invalidateGiteaPullRequestScanForRepo(repo)
       return { ok: true, number: created.number, url: created.url }
     }
     const found = await findExistingPullRequest(repoPath, head, connectionId).catch(() => null)

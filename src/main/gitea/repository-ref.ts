@@ -1,5 +1,6 @@
 import { createRemoteRefProbeCache } from '../git/remotes/remote-ref-probe-cache'
 import { getPublicForgeProviderForHost } from '../../shared/git/remotes/public-forge-host'
+import { lookUpSshConfigHostname, type SshHostnameContext } from './ssh-config-hostname'
 
 export type GiteaRepoRef = {
   host: string
@@ -7,8 +8,8 @@ export type GiteaRepoRef = {
   repo: string
   apiBaseUrl: string
   webBaseUrl: string
-  // SSH and scp remotes carry the SSH port, so their derived https origin has no API port.
-  isSshRemote: boolean
+  // The host an SSH or scp remote connects to; null for http(s). Its port is the SSH port, never the API's.
+  sshHostname: string | null
 }
 
 type LocalGitExecOptions = {
@@ -89,7 +90,7 @@ function makeRepoRef(
     repo: parsed.repo,
     apiBaseUrl: apiBaseUrlFromWebBase(webBaseUrl),
     webBaseUrl,
-    isSshRemote
+    sshHostname: isSshRemote ? normalizedHost : null
   }
 }
 
@@ -126,13 +127,33 @@ export function parseGiteaRepoRef(remoteUrl: string): GiteaRepoRef | null {
   }
 }
 
+// Git follows ~/.ssh/config Host aliases, so match the server by the HostName ssh -G reports.
+export async function resolveGiteaSshHostname(
+  repo: GiteaRepoRef,
+  context: SshHostnameContext,
+  resolveHostname: typeof lookUpSshConfigHostname = lookUpSshConfigHostname
+): Promise<GiteaRepoRef> {
+  if (repo.sshHostname === null) {
+    return repo
+  }
+  try {
+    const { hostname } = await resolveHostname(repo.sshHostname, context)
+    return hostname ? { ...repo, sshHostname: hostname.toLowerCase() } : repo
+  } catch {
+    return repo
+  }
+}
+
 export async function getGiteaRepoRefForRemote(
   repoPath: string,
   remoteName: string,
   connectionId?: string | null,
   localGitOptions: LocalGitExecOptions = {}
 ): Promise<GiteaRepoRef | null> {
-  return repoRefProbeCache.get(repoPath, remoteName, connectionId, localGitOptions)
+  const repo = await repoRefProbeCache.get(repoPath, remoteName, connectionId, localGitOptions)
+  return repo
+    ? resolveGiteaSshHostname(repo, { connectionId, wslDistro: localGitOptions.wslDistro })
+    : null
 }
 
 export async function getGiteaRepoRef(

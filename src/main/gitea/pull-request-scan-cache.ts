@@ -136,6 +136,18 @@ export function invalidateGiteaPullRequestScan(repoKey: string): void {
   }
 }
 
+// A credential change can alter what every listing shows, so none may be reused.
+export function invalidateAllGiteaPullRequestScans(): void {
+  const repoKeys = new Set([
+    ...scanCache.keys(),
+    ...inFlightScans.keys(),
+    ...activeScanCounts.keys()
+  ])
+  for (const repoKey of repoKeys) {
+    invalidateGiteaPullRequestScan(repoKey)
+  }
+}
+
 export function _resetGiteaPullRequestScanCache(): void {
   for (const repoKey of scanCache.keys()) {
     removeScanCacheEntry(repoKey)
