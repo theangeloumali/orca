@@ -1,8 +1,10 @@
 import { requestJsonAtBase } from './client'
 import {
+  getStoredGiteaCredentialError,
   getStoredGiteaMetadata,
   hasStoredGiteaCredential,
-  loadStoredGiteaSecret
+  loadStoredGiteaSecret,
+  noteGiteaTokenWorked
 } from './credential-store'
 import { getEnvGiteaAuthConfig, hasEnvGiteaAuth, type GiteaAuthConfig } from './resolve-auth'
 import { fetchGiteaUserResult } from './user-request'
@@ -19,8 +21,9 @@ export type GiteaAuthStatus = {
 
 async function environmentAuthStatus(config: GiteaAuthConfig): Promise<GiteaAuthStatus> {
   const tokenConfigured = config.token !== null
+  // Without a base URL the env token has no server it may be sent to.
   if (!config.apiBaseUrl) {
-    return { configured: true, authenticated: true, account: null, baseUrl: null, tokenConfigured }
+    return { configured: true, authenticated: false, account: null, baseUrl: null, tokenConfigured }
   }
   if (!config.token) {
     const version = await requestJsonAtBase<{ version?: string }>(
@@ -63,9 +66,12 @@ async function storedAuthStatus(): Promise<GiteaAuthStatus> {
   const user = secret
     ? await fetchGiteaUserResult(secret.baseUrl, secret.token, PROBE_TIMEOUT_MS)
     : null
+  if (secret && user?.ok) {
+    noteGiteaTokenWorked(secret.token)
+  }
   return {
     configured: true,
-    authenticated: user?.ok ?? true,
+    authenticated: user?.ok ?? getStoredGiteaCredentialError() === null,
     account: (user?.ok ? user.account : null) ?? metadata.account,
     baseUrl: metadata.baseUrl,
     tokenConfigured: true

@@ -27,32 +27,45 @@ export function hasEnvGiteaAuth(config: GiteaAuthConfig): boolean {
   return config.apiBaseUrl !== null || config.token !== null
 }
 
-function hostOf(url: string): string | null {
+const NO_AUTH: GiteaAuthConfig = { apiBaseUrl: null, token: null }
+
+// URL.origin lowercases the host and drops default ports, so it compares scheme + host + port.
+function originOf(url: string): string | null {
   try {
-    return new URL(url).hostname.toLowerCase()
+    return new URL(url).origin
   } catch {
     return null
   }
 }
 
-// Env vars win; a stored token only goes to the host it was saved for.
-export async function resolveGiteaAuthForHost(host: string): Promise<GiteaAuthConfig> {
+export function isSameGiteaOrigin(left: string, right: string): boolean {
+  const leftOrigin = originOf(left)
+  return leftOrigin !== null && leftOrigin === originOf(right)
+}
+
+/** The env base URL, only when it serves this repo's origin. */
+export function envGiteaApiBaseUrlFor(repoApiBaseUrl: string): string | null {
+  const { apiBaseUrl } = getEnvGiteaAuthConfig()
+  return apiBaseUrl && isSameGiteaOrigin(apiBaseUrl, repoApiBaseUrl) ? apiBaseUrl : null
+}
+
+// Env vars win, but either token only goes to the server origin it was configured for.
+export async function resolveGiteaAuthForRepo(repoApiBaseUrl: string): Promise<GiteaAuthConfig> {
   const env = getEnvGiteaAuthConfig()
   if (hasEnvGiteaAuth(env)) {
-    return env
+    return envGiteaApiBaseUrlFor(repoApiBaseUrl) ? env : NO_AUTH
   }
-  const repoHost = host.toLowerCase()
   const metadata = await getStoredGiteaMetadata()
-  if (!metadata || hostOf(metadata.baseUrl) !== repoHost) {
-    return { apiBaseUrl: null, token: null }
+  if (!metadata || !isSameGiteaOrigin(metadata.baseUrl, repoApiBaseUrl)) {
+    return NO_AUTH
   }
   try {
     const secret = await loadStoredGiteaSecret({ force: true })
-    return secret && hostOf(secret.baseUrl) === repoHost
+    return secret && isSameGiteaOrigin(secret.baseUrl, repoApiBaseUrl)
       ? { apiBaseUrl: secret.baseUrl, token: secret.token }
-      : { apiBaseUrl: null, token: null }
+      : NO_AUTH
   } catch {
     // An undecryptable token still leaves public repositories readable.
-    return { apiBaseUrl: null, token: null }
+    return NO_AUTH
   }
 }

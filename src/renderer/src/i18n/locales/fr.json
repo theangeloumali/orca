@@ -13535,18 +13535,20 @@
           },
           "integration": {
             "card": {
-              "disconnectFailed": "Impossible de supprimer le jeton Gitea enregistré.",
+              "disconnectFailed": "Impossible de supprimer le jeton Gitea / Forgejo enregistré.",
               "description": "Pull requests et statuts de commit pour les serveurs Gitea et Forgejo.",
               "edit": "Modifier le jeton",
               "connect": "Connecter",
-              "credentialName": "Votre jeton Gitea",
-              "accountUnknown": "Serveur Gitea",
-              "disconnect": "Déconnecter Gitea",
-              "statusLoadFailed": "Impossible de vérifier si un jeton Gitea est enregistré.",
+              "credentialName": "Votre jeton Gitea / Forgejo",
+              "accountUnknown": "Serveur Gitea / Forgejo",
+              "disconnect": "Déconnecter Gitea / Forgejo",
+              "statusLoadFailed": "Impossible de vérifier la présence d’un jeton Gitea / Forgejo enregistré.",
               "storedAuthFailed": "Le jeton enregistré n'a pas pu s'authentifier. Modifiez-le ou vérifiez qu'il peut toujours lire les dépôts.",
-              "envManaged": "Configuré via des variables d'environnement. Supprimez les variables ORCA_GITEA_* pour gérer ce jeton dans Orca.",
+              "envManaged": "Configuré via des variables d’environnement. ORCA_GITEA_TOKEN n’est envoyé qu’au serveur ORCA_GITEA_API_BASE_URL. Supprimez les variables ORCA_GITEA_* pour gérer ce jeton dans Orca.",
               "storedCredential": "Enregistré dans Orca sur cet appareil. Les variables d'environnement ORCA_GITEA_* sont prioritaires lorsqu'elles sont définies.",
-              "notConfigured": "Les dépôts publics fonctionnent sans jeton. Connectez votre serveur avec un jeton d'accès pour les dépôts privés et la création de pull requests."
+              "notConfigured": "Les dépôts publics fonctionnent sans jeton. Connectez votre serveur avec un jeton d'accès pour les dépôts privés et la création de pull requests.",
+              "notCheckedSinceRestart": "Enregistré · non vérifié depuis le redémarrage",
+              "desktopOnly": "Connectez Gitea / Forgejo depuis l’application de bureau"
             }
           }
         }
@@ -22022,7 +22024,7 @@
         "stackRegistrationFailed": "La pull request a été créée, mais GitHub n'a pas pu l'ajouter à la stack. Réessayez pour terminer l'enregistrement dans la stack."
       },
       "baseHeadTitleRequired": "la branche de base, la branche source et le titre sont requis.",
-      "authRequiredGitea": "Gitea n'est pas authentifié. Étape suivante : connectez Gitea / Forgejo dans Paramètres > Intégrations, ou définissez ORCA_GITEA_TOKEN dans cet environnement.",
+      "authRequiredGitea": "Gitea n'est pas authentifié. Étape suivante : connectez Gitea / Forgejo dans Paramètres > Intégrations, ou définissez ORCA_GITEA_API_BASE_URL et ORCA_GITEA_TOKEN dans cet environnement.",
       "signInHintGitea": "Connectez Gitea / Forgejo dans Paramètres > Intégrations"
     },
     "thinking": {
@@ -24233,10 +24235,11 @@
     },
     "giteaConnect": {
       "invalidInput": "Identifiants Gitea non valides",
-      "invalidBaseUrl": "Saisissez une URL de serveur commençant par https:// ou http://.",
+      "invalidBaseUrl": "Saisissez une URL de serveur https:// sans nom d’utilisateur, requête ni #fragment. Le http:// simple ne fonctionne que pour localhost.",
       "tokenRequired": "Saisissez un jeton d'accès.",
       "rejected": "Le serveur a refusé ce jeton. Vérifiez qu'il peut lire les dépôts, puis réessayez.",
-      "unreachable": "Impossible de joindre le serveur. Vérifiez l'URL et votre connexion, puis réessayez."
+      "unreachable": "Impossible de joindre le serveur. Vérifiez l'URL et votre connexion, puis réessayez.",
+      "notGiteaServer": "Cette URL n’est pas un serveur Gitea ou Forgejo. Vérifiez l’adresse, puis réessayez."
     }
   },
   "featureWall": {

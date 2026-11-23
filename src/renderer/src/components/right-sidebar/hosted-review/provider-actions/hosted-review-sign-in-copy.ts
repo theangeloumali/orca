@@ -25,7 +25,7 @@ export function authRequiredDetail(
   if (provider === 'gitea') {
     return t(
       'sourceControl.createReviewFailure.authRequiredGitea',
-      'Gitea is not authenticated. Next step: connect Gitea / Forgejo in Settings > Integrations, or set ORCA_GITEA_TOKEN in this environment.'
+      'Gitea is not authenticated. Next step: connect Gitea / Forgejo in Settings > Integrations, or set ORCA_GITEA_API_BASE_URL and ORCA_GITEA_TOKEN in this environment.'
     )
   }
   if (provider === 'github' || provider === 'gitlab') {

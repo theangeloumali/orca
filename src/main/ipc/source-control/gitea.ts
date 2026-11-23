@@ -13,9 +13,10 @@ import {
   giteaConnectFailure
 } from '../../../shared/gitea/gitea-credentials'
 
+// Caps keep an oversized renderer payload out of URL parsing and the keychain.
 const connectArgsSchema = z.object({
-  baseUrl: z.string(),
-  token: z.string()
+  baseUrl: z.string().max(2048),
+  token: z.string().max(4096)
 }) satisfies z.ZodType<GiteaConnectArgs>
 
 export function registerGiteaHandlers(): void {

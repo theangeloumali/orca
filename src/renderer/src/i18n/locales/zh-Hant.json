@@ -13437,18 +13437,20 @@
           },
           "integration": {
             "card": {
-              "disconnectFailed": "無法移除已儲存的 Gitea 權杖。",
+              "disconnectFailed": "無法移除已儲存的 Gitea / Forgejo 權杖。",
               "description": "Gitea 與 Forgejo 伺服器的提取要求和提交狀態。",
               "edit": "編輯權杖",
               "connect": "連結",
-              "credentialName": "你的 Gitea 權杖",
-              "accountUnknown": "Gitea 伺服器",
-              "disconnect": "中斷 Gitea 連結",
-              "statusLoadFailed": "無法檢查是否已儲存 Gitea 權杖。",
+              "credentialName": "你的 Gitea / Forgejo 權杖",
+              "accountUnknown": "Gitea / Forgejo 伺服器",
+              "disconnect": "中斷 Gitea / Forgejo 連線",
+              "statusLoadFailed": "無法檢查是否有已儲存的 Gitea / Forgejo 權杖。",
               "storedAuthFailed": "已儲存的權杖無法通過身分驗證。請編輯權杖，或檢查它是否仍能讀取存放庫。",
-              "envManaged": "已透過環境變數設定。取消設定 ORCA_GITEA_* 變數後才能在 Orca 中管理此權杖。",
+              "envManaged": "透過環境變數設定。ORCA_GITEA_TOKEN 僅會傳送到 ORCA_GITEA_API_BASE_URL 指定的伺服器。取消設定 ORCA_GITEA_* 變數即可在 Orca 中管理此權杖。",
               "storedCredential": "已儲存在這台裝置的 Orca 中。設定 ORCA_GITEA_* 環境變數時，以環境變數為準。",
-              "notConfigured": "公開存放庫不需權杖即可使用。如需存取私人存放庫和建立提取要求，請使用存取權杖連結你的伺服器。"
+              "notConfigured": "公開存放庫不需權杖即可使用。如需存取私人存放庫和建立提取要求，請使用存取權杖連結你的伺服器。",
+              "notCheckedSinceRestart": "已儲存 · 重新啟動後尚未檢查",
+              "desktopOnly": "請在桌面應用程式中連接 Gitea / Forgejo"
             }
           }
         }
@@ -21280,7 +21282,7 @@
         "stackRegistrationFailed": "PR 已建立，但 GitHub 無法將其加入堆疊。請重試以完成堆疊註冊。"
       },
       "baseHeadTitleRequired": "必須提供基底分支、來源分支和標題。",
-      "authRequiredGitea": "Gitea 尚未通過身分驗證。下一步：在「設定 > 整合」中連結 Gitea / Forgejo，或在此環境中設定 ORCA_GITEA_TOKEN。",
+      "authRequiredGitea": "Gitea 尚未通過身分驗證。下一步：在「設定 > 整合」中連結 Gitea / Forgejo，或在此環境中設定 ORCA_GITEA_API_BASE_URL 和 ORCA_GITEA_TOKEN。",
       "signInHintGitea": "在「設定 > 整合」中連結 Gitea / Forgejo"
     },
     "model": {
@@ -23386,10 +23388,11 @@
     },
     "giteaConnect": {
       "invalidInput": "Gitea 認證無效",
-      "invalidBaseUrl": "請輸入以 https:// 或 http:// 開頭的伺服器 URL。",
+      "invalidBaseUrl": "請輸入不含使用者名稱、查詢參數或 #片段的 https:// 伺服器 URL。純 http:// 僅適用於 localhost。",
       "tokenRequired": "請輸入存取權杖。",
       "rejected": "伺服器拒絕了此權杖。請檢查它能否讀取存放庫，然後再試一次。",
-      "unreachable": "無法連線到伺服器。請檢查 URL 和網路連線，然後再試一次。"
+      "unreachable": "無法連線到伺服器。請檢查 URL 和網路連線，然後再試一次。",
+      "notGiteaServer": "此 URL 不是 Gitea 或 Forgejo 伺服器。請檢查位址後再試一次。"
     }
   },
   "featureWall": {

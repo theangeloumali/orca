@@ -2471,8 +2471,9 @@
       "titleRequired": "Title is required"
     },
     "giteaConnect": {
-      "invalidBaseUrl": "Enter a server URL that starts with https:// or http://.",
+      "invalidBaseUrl": "Enter an https:// server URL without a username, query, or #fragment. Plain http:// works only for localhost.",
       "invalidInput": "Invalid Gitea credentials",
+      "notGiteaServer": "This URL isn't a Gitea or Forgejo server. Check the address, then try again.",
       "rejected": "The server rejected this token. Check it can read repositories, then try again.",
       "tokenRequired": "Enter an access token.",
       "unreachable": "Could not reach the server. Check the URL and your connection, then try again."

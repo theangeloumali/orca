@@ -20,6 +20,7 @@ import { hasRemoteProviderRuntime } from '@/runtime/hosts/observations/provider-
 import { preventOutsideDismissWhenDirty } from '@/lib/overlay-interaction/outside-dismiss-guard'
 import { bitbucketConnectErrorText } from '@/lib/source-control/remote/bitbucket-connect-error-copy'
 import { useTranslate } from '@/i18n/use-translate'
+import { readIpcErrorMessage } from '@/runtime/errors/ipc-error'
 import { BitbucketApiTokenScopes } from './bitbucket-api-token-scopes'
 
 const API_TOKEN_DOCS_URL = 'https://support.atlassian.com/bitbucket-cloud/docs/using-api-tokens/'
@@ -148,12 +149,11 @@ export function BitbucketCredentialsDialog({
       if (mountedRef.current) {
         setConnectState('error')
         setConnectError(
-          error instanceof Error
-            ? error.message
-            : t(
-                'auto.components.settings.bitbucket.credentials.dialog.connectFailed',
-                'Connection failed'
-              )
+          readIpcErrorMessage(error) ??
+            t(
+              'auto.components.settings.bitbucket.credentials.dialog.connectFailed',
+              'Connection failed'
+            )
         )
       }
     }

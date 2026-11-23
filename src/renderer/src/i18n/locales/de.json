@@ -13618,18 +13618,20 @@
           },
           "integration": {
             "card": {
-              "disconnectFailed": "Das gespeicherte Gitea-Token konnte nicht entfernt werden.",
+              "disconnectFailed": "Das gespeicherte Gitea / Forgejo-Token konnte nicht entfernt werden.",
               "description": "Pull Requests und Commit-Status für Gitea- und Forgejo-Server.",
               "edit": "Token bearbeiten",
               "connect": "Verbinden",
-              "credentialName": "Dein Gitea-Token",
-              "accountUnknown": "Gitea-Server",
-              "disconnect": "Gitea trennen",
-              "statusLoadFailed": "Es konnte nicht geprüft werden, ob ein Gitea-Token gespeichert ist.",
+              "credentialName": "Dein Gitea / Forgejo-Token",
+              "accountUnknown": "Gitea / Forgejo-Server",
+              "disconnect": "Gitea / Forgejo trennen",
+              "statusLoadFailed": "Es konnte nicht geprüft werden, ob ein Gitea / Forgejo-Token gespeichert ist.",
               "storedAuthFailed": "Das gespeicherte Token konnte sich nicht authentifizieren. Bearbeite es oder prüfe, ob es noch Repositorys lesen kann.",
-              "envManaged": "Über Umgebungsvariablen konfiguriert. Entferne die ORCA_GITEA_*-Variablen, um dieses Token in Orca zu verwalten.",
+              "envManaged": "Über Umgebungsvariablen konfiguriert. ORCA_GITEA_TOKEN wird nur an den Server aus ORCA_GITEA_API_BASE_URL gesendet. Entferne die ORCA_GITEA_*-Variablen, um dieses Token in Orca zu verwalten.",
               "storedCredential": "In Orca auf diesem Gerät gespeichert. ORCA_GITEA_*-Umgebungsvariablen haben Vorrang, wenn sie gesetzt sind.",
-              "notConfigured": "Öffentliche Repositorys funktionieren ohne Token. Verbinde deinen Server mit einem Zugriffstoken für private Repositorys und zum Erstellen von Pull Requests."
+              "notConfigured": "Öffentliche Repositorys funktionieren ohne Token. Verbinde deinen Server mit einem Zugriffstoken für private Repositorys und zum Erstellen von Pull Requests.",
+              "notCheckedSinceRestart": "Gespeichert · seit dem Neustart nicht geprüft",
+              "desktopOnly": "Verbinde Gitea / Forgejo über die Desktop-App"
             }
           }
         }
@@ -21610,7 +21612,7 @@
         "stackRegistrationFailed": "Der Pull Request wurde erstellt, aber GitHub konnte ihn nicht zum Stack hinzufügen. Erneut versuchen, um die Stack-Registrierung abzuschließen."
       },
       "baseHeadTitleRequired": "Basis-Branch, Quell-Branch und Titel sind erforderlich.",
-      "authRequiredGitea": "Gitea ist nicht authentifiziert. Nächster Schritt: Gitea / Forgejo unter Einstellungen > Integrationen verbinden oder ORCA_GITEA_TOKEN in dieser Umgebung setzen.",
+      "authRequiredGitea": "Gitea ist nicht authentifiziert. Nächster Schritt: Gitea / Forgejo unter Einstellungen > Integrationen verbinden oder ORCA_GITEA_API_BASE_URL und ORCA_GITEA_TOKEN in dieser Umgebung setzen.",
       "signInHintGitea": "Gitea / Forgejo unter Einstellungen > Integrationen verbinden"
     },
     "model": {
@@ -23731,10 +23733,11 @@
     },
     "giteaConnect": {
       "invalidInput": "Ungültige Gitea-Anmeldedaten",
-      "invalidBaseUrl": "Gib eine Server-URL ein, die mit https:// oder http:// beginnt.",
+      "invalidBaseUrl": "Gib eine https://-Server-URL ohne Benutzernamen, Abfrage oder #Fragment ein. Einfaches http:// funktioniert nur für localhost.",
       "tokenRequired": "Gib ein Zugriffstoken ein.",
       "rejected": "Der Server hat dieses Token abgelehnt. Prüfe, ob es Repositorys lesen kann, und versuche es erneut.",
-      "unreachable": "Der Server ist nicht erreichbar. Prüfe die URL und deine Verbindung und versuche es erneut."
+      "unreachable": "Der Server ist nicht erreichbar. Prüfe die URL und deine Verbindung und versuche es erneut.",
+      "notGiteaServer": "Diese URL ist kein Gitea- oder Forgejo-Server. Prüfe die Adresse und versuche es erneut."
     }
   },
   "featureWall": {

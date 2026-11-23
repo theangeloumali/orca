@@ -32,6 +32,9 @@ export type GiteaCredentialSaveInput = GiteaStoredSecret & { account: string | n
 let cachedMetadata: GiteaStoredMetadata | null = null
 let metadataLoadedFromDisk = false
 let cachedSecret: GiteaStoredSecret | null = null
+let credentialError: string | null = null
+// Stays false after a restart until a request with the stored token succeeds.
+let storedCredentialChecked = false
 
 function getOrcaDir(): string {
   return join(homedir(), '.orca')
@@ -115,14 +118,31 @@ export function loadStoredGiteaSecret(
       const envelope = readStoredCredentialToken('Gitea', await readFile(path))
       const parsed = storedSecretSchema.safeParse(envelope ? JSON.parse(envelope) : null)
       cachedSecret = parsed.success ? parsed.data : null
+      credentialError = null
       return cachedSecret
     } catch (error) {
       if (error instanceof CredentialDecryptionError) {
+        credentialError = error.message
         throw error
       }
       return null
     }
   })
+}
+
+export function getStoredGiteaCredentialError(): string | null {
+  return credentialError
+}
+
+export function isStoredGiteaCredentialChecked(): boolean {
+  return storedCredentialChecked
+}
+
+// Only the token currently stored counts; an env token or a replaced one does not.
+export function noteGiteaTokenWorked(token: string): void {
+  if (cachedSecret?.token === token) {
+    storedCredentialChecked = true
+  }
 }
 
 export function getGiteaCredentialProtection(): Promise<SecretAtRestProtection | null> {
@@ -150,6 +170,8 @@ export function saveGiteaCredential(input: GiteaCredentialSaveInput): Promise<vo
     cachedMetadata = metadata
     metadataLoadedFromDisk = true
     cachedSecret = secret
+    credentialError = null
+    storedCredentialChecked = true
   })
 }
 
@@ -160,6 +182,9 @@ function isMissingFileError(error: unknown): boolean {
 // Surface failed deletes so credentials cannot silently reappear on relaunch.
 export function clearStoredGiteaCredential(): Promise<void> {
   return inStoreOrder(async () => {
+    cachedSecret = null
+    cachedMetadata = null
+    storedCredentialChecked = false
     try {
       for (const path of [getSecretPath(), getMetadataPath()]) {
         await unlink(path).catch((error: unknown) => {
@@ -168,12 +193,13 @@ export function clearStoredGiteaCredential(): Promise<void> {
           }
         })
       }
-    } finally {
-      // Clear caches even when deletion only partly succeeds.
-      cachedMetadata = null
-      metadataLoadedFromDisk = true
-      cachedSecret = null
+    } catch (error) {
+      // A partial delete may leave files behind, so the next status read goes back to disk.
+      metadataLoadedFromDisk = false
+      throw error
     }
+    metadataLoadedFromDisk = true
+    credentialError = null
   })
 }
 
@@ -182,4 +208,6 @@ export function _resetGiteaCredentialCache(): void {
   cachedMetadata = null
   metadataLoadedFromDisk = false
   cachedSecret = null
+  credentialError = null
+  storedCredentialChecked = false
 }

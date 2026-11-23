@@ -13744,18 +13744,20 @@
           },
           "integration": {
             "card": {
-              "disconnectFailed": "Kaydedilen Gitea token'ı kaldırılamadı.",
+              "disconnectFailed": "Kayıtlı Gitea / Forgejo belirteci kaldırılamadı.",
               "description": "Gitea ve Forgejo sunucuları için pull request'ler ve commit durumları.",
               "edit": "Token'ı düzenle",
               "connect": "Bağla",
-              "credentialName": "Gitea token'ınız",
-              "accountUnknown": "Gitea sunucusu",
-              "disconnect": "Gitea bağlantısını kes",
-              "statusLoadFailed": "Kaydedilmiş bir Gitea token'ı olup olmadığı denetlenemedi.",
+              "credentialName": "Gitea / Forgejo belirteciniz",
+              "accountUnknown": "Gitea / Forgejo sunucusu",
+              "disconnect": "Gitea / Forgejo bağlantısını kes",
+              "statusLoadFailed": "Kayıtlı bir Gitea / Forgejo belirteci olup olmadığı denetlenemedi.",
               "storedAuthFailed": "Kaydedilen token kimlik doğrulaması yapamadı. Düzenleyin veya hâlâ depoları okuyabildiğini kontrol edin.",
-              "envManaged": "Ortam değişkenleriyle yapılandırıldı. Bu token'ı Orca'da yönetmek için ORCA_GITEA_* değişkenlerini kaldırın.",
+              "envManaged": "Ortam değişkenleriyle yapılandırıldı. ORCA_GITEA_TOKEN yalnızca ORCA_GITEA_API_BASE_URL sunucusuna gönderilir. Bu belirteci Orca'da yönetmek için ORCA_GITEA_* değişkenlerini kaldırın.",
               "storedCredential": "Bu makinede Orca'ya kaydedildi. Ayarlandığında ORCA_GITEA_* ortam değişkenleri önceliklidir.",
-              "notConfigured": "Herkese açık depolar token olmadan çalışır. Özel depolar ve pull request oluşturmak için sunucunuzu bir erişim token'ıyla bağlayın."
+              "notConfigured": "Herkese açık depolar token olmadan çalışır. Özel depolar ve pull request oluşturmak için sunucunuzu bir erişim token'ıyla bağlayın.",
+              "notCheckedSinceRestart": "Kaydedildi · yeniden başlatmadan beri denetlenmedi",
+              "desktopOnly": "Gitea / Forgejo'yu masaüstü uygulamasından bağlayın"
             }
           }
         }
@@ -21729,7 +21731,7 @@
         "stackRegistrationFailed": "Pull request oluşturuldu, ancak GitHub bunu yığına ekleyemedi. Yığın kaydını tamamlamak için yeniden deneyin."
       },
       "baseHeadTitleRequired": "temel branch, head branch ve başlık gereklidir.",
-      "authRequiredGitea": "Gitea için kimlik doğrulaması yapılmamış. Sonraki adım: Ayarlar > Entegrasyonlar bölümünden Gitea / Forgejo'yu bağlayın veya bu ortamda ORCA_GITEA_TOKEN değişkenini ayarlayın.",
+      "authRequiredGitea": "Gitea için kimlik doğrulaması yapılmamış. Sonraki adım: Ayarlar > Entegrasyonlar bölümünden Gitea / Forgejo'yu bağlayın veya bu ortamda ORCA_GITEA_API_BASE_URL ve ORCA_GITEA_TOKEN değişkenlerini ayarlayın.",
       "signInHintGitea": "Ayarlar > Entegrasyonlar bölümünden Gitea / Forgejo'yu bağlayın"
     },
     "model": {
@@ -23850,10 +23852,11 @@
     },
     "giteaConnect": {
       "invalidInput": "Geçersiz Gitea kimlik bilgileri",
-      "invalidBaseUrl": "https:// veya http:// ile başlayan bir sunucu URL'si girin.",
+      "invalidBaseUrl": "Kullanıcı adı, sorgu veya #parça içermeyen bir https:// sunucu URL'si girin. Düz http:// yalnızca localhost için çalışır.",
       "tokenRequired": "Bir erişim token'ı girin.",
       "rejected": "Sunucu bu token'ı reddetti. Depoları okuyabildiğini kontrol edip yeniden deneyin.",
-      "unreachable": "Sunucuya ulaşılamadı. URL'yi ve bağlantınızı kontrol edip yeniden deneyin."
+      "unreachable": "Sunucuya ulaşılamadı. URL'yi ve bağlantınızı kontrol edip yeniden deneyin.",
+      "notGiteaServer": "Bu URL bir Gitea veya Forgejo sunucusu değil. Adresi kontrol edip yeniden deneyin."
     }
   },
   "featureWall": {

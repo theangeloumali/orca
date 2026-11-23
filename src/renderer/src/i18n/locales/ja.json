@@ -13698,18 +13698,20 @@
           },
           "integration": {
             "card": {
-              "disconnectFailed": "保存された Gitea トークンを削除できませんでした。",
+              "disconnectFailed": "保存された Gitea / Forgejo のトークンを削除できませんでした。",
               "description": "Gitea および Forgejo サーバーのプルリクエストとコミットステータス。",
               "edit": "トークンを編集",
               "connect": "接続",
-              "credentialName": "Gitea トークン",
-              "accountUnknown": "Gitea サーバー",
-              "disconnect": "Gitea の接続を解除",
-              "statusLoadFailed": "保存された Gitea トークンを確認できませんでした。",
+              "credentialName": "Gitea / Forgejo のトークン",
+              "accountUnknown": "Gitea / Forgejo サーバー",
+              "disconnect": "Gitea / Forgejo の接続を解除",
+              "statusLoadFailed": "保存された Gitea / Forgejo のトークンを確認できませんでした。",
               "storedAuthFailed": "保存されたトークンで認証できませんでした。トークンを編集するか、まだリポジトリを読み取れるか確認してください。",
-              "envManaged": "環境変数で設定されています。Orca でこのトークンを管理するには、ORCA_GITEA_* 変数を解除してください。",
+              "envManaged": "環境変数で設定されています。ORCA_GITEA_TOKEN は ORCA_GITEA_API_BASE_URL のサーバーにのみ送信されます。Orca でこのトークンを管理するには、ORCA_GITEA_* 変数の設定を解除してください。",
               "storedCredential": "このマシンの Orca に保存されています。ORCA_GITEA_* 環境変数が設定されている場合はそちらが優先されます。",
-              "notConfigured": "公開リポジトリはトークンなしで利用できます。非公開リポジトリやプルリクエストの作成には、アクセストークンでサーバーを接続してください。"
+              "notConfigured": "公開リポジトリはトークンなしで利用できます。非公開リポジトリやプルリクエストの作成には、アクセストークンでサーバーを接続してください。",
+              "notCheckedSinceRestart": "保存済み · 再起動後は未確認",
+              "desktopOnly": "デスクトップアプリから Gitea / Forgejo に接続してください"
             }
           }
         }
@@ -22731,7 +22733,7 @@
         "stackRegistrationFailed": "PR は作成されましたが、GitHub がスタックに追加できませんでした。再試行してスタックへの登録を完了してください。"
       },
       "baseHeadTitleRequired": "ベースブランチ、ヘッドブランチ、タイトルは必須です。",
-      "authRequiredGitea": "Gitea が認証されていません。次の手順: 設定 > 連携 で Gitea / Forgejo を接続するか、この環境で ORCA_GITEA_TOKEN を設定してください。",
+      "authRequiredGitea": "Gitea が認証されていません。次の手順: 設定 > 連携 で Gitea / Forgejo を接続するか、この環境で ORCA_GITEA_API_BASE_URL と ORCA_GITEA_TOKEN を設定してください。",
       "signInHintGitea": "設定 > 連携 で Gitea / Forgejo を接続してください"
     },
     "model": {
@@ -25045,10 +25047,11 @@
     },
     "giteaConnect": {
       "invalidInput": "Gitea の認証情報が無効です",
-      "invalidBaseUrl": "https:// または http:// で始まるサーバー URL を入力してください。",
+      "invalidBaseUrl": "ユーザー名、クエリ、#フラグメントを含まない https:// のサーバー URL を入力してください。http:// は localhost でのみ使用できます。",
       "tokenRequired": "アクセストークンを入力してください。",
       "rejected": "サーバーがこのトークンを拒否しました。リポジトリを読み取れるか確認してから、もう一度お試しください。",
-      "unreachable": "サーバーに接続できませんでした。URL と接続を確認してから、もう一度お試しください。"
+      "unreachable": "サーバーに接続できませんでした。URL と接続を確認してから、もう一度お試しください。",
+      "notGiteaServer": "この URL は Gitea または Forgejo のサーバーではありません。アドレスを確認してから、もう一度お試しください。"
     }
   },
   "featureWall": {

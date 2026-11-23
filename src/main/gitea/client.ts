@@ -14,7 +14,8 @@ import {
   type HostedReviewExecutionOptions
 } from '../source-control/hosted-review-git-options'
 import { cancelUnreadResponseBody } from '../lib/unread-response-body'
-import { getEnvGiteaAuthConfig, resolveGiteaAuthForHost } from './resolve-auth'
+import { envGiteaApiBaseUrlFor, resolveGiteaAuthForRepo } from './resolve-auth'
+import { noteGiteaTokenWorked } from './credential-store'
 
 const REQUEST_TIMEOUT_MS = 5000
 // Forgejo may spend several seconds loading reviewers for one pulls page.
@@ -34,7 +35,7 @@ function authHeaders(token: string | null): Record<string, string> {
 }
 
 function configuredApiBaseUrl(repo: GiteaRepoRef): string {
-  return getEnvGiteaAuthConfig().apiBaseUrl ?? repo.apiBaseUrl
+  return envGiteaApiBaseUrlFor(repo.apiBaseUrl) ?? repo.apiBaseUrl
 }
 
 function apiUrl(baseUrl: string, path: string, searchParams?: RequestOptions['searchParams']): URL {
@@ -86,14 +87,18 @@ async function requestJson<T>(
   options: RequestOptions = {},
   throwOnFailure = false
 ): Promise<T | null> {
-  const auth = await resolveGiteaAuthForHost(repo.host)
-  return requestJsonAtBase(
+  const auth = await resolveGiteaAuthForRepo(repo.apiBaseUrl)
+  const result = await requestJsonAtBase<T>(
     auth.apiBaseUrl ?? repo.apiBaseUrl,
     auth.token,
     path,
     options,
     throwOnFailure
   )
+  if (result !== null && auth.token) {
+    noteGiteaTokenWorked(auth.token)
+  }
+  return result
 }
 
 function encodedRepoPath(repo: GiteaRepoRef): string {

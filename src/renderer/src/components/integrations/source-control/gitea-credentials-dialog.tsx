@@ -13,7 +13,12 @@ import { DialogCancel, DialogError } from '@/components/ui/dialog-parts'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { preventOutsideDismissWhenDirty } from '@/lib/overlay-interaction/outside-dismiss-guard'
-import { giteaConnectErrorText } from '@/lib/source-control/remote/gitea-connect-error-copy'
+import {
+  giteaConnectErrorField,
+  giteaConnectErrorText,
+  type GiteaConnectErrorField
+} from '@/lib/source-control/remote/gitea-connect-error-copy'
+import { readIpcErrorMessage } from '@/runtime/errors/ipc-error'
 import { useTranslate } from '@/i18n/use-translate'
 
 type ConnectState = 'idle' | 'connecting' | 'error'
@@ -49,6 +54,7 @@ export function GiteaCredentialsDialog({
   const [token, setToken] = useState('')
   const [connectState, setConnectState] = useState<ConnectState>('idle')
   const [connectError, setConnectError] = useState<string | null>(null)
+  const [errorField, setErrorField] = useState<GiteaConnectErrorField | null>(null)
   const [baselineServerUrl, setBaselineServerUrl] = useState('')
 
   // Reseed on each opening; the token always starts empty because main never returns it.
@@ -59,6 +65,7 @@ export function GiteaCredentialsDialog({
     setToken('')
     setConnectState('idle')
     setConnectError(null)
+    setErrorField(null)
   })
   useLayoutEffect(() => {
     if (open) {
@@ -74,6 +81,7 @@ export function GiteaCredentialsDialog({
     if (connectState === 'error') {
       setConnectState('idle')
       setConnectError(null)
+      setErrorField(null)
     }
   }
 
@@ -93,6 +101,7 @@ export function GiteaCredentialsDialog({
     }
     setConnectState('connecting')
     setConnectError(null)
+    setErrorField(null)
     try {
       const result = await window.api.gitea.connect({
         baseUrl: serverUrl.trim(),
@@ -110,16 +119,16 @@ export function GiteaCredentialsDialog({
       }
       setConnectState('error')
       setConnectError(giteaConnectErrorText(result))
+      setErrorField(giteaConnectErrorField(result))
     } catch (error) {
       if (mountedRef.current) {
         setConnectState('error')
         setConnectError(
-          error instanceof Error
-            ? error.message
-            : t(
-                'auto.components.settings.gitea.credentials.dialog.connectFailed',
-                'Connection failed'
-              )
+          readIpcErrorMessage(error) ??
+            t(
+              'auto.components.settings.gitea.credentials.dialog.connectFailed',
+              'Connection failed'
+            )
         )
       }
     }
@@ -170,6 +179,8 @@ export function GiteaCredentialsDialog({
                 id={serverUrlId}
                 autoFocus
                 type="url"
+                name="serverUrl"
+                spellCheck={false}
                 placeholder={t(
                   'auto.components.settings.gitea.credentials.dialog.serverUrlPlaceholder',
                   'https://git.example.com'
@@ -180,6 +191,8 @@ export function GiteaCredentialsDialog({
                   clearErrorOnEdit()
                 }}
                 disabled={connecting}
+                aria-invalid={errorField === 'serverUrl'}
+                aria-describedby={errorField === 'serverUrl' ? errorId : undefined}
               />
             </div>
             <div className="grid gap-1.5">
@@ -200,8 +213,8 @@ export function GiteaCredentialsDialog({
                   clearErrorOnEdit()
                 }}
                 disabled={connecting}
-                aria-invalid={connectState === 'error'}
-                aria-describedby={connectState === 'error' ? errorId : undefined}
+                aria-invalid={errorField === 'token'}
+                aria-describedby={errorField === 'token' ? errorId : undefined}
               />
               <p className="text-xs text-muted-foreground">
                 {t(

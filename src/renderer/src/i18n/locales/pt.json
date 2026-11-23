@@ -94,7 +94,7 @@
         "stackRegistrationFailed": "O pull request foi criado, mas o GitHub não conseguiu adicioná-lo à pilha. Tente novamente para concluir o registro na pilha."
       },
       "baseHeadTitleRequired": "a branch base, a branch head e o título são obrigatórios.",
-      "authRequiredGitea": "Gitea não está autenticado. Próximo passo: conecte o Gitea / Forgejo em Configurações > Integrações ou defina ORCA_GITEA_TOKEN neste ambiente.",
+      "authRequiredGitea": "Gitea não está autenticado. Próximo passo: conecte o Gitea / Forgejo em Configurações > Integrações ou defina ORCA_GITEA_API_BASE_URL e ORCA_GITEA_TOKEN neste ambiente.",
       "signInHintGitea": "Conecte o Gitea / Forgejo em Configurações > Integrações"
     },
     "actionSaveFailed": "Não foi possível salvar esta ação. Tente salvá-la novamente em Configurações.",
@@ -10233,18 +10233,20 @@
           },
           "integration": {
             "card": {
-              "disconnectFailed": "Não foi possível remover o token do Gitea salvo.",
+              "disconnectFailed": "Não foi possível remover o token salvo do Gitea / Forgejo.",
               "description": "Pull requests e status de commits para servidores Gitea e Forgejo.",
               "edit": "Editar token",
               "connect": "Conectar",
-              "credentialName": "Seu token do Gitea",
-              "accountUnknown": "Servidor Gitea",
-              "disconnect": "Desconectar Gitea",
-              "statusLoadFailed": "Não foi possível verificar se há um token do Gitea salvo.",
+              "credentialName": "Seu token do Gitea / Forgejo",
+              "accountUnknown": "Servidor Gitea / Forgejo",
+              "disconnect": "Desconectar Gitea / Forgejo",
+              "statusLoadFailed": "Não foi possível verificar se há um token do Gitea / Forgejo salvo.",
               "storedAuthFailed": "O token salvo não conseguiu autenticar. Edite-o ou verifique se ele ainda consegue ler repositórios.",
-              "envManaged": "Configurado por variáveis de ambiente. Remova as variáveis ORCA_GITEA_* para gerenciar este token no Orca.",
+              "envManaged": "Configurado por variáveis de ambiente. ORCA_GITEA_TOKEN é enviado apenas ao servidor de ORCA_GITEA_API_BASE_URL. Remova as variáveis ORCA_GITEA_* para gerenciar este token no Orca.",
               "storedCredential": "Salvo no Orca nesta máquina. As variáveis de ambiente ORCA_GITEA_* têm prioridade quando definidas.",
-              "notConfigured": "Repositórios públicos funcionam sem token. Conecte seu servidor com um token de acesso para repositórios privados e para criar pull requests."
+              "notConfigured": "Repositórios públicos funcionam sem token. Conecte seu servidor com um token de acesso para repositórios privados e para criar pull requests.",
+              "notCheckedSinceRestart": "Salvo · não verificado desde a reinicialização",
+              "desktopOnly": "Conecte o Gitea / Forgejo pelo aplicativo para desktop"
             }
           }
         }
@@ -24751,10 +24753,11 @@
     },
     "giteaConnect": {
       "invalidInput": "Credenciais do Gitea inválidas",
-      "invalidBaseUrl": "Insira uma URL de servidor que comece com https:// ou http://.",
+      "invalidBaseUrl": "Insira uma URL de servidor https:// sem nome de usuário, consulta ou #fragmento. http:// simples só funciona para localhost.",
       "tokenRequired": "Insira um token de acesso.",
       "rejected": "O servidor rejeitou este token. Verifique se ele consegue ler repositórios e tente novamente.",
-      "unreachable": "Não foi possível acessar o servidor. Verifique a URL e sua conexão e tente novamente."
+      "unreachable": "Não foi possível acessar o servidor. Verifique a URL e sua conexão e tente novamente.",
+      "notGiteaServer": "Esta URL não é um servidor Gitea ou Forgejo. Verifique o endereço e tente novamente."
     }
   },
   "featureWall": {

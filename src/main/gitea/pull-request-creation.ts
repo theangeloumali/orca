@@ -17,13 +17,17 @@ import { getGiteaPullRequestForBranch, invalidateGiteaPullRequestScanForRepo } f
 import { mapGiteaPullRequest, type RawGiteaPullRequest } from './pull-request-mappers'
 import { getGiteaRepoRef, type GiteaRepoRef } from './repository-ref'
 import { hasStoredGiteaCredential } from './credential-store'
-import { getEnvGiteaAuthConfig, resolveGiteaAuthForHost } from './resolve-auth'
+import { getEnvGiteaAuthConfig, hasEnvGiteaAuth, resolveGiteaAuthForRepo } from './resolve-auth'
 
 const CREATE_REQUEST_TIMEOUT_MS = 60_000
 
 // Sidebar eligibility must avoid keychain prompts; creation validates the actual credential.
 export async function isGiteaReviewCreationAuthenticated(): Promise<boolean> {
-  return getEnvGiteaAuthConfig().token !== null || (await hasStoredGiteaCredential())
+  const env = getEnvGiteaAuthConfig()
+  // An env token without its base URL is never sent, so it cannot create reviews.
+  return hasEnvGiteaAuth(env)
+    ? env.token !== null && env.apiBaseUrl !== null
+    : hasStoredGiteaCredential()
 }
 
 function encodedRepoPath(repo: GiteaRepoRef): string {
@@ -162,7 +166,7 @@ export async function createGiteaPullRequest(
     ...(input.draft ? { draft: true } : {})
   }
 
-  const auth = await resolveGiteaAuthForHost(repo.host)
+  const auth = await resolveGiteaAuthForRepo(repo.apiBaseUrl)
   const apiBaseUrl = (auth.apiBaseUrl ?? repo.apiBaseUrl).replace(/\/+$/, '')
   try {
     const raw = await requestHostedReviewJson<RawGiteaPullRequest>(

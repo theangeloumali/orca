@@ -3,8 +3,10 @@ import { getEnvGiteaAuthConfig, hasEnvGiteaAuth, normalizeGiteaApiBaseUrl } from
 import {
   clearStoredGiteaCredential,
   getGiteaCredentialProtection,
+  getStoredGiteaCredentialError,
   getStoredGiteaMetadata,
   hasStoredGiteaCredential,
+  isStoredGiteaCredentialChecked,
   saveGiteaCredential
 } from './credential-store'
 import {
@@ -16,18 +18,27 @@ import {
 
 const VERIFY_TIMEOUT_MS = 6000
 
+// A token over plain http is readable on the network, so http is only for this machine.
+const LOOPBACK_HOSTNAMES = new Set(['localhost', '127.0.0.1', '[::1]'])
+
+function isAllowedTokenTransport(url: URL): boolean {
+  return (
+    url.protocol === 'https:' || (url.protocol === 'http:' && LOOPBACK_HOSTNAMES.has(url.hostname))
+  )
+}
+
 function parseApiBaseUrl(value: string): string | null {
-  const trimmed = value.trim()
-  if (!trimmed) {
-    return null
-  }
-  const candidate = normalizeGiteaApiBaseUrl(trimmed)
+  let url: URL
   try {
-    const { protocol } = new URL(candidate)
-    return protocol === 'https:' || protocol === 'http:' ? candidate : null
+    url = new URL(value.trim())
   } catch {
     return null
   }
+  // Credentials, a query or a fragment in the saved URL would ride along on every request.
+  if (url.username || url.password || url.search || url.hash || !isAllowedTokenTransport(url)) {
+    return null
+  }
+  return normalizeGiteaApiBaseUrl(`${url.origin}${url.pathname}`)
 }
 
 // Saves only after the server accepts the token, so a failed connect leaves no file.
@@ -61,7 +72,9 @@ export async function getGiteaConnectionStatus(): Promise<GiteaConnectionStatus>
       source: 'environment',
       credentialProtection: null,
       account: null,
-      baseUrl: env.apiBaseUrl
+      baseUrl: env.apiBaseUrl,
+      credentialError: null,
+      checkedSinceRestart: false
     }
   }
   const metadata = await getStoredGiteaMetadata()
@@ -71,7 +84,9 @@ export async function getGiteaConnectionStatus(): Promise<GiteaConnectionStatus>
       source: 'stored',
       credentialProtection: await getGiteaCredentialProtection(),
       account: metadata.account,
-      baseUrl: metadata.baseUrl
+      baseUrl: metadata.baseUrl,
+      credentialError: getStoredGiteaCredentialError(),
+      checkedSinceRestart: isStoredGiteaCredentialChecked()
     }
   }
   return {
@@ -79,6 +94,8 @@ export async function getGiteaConnectionStatus(): Promise<GiteaConnectionStatus>
     source: 'none',
     credentialProtection: null,
     account: null,
-    baseUrl: null
+    baseUrl: null,
+    credentialError: null,
+    checkedSinceRestart: false
   }
 }

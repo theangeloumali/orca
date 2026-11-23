@@ -16,15 +16,21 @@ export type GiteaConnectionStatus = {
   source: GiteaCredentialSource
   account: string | null
   baseUrl: string | null
+  /** Why the stored token could not be read, e.g. a keychain decryption failure. */
+  credentialError: string | null
+  /** False after a restart until a request with the stored token succeeds. */
+  checkedSinceRestart: boolean
 }
 
 // One English table: main builds the wire `error`, the renderer translates by code.
 export const GITEA_CONNECT_FAILURE_COPY = {
   invalidInput: 'Invalid Gitea credentials',
-  invalidBaseUrl: 'Enter a server URL that starts with https:// or http://.',
+  invalidBaseUrl:
+    'Enter an https:// server URL without a username, query, or #fragment. Plain http:// works only for localhost.',
   tokenRequired: 'Enter an access token.',
   rejected: 'The server rejected this token. Check it can read repositories, then try again.',
-  unreachable: 'Could not reach the server. Check the URL and your connection, then try again.'
+  unreachable: 'Could not reach the server. Check the URL and your connection, then try again.',
+  notGiteaServer: "This URL isn't a Gitea or Forgejo server. Check the address, then try again."
 } as const
 
 export type GiteaConnectFailureCode = keyof typeof GITEA_CONNECT_FAILURE_COPY

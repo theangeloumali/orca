@@ -20,6 +20,11 @@ import { giteaConnectedSummary } from './gitea-card-summary'
 
 const TOKEN_DOCS_URL = 'https://docs.gitea.com/next/development/api-usage'
 
+// The gitea bridge is preload-only; web and mobile clients render this card without it.
+function desktopGiteaApi(): Window['api']['gitea'] | null {
+  return window.api?.gitea ?? null
+}
+
 export function GiteaIntegrationCard(): React.JSX.Element {
   const t = useTranslate()
   const { statuses, unavailable, refresh } = usePreflightCardStatuses('gitea')
@@ -39,8 +44,12 @@ export function GiteaIntegrationCard(): React.JSX.Element {
     const generation = ++connectionLoadGenerationRef.current
     const isCurrent = (): boolean =>
       mountedRef.current && generation === connectionLoadGenerationRef.current
+    const giteaApi = desktopGiteaApi()
+    if (!giteaApi) {
+      return
+    }
     try {
-      const next = await window.api.gitea.status()
+      const next = await giteaApi.status()
       if (isCurrent()) {
         setConnection(next)
         setConnectionLoadFailed(false)
@@ -56,10 +65,14 @@ export function GiteaIntegrationCard(): React.JSX.Element {
     void loadConnection()
   }, [loadConnection])
 
+  const bridgeMissing = desktopGiteaApi() === null
   const currentConnection = connectionLoadFailed ? null : connection
   const credentialStatusKnown = currentConnection !== null
   const envManaged = currentConnection?.source === 'environment'
   const storedCredential = currentConnection?.source === 'stored'
+  const credentialError = currentConnection?.credentialError ?? null
+  const showUncheckedNote =
+    storedCredential && !credentialError && currentConnection?.checkedSinceRestart === false
   const summary = giteaConnectedSummary(
     currentConnection?.account ?? statuses.giteaAccount,
     currentConnection?.baseUrl ?? statuses.giteaBaseUrl
@@ -82,7 +95,7 @@ export function GiteaIntegrationCard(): React.JSX.Element {
             readIpcErrorMessage(error) ??
               t(
                 'auto.components.settings.gitea.integration.card.disconnectFailed',
-                'Could not remove the saved Gitea token.'
+                'Could not remove the saved Gitea / Forgejo token.'
               )
           )
         }
@@ -123,7 +136,10 @@ export function GiteaIntegrationCard(): React.JSX.Element {
         t
       )}
       actions={
-        status !== 'checking' && !envManaged && (credentialStatusKnown || connectionLoadFailed) ? (
+        status !== 'checking' &&
+        !bridgeMissing &&
+        !envManaged &&
+        (credentialStatusKnown || connectionLoadFailed) ? (
           <Button
             variant={storedCredential ? 'outline' : 'default'}
             size="sm"
@@ -142,41 +158,64 @@ export function GiteaIntegrationCard(): React.JSX.Element {
             protection={currentConnection?.credentialProtection ?? null}
             credentialName={t(
               'auto.components.settings.gitea.integration.card.credentialName',
-              'Your Gitea token'
+              'Your Gitea / Forgejo token'
             )}
           />
-          {configured && storedCredential ? (
+          {/* Not gated on preflight: a token that fails to decrypt must stay removable. */}
+          {storedCredential ? (
             <div className={subordinateRowClass}>
               <p className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
                 {summary ??
                   t(
                     'auto.components.settings.gitea.integration.card.accountUnknown',
-                    'Gitea server'
+                    'Gitea / Forgejo server'
                   )}
               </p>
-              <button
+              <Button
+                variant="ghost"
+                size="icon-xs"
                 onClick={handleDisconnect}
                 disabled={disconnecting}
                 aria-label={t(
                   'auto.components.settings.gitea.integration.card.disconnect',
-                  'Disconnect Gitea'
+                  'Disconnect Gitea / Forgejo'
                 )}
-                className="rounded-md p-1 text-muted-foreground/50 transition-colors hover:text-destructive"
               >
                 {disconnecting ? (
                   <LoaderCircle className="size-3.5 animate-spin" />
                 ) : (
                   <Unlink className="size-3.5" />
                 )}
-              </button>
+              </Button>
             </div>
           ) : null}
+          {showUncheckedNote ? (
+            <p className="text-xs text-muted-foreground">
+              {t(
+                'auto.components.settings.gitea.integration.card.notCheckedSinceRestart',
+                'Saved · not checked since restart'
+              )}
+            </p>
+          ) : null}
+          {credentialError ? (
+            <p role="alert" className="text-xs text-destructive">
+              {credentialError}
+            </p>
+          ) : null}
           {disconnectError ? <p className="text-xs text-destructive">{disconnectError}</p> : null}
+          {bridgeMissing ? (
+            <p className="text-xs text-muted-foreground">
+              {t(
+                'auto.components.settings.gitea.integration.card.desktopOnly',
+                'Connect Gitea / Forgejo from the desktop app'
+              )}
+            </p>
+          ) : null}
           {connectionLoadFailed ? (
             <p role="alert" className="text-xs text-destructive">
               {t(
                 'auto.components.settings.gitea.integration.card.statusLoadFailed',
-                'Could not check for a saved Gitea token.'
+                'Could not check for a saved Gitea / Forgejo token.'
               )}
             </p>
           ) : null}
@@ -258,7 +297,7 @@ function GiteaCardNote(props: {
       <p className="text-xs text-muted-foreground">
         {t(
           'auto.components.settings.gitea.integration.card.envManaged',
-          'Configured via environment variables. Unset the ORCA_GITEA_* variables to manage this token in Orca.'
+          'Configured via environment variables. ORCA_GITEA_TOKEN is sent only to the ORCA_GITEA_API_BASE_URL server. Unset the ORCA_GITEA_* variables to manage this token in Orca.'
         )}
       </p>
     )
