@@ -22,7 +22,11 @@ function chatTabsOf(state: AppState): Tab[] {
   return copy
 }
 
-function ownerFields(state: AppState): Required<WorktreeRuntimeOwnerState> {
+// The store's own repo and folder types, so the workspace card's stopped-host rule reads them too.
+function ownerFields(
+  state: AppState
+): Required<WorktreeRuntimeOwnerState> &
+  Pick<AppState, 'repos' | 'folderWorkspaces' | 'projectGroups'> {
   return {
     repos: state.repos,
     settings: state.settings,
@@ -43,11 +47,15 @@ function ownerFields(state: AppState): Required<WorktreeRuntimeOwnerState> {
 export function createPaneOwnershipProjection() {
   let previous: ReturnType<typeof project> | null = null
   function project(state: AppState) {
+    // Shorthand keys: this is a read projection, which the layout-writer ratchet reads as such.
+    const unifiedTabsByWorktree = chatTabsOf(state)
+    const terminalLayoutsByTabId = getTerminalLeafPtyIds(state.terminalLayoutsByTabId)
     return {
       ...ownerFields(state),
-      unifiedTabsByWorktree: chatTabsOf(state),
-      terminalLayoutsByTabId: getTerminalLeafPtyIds(state.terminalLayoutsByTabId),
-      ptyIdsByTabId: state.ptyIdsByTabId
+      unifiedTabsByWorktree,
+      terminalLayoutsByTabId,
+      ptyIdsByTabId: state.ptyIdsByTabId,
+      wslHostStatuses: state.wslHostStatuses
     }
   }
   return (state: AppState) => {

@@ -25,13 +25,18 @@ import {
   getVisibleWorktreeTerminalActivityTabs,
   type TerminalActivityTab
 } from '../listing/visible-worktree-activity-inputs'
+import {
+  ptyOutlivesStoppedHost,
+  selectStoppedWorkspaceHost
+} from '../../workspace-card/activity/use-worktree-activity-status'
 import { createPaneOwnershipProjection } from './project-activity-ownership'
 
 export type ProjectActivityCounts = HostAgentActivityCounts & { terminals: number }
 /** The workspace ids a header draws, per machine. */
 export type HeaderWorkspaceScope = ReadonlyMap<ExecutionHostId, readonly string[]>
 type PaneHostState = Parameters<typeof getAgentPaneExecutionHost>[0] &
-  Parameters<typeof isExecutionHostForWorktree>[0]
+  Parameters<typeof isExecutionHostForWorktree>[0] &
+  Parameters<typeof selectStoppedWorkspaceHost>[0]
 type TerminalTabs = Record<string, TerminalActivityTab[]>
 
 const EMPTY_SCOPE: HeaderWorkspaceScope = new Map()
@@ -70,7 +75,10 @@ function liveAgentsOnHost(
   return getLiveAgentStatusByWorktreeId(new Map(onHost), terminalTabs, now)
 }
 
-/** Hostless PTY ids are local; a malformed prefixed id ('foreign') matches no machine. */
+/**
+ * Hostless PTY ids are local; a malformed prefixed id ('foreign') matches no machine.
+ * A stopped distro's retained PTYs end with it, as on the workspace card.
+ */
 function hasLiveTerminalOnHost(
   state: PaneHostState,
   terminalTabs: TerminalTabs,
@@ -78,14 +86,17 @@ function hasLiveTerminalOnHost(
   worktreeId: string,
   hostId: ExecutionHostId
 ): boolean {
+  const stoppedHost = selectStoppedWorkspaceHost(state, worktreeId)
   return (terminalTabs[worktreeId] ?? []).some((tab) =>
-    (ptyIdsByTabId[tab.id] ?? []).some((ptyId) =>
-      isExecutionHostForWorktree(
-        state,
-        worktreeId,
-        hostId,
-        getPtyExecutionHost(ptyId) ?? LOCAL_EXECUTION_HOST_ID
-      )
+    (ptyIdsByTabId[tab.id] ?? []).some(
+      (ptyId) =>
+        ptyOutlivesStoppedHost(ptyId, stoppedHost) &&
+        isExecutionHostForWorktree(
+          state,
+          worktreeId,
+          hostId,
+          getPtyExecutionHost(ptyId) ?? LOCAL_EXECUTION_HOST_ID
+        )
     )
   )
 }
