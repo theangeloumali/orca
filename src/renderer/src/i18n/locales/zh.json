@@ -6679,8 +6679,6 @@
         "SidebarHeader": {
           "92154beb7e": "新工作区",
           "addProject": "添加项目",
-          "expandAllProjects": "展开所有项目",
-          "collapseAllProjects": "折叠所有项目",
           "collapseAll": "全部折叠",
           "expandAll": "全部展开"
         },
@@ -7876,6 +7874,11 @@
         "ClientGroupingHint": {
           "dismiss": "忽略按客户分组的建议",
           "offer_other": "将 {{count}} 个未分组项目按客户分组…"
+        },
+        "AgentActivityBadges": {
+          "workspacesWithTerminals_other": "终端已打开：{{count}}",
+          "agentsNeedYou": "需要你处理：{{count}}",
+          "agentsWorking": "工作中：{{count}}"
         }
       },
       "shared": {
@@ -15743,7 +15746,6 @@
         "RepoCombobox": {
           "b3e15f4525": "添加项目",
           "b4a235e886": "添加项目",
-          "3639fd9da2": "SSH",
           "e7ed739236": "没有项目/文件夹与您的搜索匹配",
           "a0c48f5f29": "搜索项目/文件夹...",
           "116812151a": "添加项目..."
@@ -23709,26 +23711,16 @@
       "existingAccept": "添加到主机"
     },
     "hiddenProjects": {
-      "hidden": "已隐藏 {{name}}",
-      "hiddenDescription": "其终端和智能体会继续运行，可在列表下方的“已隐藏的项目”中重新显示",
       "undo": "撤销",
-      "hideFailed": "无法隐藏 {{name}}，其主机可能需要更新 Orca",
-      "showFailed": "无法重新显示 {{name}}",
-      "listLabel": "已隐藏的项目",
-      "show": "显示",
-      "showAriaLabel": "在侧边栏中显示 {{name}}",
       "settingsTitle": "在侧边栏中隐藏",
       "settingsDescription": "在侧边栏、项目选择器和工作区切换器中隐藏此主机上的项目副本，其终端、智能体和自动化会继续运行；在已配对的 Orca 服务器上，此操作会对连接到该服务器的所有人隐藏该项目",
       "settingsToggleLabel": "在侧边栏中隐藏 {{name}}",
       "keywordHide": "隐藏",
       "keywordHidden": "已隐藏",
       "keywordSidebar": "侧边栏",
-      "hideFromSidebar": "在侧边栏中隐藏",
-      "sectionTitle": "已隐藏的项目（{{count}}）",
       "allHidden": "所有项目都已隐藏，可从下方的“已隐藏的项目”中重新显示",
       "undoGone": "{{name}} 已从 Orca 中移除",
       "settingsGroup": "侧边栏",
-      "showOnHostAriaLabel": "在侧边栏中显示 {{host}} 上的 {{name}}",
       "keywordShow": "显示",
       "keywordUnhide": "取消隐藏"
     },

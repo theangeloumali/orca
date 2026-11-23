@@ -7423,6 +7423,11 @@
         "ClientGroupingHint": {
           "dismiss": "クライアントでのグループ化の提案を閉じる",
           "offer_other": "未分類の {{count}} 件をクライアントでグループ化…"
+        },
+        "AgentActivityBadges": {
+          "workspacesWithTerminals_other": "ターミナルが開いている: {{count}}",
+          "agentsNeedYou": "対応待ちの Agent: {{count}}",
+          "agentsWorking": "作業中の Agent: {{count}}"
         }
       },
       "shared": {

@@ -7414,6 +7414,13 @@
           "offer_one": "Grouper {{count}} non groupé par client…",
           "offer_many": "Grouper {{count}} non groupés par client…",
           "offer_other": "Grouper {{count}} non groupés par client…"
+        },
+        "AgentActivityBadges": {
+          "workspacesWithTerminals_one": "{{count}} avec un terminal ouvert",
+          "workspacesWithTerminals_many": "{{count}} avec des terminaux ouverts",
+          "workspacesWithTerminals_other": "{{count}} avec des terminaux ouverts",
+          "agentsNeedYou": "Ont besoin de vous : {{count}}",
+          "agentsWorking": "En cours : {{count}}"
         }
       },
       "shared": {

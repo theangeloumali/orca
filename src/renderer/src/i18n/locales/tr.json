@@ -7600,6 +7600,12 @@
           "dismiss": "Müşteriye göre gruplama önerisini kapat",
           "offer_one": "Gruplanmamış {{count}} projeyi müşteriye göre grupla…",
           "offer_other": "Gruplanmamış {{count}} projeyi müşteriye göre grupla…"
+        },
+        "AgentActivityBadges": {
+          "workspacesWithTerminals_one": "Açık terminalli: {{count}}",
+          "workspacesWithTerminals_other": "Açık terminalli: {{count}}",
+          "agentsNeedYou": "Sizi bekleyen: {{count}}",
+          "agentsWorking": "Çalışan: {{count}}"
         }
       },
       "shared": {

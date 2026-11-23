@@ -891,6 +891,10 @@
           "foundRepositories_one": "Found {{count}} repository in {{path}}.",
           "foundRepositories_other": "Found {{count}} repositories in {{path}}."
         },
+        "AgentActivityBadges": {
+          "workspacesWithTerminals_one": "{{count}} with an open terminal",
+          "workspacesWithTerminals_other": "{{count}} with open terminals"
+        },
         "ClientGroupingHint": {
           "offer_one": "Group {{count}} ungrouped by client…",
           "offer_other": "Group {{count}} ungrouped by client…"

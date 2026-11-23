@@ -7335,6 +7335,11 @@
         "ClientGroupingHint": {
           "dismiss": "忽略依客戶分組的建議",
           "offer_other": "將 {{count}} 個未分組專案依客戶分組…"
+        },
+        "AgentActivityBadges": {
+          "workspacesWithTerminals_other": "終端機已開啟：{{count}}",
+          "agentsNeedYou": "需要你處理：{{count}}",
+          "agentsWorking": "工作中：{{count}}"
         }
       },
       "shared": {

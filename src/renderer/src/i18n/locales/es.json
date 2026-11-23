@@ -7136,6 +7136,13 @@
           "offer_one": "Agrupar {{count}} sin grupo por cliente…",
           "offer_many": "Agrupar {{count}} sin grupo por cliente…",
           "offer_other": "Agrupar {{count}} sin grupo por cliente…"
+        },
+        "AgentActivityBadges": {
+          "workspacesWithTerminals_one": "{{count}} con una terminal abierta",
+          "workspacesWithTerminals_many": "{{count}} con terminales abiertas",
+          "workspacesWithTerminals_other": "{{count}} con terminales abiertas",
+          "agentsNeedYou": "Te necesitan: {{count}}",
+          "agentsWorking": "Trabajando: {{count}}"
         }
       },
       "shared": {

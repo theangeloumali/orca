@@ -33,7 +33,7 @@ import {
 } from './indentation'
 import { isFolderWorkspaceCreateDisabled } from './FolderPathStatusIndicator'
 import { ProjectGroupTitleExtras } from './ProjectGroupTitleExtras'
-import { RepoScanUnavailableIndicator } from './RepoScanUnavailableIndicator'
+import { RepoHeaderTitleExtras } from './RepoHeaderTitleExtras'
 import {
   ProjectGroupCreateWorkspaceButton,
   ProjectGroupHeaderMenu
@@ -338,7 +338,7 @@ export function renderWorktreeSectionHeaderRow(
                   status={projectGroupPathStatus}
                   groupId={projectGroupIdForHeader}
                 />
-                {isRepoHeader ? <RepoScanUnavailableIndicator repo={row.repo!} /> : null}
+                {isRepoHeader ? <RepoHeaderTitleExtras row={row} /> : null}
               </div>
             </div>
           </div>

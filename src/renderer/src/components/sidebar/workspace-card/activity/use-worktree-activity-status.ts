@@ -17,16 +17,24 @@ import { selectWorkspaceRuntimeEnvironmentId } from '../../../../lib/workspace/o
 import { parseRemoteRuntimePtyId } from '../../../../../../shared/remote-runtime/remote-runtime-pty-id'
 
 /** The Start card's rule: a pane with no server yet, or on the stopped one, ended with its distro. */
+export function ptyOutlivesStoppedHost(
+  ptyId: string,
+  stoppedEnvironmentId: string | null
+): boolean {
+  if (stoppedEnvironmentId === null) {
+    return true
+  }
+  const environmentId = parseRemoteRuntimePtyId(ptyId)?.environmentId
+  return environmentId != null && environmentId !== stoppedEnvironmentId
+}
+
 function withoutStoppedHostPtys(
   ptyIdsByTabId: Record<string, string[]>,
   stoppedEnvironmentId: string
 ): Record<string, string[]> {
   const live: Record<string, string[]> = {}
   for (const [tabId, ptyIds] of Object.entries(ptyIdsByTabId)) {
-    const kept = ptyIds.filter((ptyId) => {
-      const environmentId = parseRemoteRuntimePtyId(ptyId)?.environmentId
-      return environmentId != null && environmentId !== stoppedEnvironmentId
-    })
+    const kept = ptyIds.filter((ptyId) => ptyOutlivesStoppedHost(ptyId, stoppedEnvironmentId))
     // Same array when nothing dropped, so useShallow keeps the card from re-rendering.
     if (kept.length > 0) {
       live[tabId] = kept.length === ptyIds.length ? ptyIds : kept
@@ -47,18 +55,26 @@ function hasStoppedWslHost(state: {
   return false
 }
 
+/** The workspace's own WSL host while its distro is known stopped; null otherwise. */
+export function selectStoppedWorkspaceHost(
+  state: Pick<AppState, 'wslHostStatuses'> &
+    Parameters<typeof selectWorkspaceRuntimeEnvironmentId>[0],
+  worktreeId: string
+): string | null {
+  if (!hasStoppedWslHost(state)) {
+    return null
+  }
+  const owner = selectWorkspaceRuntimeEnvironmentId(state, worktreeId)
+  return owner && selectStoppedWslDistro(state, owner) !== null ? owner : null
+}
+
 export function selectWorktreeActivityPtyIds(
   state: AppState,
   worktreeId: string
 ): Record<string, string[]> {
   const ptyIds = selectLivePtyIdsForWorktree(state, worktreeId)
-  if (!hasStoppedWslHost(state)) {
-    return ptyIds
-  }
-  const owner = selectWorkspaceRuntimeEnvironmentId(state, worktreeId)
-  return owner && selectStoppedWslDistro(state, owner) !== null
-    ? withoutStoppedHostPtys(ptyIds, owner)
-    : ptyIds
+  const stopped = selectStoppedWorkspaceHost(state, worktreeId)
+  return stopped ? withoutStoppedHostPtys(ptyIds, stopped) : ptyIds
 }
 
 export function useWorktreeActivityStatus(worktreeId: string): WorktreeStatus {
