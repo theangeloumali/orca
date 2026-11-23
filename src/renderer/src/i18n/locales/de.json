@@ -7418,7 +7418,9 @@
         },
         "HostSectionHeader": {
           "workspaceCount_one": "{{count}} Arbeitsbereich",
-          "workspaceCount_other": "{{count}} Arbeitsbereiche"
+          "workspaceCount_other": "{{count}} Arbeitsbereiche",
+          "agentsNeedYou": "Warten auf dich: {{count}}",
+          "agentsWorking": "In Arbeit: {{count}}"
         },
         "titleDerivedAgentRows": {
           "needsInput": "Eingabe erforderlich",
@@ -7516,6 +7518,10 @@
           "dismiss": "Vorschlag zur Kundengruppierung ausblenden",
           "offer_one": "{{count}} ungruppiertes Projekt nach Kunde gruppieren…",
           "offer_other": "{{count}} ungruppierte Projekte nach Kunde gruppieren…"
+        },
+        "AgentActivityBadges": {
+          "workspacesWithTerminals_one": "{{count}} mit offenem Terminal",
+          "workspacesWithTerminals_other": "{{count}} mit offenen Terminals"
         }
       },
       "shared": {

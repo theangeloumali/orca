@@ -7320,7 +7320,9 @@
           "loadingPr": "PR を読み込み中…"
         },
         "HostSectionHeader": {
-          "workspaceCount_other": "{{count}} 件のワークスペース"
+          "workspaceCount_other": "{{count}} 件のワークスペース",
+          "agentsNeedYou": "対応待ちの Agent: {{count}}",
+          "agentsWorking": "作業中の Agent: {{count}}"
         },
         "titleDerivedAgentRows": {
           "needsInput": "入力待ち",
@@ -7423,6 +7425,9 @@
         "ClientGroupingHint": {
           "dismiss": "クライアントでのグループ化の提案を閉じる",
           "offer_other": "未分類の {{count}} 件をクライアントでグループ化…"
+        },
+        "AgentActivityBadges": {
+          "workspacesWithTerminals_other": "ターミナルが開いている: {{count}}"
         }
       },
       "shared": {

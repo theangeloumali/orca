@@ -6522,8 +6522,6 @@
         "SidebarHeader": {
           "92154beb7e": "새로운 워크스페이스",
           "addProject": "프로젝트 추가",
-          "expandAllProjects": "모든 프로젝트 펼치기",
-          "collapseAllProjects": "모든 프로젝트 접기",
           "collapseAll": "모두 접기",
           "expandAll": "모두 펼치기"
         },
@@ -7634,7 +7632,9 @@
         },
         "HostSectionHeader": {
           "workspaceCount_one": "워크스페이스 {{count}}개",
-          "workspaceCount_other": "워크스페이스 {{count}}개"
+          "workspaceCount_other": "워크스페이스 {{count}}개",
+          "agentsNeedYou": "응답 필요: {{count}}",
+          "agentsWorking": "작업 중: {{count}}"
         },
         "titleDerivedAgentRows": {
           "needsInput": "입력 필요",
@@ -7737,6 +7737,9 @@
         "ClientGroupingHint": {
           "dismiss": "클라이언트별 그룹화 제안 닫기",
           "offer_other": "그룹 없는 {{count}}개를 클라이언트별로 그룹화…"
+        },
+        "AgentActivityBadges": {
+          "workspacesWithTerminals_other": "터미널 열림: {{count}}"
         }
       },
       "shared": {
@@ -15641,7 +15644,6 @@
         "RepoCombobox": {
           "b3e15f4525": "프로젝트 추가",
           "b4a235e886": "프로젝트 추가 중",
-          "3639fd9da2": "SSH",
           "e7ed739236": "검색과 일치하는 프로젝트/폴더가 없습니다.",
           "a0c48f5f29": "프로젝트/폴더 검색...",
           "116812151a": "프로젝트 추가 중…"
@@ -23713,26 +23715,16 @@
       "existingAccept": "호스트에 추가"
     },
     "hiddenProjects": {
-      "hidden": "{{name}} 숨김",
-      "hiddenDescription": "터미널과 에이전트는 계속 실행됩니다. 목록 아래의 숨긴 프로젝트에서 다시 표시할 수 있습니다.",
       "undo": "실행 취소",
-      "hideFailed": "{{name}}을(를) 숨기지 못했습니다. 해당 호스트의 Orca 업데이트가 필요할 수 있습니다.",
-      "showFailed": "{{name}}을(를) 다시 표시하지 못했습니다.",
-      "listLabel": "숨긴 프로젝트",
-      "show": "표시",
-      "showAriaLabel": "사이드바에 {{name}} 표시",
       "settingsTitle": "사이드바에서 숨기기",
       "settingsDescription": "이 호스트의 프로젝트 사본을 사이드바, 프로젝트 선택기, 워크스페이스 전환기에서 숨깁니다. 터미널, 에이전트, 자동화는 계속 실행됩니다. 페어링된 Orca 서버에서는 해당 서버에 연결된 모든 사용자에게 숨겨집니다.",
       "settingsToggleLabel": "사이드바에서 {{name}} 숨기기",
       "keywordHide": "숨기기",
       "keywordHidden": "숨김",
       "keywordSidebar": "사이드바",
-      "hideFromSidebar": "사이드바에서 숨기기",
-      "sectionTitle": "숨긴 프로젝트 ({{count}}개)",
       "allHidden": "모든 프로젝트가 숨겨져 있습니다. 아래의 숨긴 프로젝트에서 표시하세요.",
       "undoGone": "{{name}}이(가) Orca에서 제거되었습니다.",
       "settingsGroup": "사이드바",
-      "showOnHostAriaLabel": "사이드바에 {{host}}의 {{name}} 표시",
       "keywordShow": "표시",
       "keywordUnhide": "숨김 해제"
     },

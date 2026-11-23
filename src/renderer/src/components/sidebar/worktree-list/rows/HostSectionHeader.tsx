@@ -1,5 +1,5 @@
 import React from 'react'
-import { AlertTriangle, ChevronDown, CircleHelp, Loader2, Server, ServerOff } from 'lucide-react'
+import { AlertTriangle, ChevronDown, Loader2, Server, ServerOff } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/class-names'
 import { useTranslate } from '@/i18n/use-translate'
@@ -7,6 +7,7 @@ import { translateHostDisplayLabel } from '../../../../runtime/hosts/display/exe
 import type { HostHeaderRow } from '../../../../../../shared/sidebar-list/hosts/host-section-rows'
 import { HostSectionHeaderMenu } from './HostSectionHeaderMenu'
 import { useHostAgentActivityCounts } from './use-host-agent-activity-counts'
+import { AgentActivityBadges } from './AgentActivityBadges'
 import { stopRepoHeaderMenuEvent } from './header-event-guards'
 import { getHostHeaderDetail } from './host-header-detail'
 import { getVmStateLabel, VmStateIcon } from '../../workspace-card/surface/WorktreeCardVmStateBadge'
@@ -43,45 +44,8 @@ function HostAgentActivity({
   hostId,
   defaultHostId
 }: Pick<HostHeaderRow, 'hostId' | 'defaultHostId'>): React.JSX.Element | null {
-  const t = useTranslate()
   const { working, needsYou } = useHostAgentActivityCounts(hostId, defaultHostId)
-  if (working === 0 && needsYou === 0) {
-    return null
-  }
-  return (
-    <span className="flex shrink-0 items-center gap-1.5 text-3xs leading-none tabular-nums">
-      {needsYou > 0 ? (
-        <span
-          className="flex items-center gap-0.5 text-agent-question"
-          aria-label={t(
-            'auto.components.sidebar.HostSectionHeader.agentsNeedYou',
-            '{{count}} need you',
-            {
-              count: needsYou
-            }
-          )}
-        >
-          <CircleHelp className="size-3" aria-hidden />
-          {needsYou}
-        </span>
-      ) : null}
-      {working > 0 ? (
-        <span
-          className="flex items-center gap-0.5 text-muted-foreground"
-          aria-label={t(
-            'auto.components.sidebar.HostSectionHeader.agentsWorking',
-            '{{count}} working',
-            {
-              count: working
-            }
-          )}
-        >
-          <Loader2 className="size-3 animate-spin motion-reduce:animate-none" aria-hidden />
-          {working}
-        </span>
-      ) : null}
-    </span>
-  )
+  return <AgentActivityBadges needsYou={needsYou} working={working} />
 }
 
 function HostHeaderHealthIcon({

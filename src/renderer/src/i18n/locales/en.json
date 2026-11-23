@@ -8674,6 +8674,10 @@
           "apply_other": "Apply {{count}} groups",
           "existingGroup": "Existing group",
           "newGroup": "New group"
+        },
+        "AgentActivityBadges": {
+          "workspacesWithTerminals_one": "{{count}} with an open terminal",
+          "workspacesWithTerminals_other": "{{count}} with open terminals"
         }
       },
       "shared": {

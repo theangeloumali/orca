@@ -13323,7 +13323,9 @@
         "HostSectionHeader": {
           "workspaceCount_one": "{{count}} espaço de trabalho",
           "workspaceCount_other": "{{count}} espaços de trabalho",
-          "workspaceCount_many": "{{count}} espaços de trabalho"
+          "workspaceCount_many": "{{count}} espaços de trabalho",
+          "agentsNeedYou": "Precisam de você: {{count}}",
+          "agentsWorking": "Trabalhando: {{count}}"
         },
         "titleDerivedAgentRows": {
           "needsInput": "Precisa de interação",
@@ -13428,6 +13430,11 @@
           "offer_one": "Agrupar {{count}} sem grupo por cliente…",
           "offer_many": "Agrupar {{count}} sem grupo por cliente…",
           "offer_other": "Agrupar {{count}} sem grupo por cliente…"
+        },
+        "AgentActivityBadges": {
+          "workspacesWithTerminals_one": "{{count}} com um terminal aberto",
+          "workspacesWithTerminals_many": "{{count}} com terminais abertos",
+          "workspacesWithTerminals_other": "{{count}} com terminais abertos"
         }
       },
       "editor": {
