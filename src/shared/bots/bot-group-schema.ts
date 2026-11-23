@@ -1,6 +1,7 @@
 import * as z from 'zod'
 import { BOT_AGENTS, BotNameSchema } from '../bot-types'
 import { BotAvatarColorSchema } from './bot-avatar-color'
+import { BotStoredOutfitSchema } from './bot-avatar-outfit'
 import { isAdmissibleAgentJournalRenderItem } from '../agent-session/journal/agent-session-journal-schemas'
 import type { AgentJournalRenderItem } from '../agent-session/journal/agent-session-journal-types'
 import type { NativeChatBlock, NativeChatMessage } from '../native-chat/native-chat-types'
@@ -35,6 +36,7 @@ export const BotGroupRemoteMemberSchema = z.object({
   name: BotNameSchema,
   avatar: z.string().nullable(),
   avatarColor: BotAvatarColorSchema.nullable().optional().catch(undefined),
+  avatarOutfit: BotStoredOutfitSchema.nullable().optional().catch(undefined),
   agent: z.enum(BOT_AGENTS)
 })
 
@@ -93,6 +95,7 @@ const BotGroupTurnSchema = z.object({
   botName: z.string(),
   avatar: z.string().nullable(),
   avatarColor: BotAvatarColorSchema.nullable().optional().catch(undefined),
+  avatarOutfit: BotStoredOutfitSchema.nullable().optional().catch(undefined),
   agent: z.enum(BOT_AGENTS),
   sessionId: z.string(),
   mailbox: z.literal(true).optional(),
@@ -176,6 +179,19 @@ export const BotGroupMessageSchema = z.object({
   fromItems: z.literal(true).optional(),
   /** On a post an automation's run made, served as its owner's: the run, shown as its run row. */
   automationRun: AutomationRunMessageSchema.optional().catch(undefined),
+  /** Beside `automationRun`: where the run's words came from and who did its event, so a hand-off
+   *  or a replay of the post keeps them out of the owner's own words. */
+  memorySource: z.string().min(1).optional().catch(undefined),
+  triggeredBy: z
+    .object({
+      source: z.string(),
+      event: z.string().optional(),
+      actor: z.string().optional(),
+      actorId: z.string().optional(),
+      place: z.string().optional()
+    })
+    .optional()
+    .catch(undefined),
   turns: z.array(BotGroupTurnSchema),
   /** The post's questions to remote members; older or unreadable ones are dropped, never the post. */
   remoteAsks: z.array(BotGroupRemoteAskSchema).optional().catch(undefined)
