@@ -11679,13 +11679,7 @@
                   "793a06e899": "Yeniden kontrol et",
                   "1a9475dace": "Daha fazla bilgi",
                   "19fb419c12": "Gitea kimlik bilgileri yapılandırılmış ancak kimlik doğrulanamadı. Belirteci, API temel URL'sini ve repository izinlerini kontrol edin, ardından ortam değişkenleri değiştiyse Orca'yı yeniden başlatın.",
-                  "60708f23da": "yalnızca Orca API URL'sini remote adresinden türetemediğinde.",
-                  "709057ad91": "ORCA_GITEA_API_BASE_URL",
-                  "6da9dfa5de": "özel repository'ler için ve şunu ayarlayın",
-                  "6d5c2a3005": "ORCA_GITEA_TOKEN",
-                  "fcbe0469fd": "Genel repository'ler git remote'larından tespit edilir. Şunu ayarlayın",
                   "0613928cb3": "Gitea durumu bu runtime'da henüz kullanılamıyor.",
-                  "05863d2599": "Gitea REST API üzerinden pull request'ler ve commit durumları.",
                   "52f75876be": "Tespit edilen repository'ler için pull request'ler ve commit durumları",
                   "0b5242f8a2": "{{value0}} · Pull request'ler ve commit durumları",
                   "40f678df73": "Azure DevOps kimlik bilgileri yapılandırılmış ancak kimlik doğrulanamadı. Belirteci, API temel URL'sini ve repository izinlerini kontrol edin, ardından ortam değişkenleri değiştiyse Orca'yı yeniden başlatın.",
@@ -13730,6 +13724,40 @@
           "ligaturesOn": "Açık",
           "fontSmoothingGrayscale": "Gri tonlama",
           "fontSmoothingNative": "Yerel"
+        },
+        "gitea": {
+          "credentials": {
+            "dialog": {
+              "connectFailed": "Bağlantı başarısız oldu",
+              "title": "Gitea / Forgejo bağla",
+              "environmentManaged": "ORCA_GITEA_* ortam değişkenleriyle ayarlandı. Burada bir token kaydetmek için bunları kaldırın.",
+              "serverUrl": "Sunucu URL'si",
+              "serverUrlPlaceholder": "https://git.example.com",
+              "token": "Erişim token'ı",
+              "tokenPlaceholder": "Gitea veya Forgejo erişim token'ı",
+              "tokenNeeds": "Depo okuma erişimi ve pull request oluşturmak için yazma erişimi gerekir.",
+              "close": "Kapat",
+              "cancel": "İptal",
+              "verifying": "Doğrulanıyor…",
+              "connect": "Bağla"
+            }
+          },
+          "integration": {
+            "card": {
+              "disconnectFailed": "Kaydedilen Gitea token'ı kaldırılamadı.",
+              "description": "Gitea ve Forgejo sunucuları için pull request'ler ve commit durumları.",
+              "edit": "Token'ı düzenle",
+              "connect": "Bağla",
+              "credentialName": "Gitea token'ınız",
+              "accountUnknown": "Gitea sunucusu",
+              "disconnect": "Gitea bağlantısını kes",
+              "statusLoadFailed": "Kaydedilmiş bir Gitea token'ı olup olmadığı denetlenemedi.",
+              "storedAuthFailed": "Kaydedilen token kimlik doğrulaması yapamadı. Düzenleyin veya hâlâ depoları okuyabildiğini kontrol edin.",
+              "envManaged": "Ortam değişkenleriyle yapılandırıldı. Bu token'ı Orca'da yönetmek için ORCA_GITEA_* değişkenlerini kaldırın.",
+              "storedCredential": "Bu makinede Orca'ya kaydedildi. Ayarlandığında ORCA_GITEA_* ortam değişkenleri önceliklidir.",
+              "notConfigured": "Herkese açık depolar token olmadan çalışır. Özel depolar ve pull request oluşturmak için sunucunuzu bir erişim token'ıyla bağlayın."
+            }
+          }
         }
       },
       "right": {
@@ -21700,7 +21728,9 @@
         "stackRegistrationUnavailable": "Pull request oluşturuldu, ancak bu repository için GitHub yığınları kullanılamıyor.",
         "stackRegistrationFailed": "Pull request oluşturuldu, ancak GitHub bunu yığına ekleyemedi. Yığın kaydını tamamlamak için yeniden deneyin."
       },
-      "baseHeadTitleRequired": "temel branch, head branch ve başlık gereklidir."
+      "baseHeadTitleRequired": "temel branch, head branch ve başlık gereklidir.",
+      "authRequiredGitea": "Gitea için kimlik doğrulaması yapılmamış. Sonraki adım: Ayarlar > Entegrasyonlar bölümünden Gitea / Forgejo'yu bağlayın veya bu ortamda ORCA_GITEA_TOKEN değişkenini ayarlayın.",
+      "signInHintGitea": "Ayarlar > Entegrasyonlar bölümünden Gitea / Forgejo'yu bağlayın"
     },
     "model": {
       "auto": "Otomatik",
@@ -23817,6 +23847,13 @@
       "emailAndApiTokenRequired": "Hem e-posta adresini hem de API belirtecini girin.",
       "rejected": "Bitbucket bu kimlik bilgilerini reddetti. E-posta adresini ve belirteci kontrol edip yeniden deneyin.",
       "unreachable": "Bitbucket'a ulaşılamadı. Bağlantınızı veya API temel URL'sini kontrol edip yeniden deneyin."
+    },
+    "giteaConnect": {
+      "invalidInput": "Geçersiz Gitea kimlik bilgileri",
+      "invalidBaseUrl": "https:// veya http:// ile başlayan bir sunucu URL'si girin.",
+      "tokenRequired": "Bir erişim token'ı girin.",
+      "rejected": "Sunucu bu token'ı reddetti. Depoları okuyabildiğini kontrol edip yeniden deneyin.",
+      "unreachable": "Sunucuya ulaşılamadı. URL'yi ve bağlantınızı kontrol edip yeniden deneyin."
     }
   },
   "featureWall": {

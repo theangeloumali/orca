@@ -93,7 +93,9 @@
         "stackRegistrationUnavailable": "O pull request foi criado, mas as pilhas do GitHub não estão disponíveis para este repositório.",
         "stackRegistrationFailed": "O pull request foi criado, mas o GitHub não conseguiu adicioná-lo à pilha. Tente novamente para concluir o registro na pilha."
       },
-      "baseHeadTitleRequired": "a branch base, a branch head e o título são obrigatórios."
+      "baseHeadTitleRequired": "a branch base, a branch head e o título são obrigatórios.",
+      "authRequiredGitea": "Gitea não está autenticado. Próximo passo: conecte o Gitea / Forgejo em Configurações > Integrações ou defina ORCA_GITEA_TOKEN neste ambiente.",
+      "signInHintGitea": "Conecte o Gitea / Forgejo em Configurações > Integrações"
     },
     "actionSaveFailed": "Não foi possível salvar esta ação. Tente salvá-la novamente em Configurações.",
     "model": {
@@ -6577,13 +6579,7 @@
                   "793a06e899": "Verificar novamente",
                   "1a9475dace": "Saiba mais",
                   "19fb419c12": "As credenciais do Gitea estão configuradas, mas não foi possível autenticar. Verifique o token, a URL base da API e as permissões do repositório, depois reinicie o Orca se as variáveis de ambiente mudaram.",
-                  "60708f23da": "somente quando o Orca não conseguir derivar a URL da API a partir do remote.",
-                  "709057ad91": "ORCA_GITEA_API_BASE_URL",
-                  "6da9dfa5de": "para repositórios privados, e defina",
-                  "6d5c2a3005": "ORCA_GITEA_TOKEN",
-                  "fcbe0469fd": "Repositórios públicos são detectados a partir do seu remote git. Defina",
                   "0613928cb3": "O status do Gitea ainda não está disponível neste runtime.",
-                  "05863d2599": "Pull requests e status de commit via a API REST do Gitea.",
                   "52f75876be": "Pull requests e status de commit para repositórios detectados",
                   "0b5242f8a2": "{{value0}} · Pull requests e status de commit",
                   "40f678df73": "As credenciais do Azure DevOps estão configuradas, mas não foi possível autenticar. Verifique o token, a URL base da API e as permissões do repositório, depois reinicie o Orca se as variáveis de ambiente mudaram.",
@@ -10216,6 +10212,40 @@
             "resetAt": "horário da redefinição, por exemplo, 20:50",
             "buckets": "grupos de modelos Gemini",
             "optional": "omitido quando um marcador dentro do grupo está vazio"
+          }
+        },
+        "gitea": {
+          "credentials": {
+            "dialog": {
+              "connectFailed": "Falha na conexão",
+              "title": "Conectar Gitea / Forgejo",
+              "environmentManaged": "Definido pelas variáveis de ambiente ORCA_GITEA_*. Remova-as para salvar um token aqui.",
+              "serverUrl": "URL do servidor",
+              "serverUrlPlaceholder": "https://git.example.com",
+              "token": "Token de acesso",
+              "tokenPlaceholder": "Token de acesso do Gitea ou Forgejo",
+              "tokenNeeds": "Precisa de acesso de leitura aos repositórios e de acesso de escrita para criar pull requests.",
+              "close": "Fechar",
+              "cancel": "Cancelar",
+              "verifying": "Verificando…",
+              "connect": "Conectar"
+            }
+          },
+          "integration": {
+            "card": {
+              "disconnectFailed": "Não foi possível remover o token do Gitea salvo.",
+              "description": "Pull requests e status de commits para servidores Gitea e Forgejo.",
+              "edit": "Editar token",
+              "connect": "Conectar",
+              "credentialName": "Seu token do Gitea",
+              "accountUnknown": "Servidor Gitea",
+              "disconnect": "Desconectar Gitea",
+              "statusLoadFailed": "Não foi possível verificar se há um token do Gitea salvo.",
+              "storedAuthFailed": "O token salvo não conseguiu autenticar. Edite-o ou verifique se ele ainda consegue ler repositórios.",
+              "envManaged": "Configurado por variáveis de ambiente. Remova as variáveis ORCA_GITEA_* para gerenciar este token no Orca.",
+              "storedCredential": "Salvo no Orca nesta máquina. As variáveis de ambiente ORCA_GITEA_* têm prioridade quando definidas.",
+              "notConfigured": "Repositórios públicos funcionam sem token. Conecte seu servidor com um token de acesso para repositórios privados e para criar pull requests."
+            }
           }
         }
       },
@@ -24718,6 +24748,13 @@
       "emailAndApiTokenRequired": "Digite um e-mail e um token de API.",
       "rejected": "O Bitbucket rejeitou estas credenciais. Verifique o e-mail e o token e tente novamente.",
       "unreachable": "Não foi possível acessar o Bitbucket. Verifique sua conexão ou a URL base da API e tente novamente."
+    },
+    "giteaConnect": {
+      "invalidInput": "Credenciais do Gitea inválidas",
+      "invalidBaseUrl": "Insira uma URL de servidor que comece com https:// ou http://.",
+      "tokenRequired": "Insira um token de acesso.",
+      "rejected": "O servidor rejeitou este token. Verifique se ele consegue ler repositórios e tente novamente.",
+      "unreachable": "Não foi possível acessar o servidor. Verifique a URL e sua conexão e tente novamente."
     }
   },
   "featureWall": {

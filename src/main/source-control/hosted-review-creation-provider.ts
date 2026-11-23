@@ -96,7 +96,7 @@ export function reviewCopy(provider: HostedReviewProvider): {
       shortLabel: 'PR',
       reviewLabel: 'pull request',
       providerName: 'Gitea',
-      authInstruction: 'Set ORCA_GITEA_TOKEN'
+      authInstruction: 'Connect Gitea in Settings > Integrations'
     }
   }
   if (provider === 'bitbucket') {

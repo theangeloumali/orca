@@ -14,25 +14,13 @@ import {
   type HostedReviewExecutionOptions
 } from '../source-control/hosted-review-git-options'
 import { cancelUnreadResponseBody } from '../lib/unread-response-body'
+import { getEnvGiteaAuthConfig, resolveGiteaAuthForHost } from './resolve-auth'
 
 const REQUEST_TIMEOUT_MS = 5000
 // Forgejo may spend several seconds loading reviewers for one pulls page.
 const PULL_REQUEST_LIST_TIMEOUT_MS = 15_000
 const PULL_REQUEST_PAGE_LIMIT = 50
 const MAX_PULL_REQUEST_PAGES = 5
-
-type GiteaAuthConfig = {
-  apiBaseUrl: string | null
-  token: string | null
-}
-
-export type GiteaAuthStatus = {
-  configured: boolean
-  authenticated: boolean
-  account: string | null
-  baseUrl: string | null
-  tokenConfigured: boolean
-}
 
 type RequestOptions = {
   searchParams?: Record<string, string | number>
@@ -41,30 +29,12 @@ type RequestOptions = {
   allowNotFound?: boolean
 }
 
-function envValue(name: string): string | null {
-  const value = process.env[name]?.trim() ?? ''
-  return value.length > 0 ? value : null
-}
-
-export function normalizeGiteaApiBaseUrl(value: string): string {
-  const trimmed = value.trim().replace(/\/+$/, '')
-  return /\/api\/v1$/i.test(trimmed) ? trimmed : `${trimmed}/api/v1`
-}
-
-function getAuthConfig(): GiteaAuthConfig {
-  const apiBaseUrl = envValue('ORCA_GITEA_API_BASE_URL')
-  return {
-    apiBaseUrl: apiBaseUrl ? normalizeGiteaApiBaseUrl(apiBaseUrl) : null,
-    token: envValue('ORCA_GITEA_TOKEN')
-  }
-}
-
-function authHeaders(config: Pick<GiteaAuthConfig, 'token'>): Record<string, string> {
-  return config.token ? { Authorization: `token ${config.token}` } : {}
+function authHeaders(token: string | null): Record<string, string> {
+  return token ? { Authorization: `token ${token}` } : {}
 }
 
 function configuredApiBaseUrl(repo: GiteaRepoRef): string {
-  return getAuthConfig().apiBaseUrl ?? repo.apiBaseUrl
+  return getEnvGiteaAuthConfig().apiBaseUrl ?? repo.apiBaseUrl
 }
 
 function apiUrl(baseUrl: string, path: string, searchParams?: RequestOptions['searchParams']): URL {
@@ -77,19 +47,19 @@ function apiUrl(baseUrl: string, path: string, searchParams?: RequestOptions['se
   return url
 }
 
-async function requestJsonAtBase<T>(
+export async function requestJsonAtBase<T>(
   baseUrl: string,
+  token: string | null,
   path: string,
   options: RequestOptions = {},
   // Creation needs transport/auth failures distinguished from confirmed absence.
   throwOnFailure = false
 ): Promise<T | null> {
-  const config = getAuthConfig()
   try {
     const response = await fetch(apiUrl(baseUrl, path, options.searchParams), {
       headers: {
         Accept: 'application/json',
-        ...authHeaders(config)
+        ...authHeaders(token)
       },
       signal: AbortSignal.timeout(options.timeoutMs ?? REQUEST_TIMEOUT_MS)
     })
@@ -110,13 +80,20 @@ async function requestJsonAtBase<T>(
   }
 }
 
-function requestJson<T>(
+async function requestJson<T>(
   repo: GiteaRepoRef,
   path: string,
   options: RequestOptions = {},
   throwOnFailure = false
 ): Promise<T | null> {
-  return requestJsonAtBase(configuredApiBaseUrl(repo), path, options, throwOnFailure)
+  const auth = await resolveGiteaAuthForHost(repo.host)
+  return requestJsonAtBase(
+    auth.apiBaseUrl ?? repo.apiBaseUrl,
+    auth.token,
+    path,
+    options,
+    throwOnFailure
+  )
 }
 
 function encodedRepoPath(repo: GiteaRepoRef): string {
@@ -163,55 +140,6 @@ function matchesBranch(raw: RawGiteaPullRequest, branchName: string): boolean {
   }
   const label = raw.head?.label?.trim()
   return label === branchName || label?.endsWith(`:${branchName}`) === true
-}
-
-export async function getGiteaAuthStatus(): Promise<GiteaAuthStatus> {
-  const config = getAuthConfig()
-  const tokenConfigured = config.token !== null
-  if (!config.apiBaseUrl && !tokenConfigured) {
-    return {
-      configured: false,
-      authenticated: false,
-      account: null,
-      baseUrl: null,
-      tokenConfigured: false
-    }
-  }
-  if (!config.apiBaseUrl) {
-    return {
-      configured: true,
-      authenticated: true,
-      account: null,
-      baseUrl: null,
-      tokenConfigured
-    }
-  }
-
-  if (!tokenConfigured) {
-    const version = await requestJsonAtBase<{ version?: string }>(config.apiBaseUrl, '/version', {
-      timeoutMs: 4000
-    })
-    return {
-      configured: version !== null,
-      authenticated: false,
-      account: null,
-      baseUrl: config.apiBaseUrl,
-      tokenConfigured
-    }
-  }
-
-  const user = await requestJsonAtBase<{
-    login?: string | null
-    username?: string | null
-    full_name?: string | null
-  }>(config.apiBaseUrl, '/user', { timeoutMs: 4000 })
-  return {
-    configured: true,
-    authenticated: user !== null,
-    account: user?.login ?? user?.username ?? user?.full_name ?? null,
-    baseUrl: config.apiBaseUrl,
-    tokenConfigured
-  }
 }
 
 export async function getGiteaPullRequest(

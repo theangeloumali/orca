@@ -9,7 +9,7 @@ import {
 } from '../startup/shell-environment/hydrate-shell-path'
 import { getAzureDevOpsAuthStatus } from '../azure-devops/client'
 import { getBitbucketAuthStatus } from '../bitbucket/client'
-import { getGiteaAuthStatus } from '../gitea/client'
+import { getGiteaAuthStatus } from '../gitea/auth-status'
 import { _resetKnownHostsCache } from '../gitlab/projects/gitlab-known-host-probe'
 import { mergePersistedWindowsPathAsync } from '../pty/environment/windows-environment-path'
 import type { WslPreflightTarget } from '../ipc/preflight/preflight-wsl-agent-detection'

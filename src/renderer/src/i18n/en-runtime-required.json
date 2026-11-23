@@ -2470,6 +2470,13 @@
       "networkError": "Network error — check your connection.",
       "titleRequired": "Title is required"
     },
+    "giteaConnect": {
+      "invalidBaseUrl": "Enter a server URL that starts with https:// or http://.",
+      "invalidInput": "Invalid Gitea credentials",
+      "rejected": "The server rejected this token. Check it can read repositories, then try again.",
+      "tokenRequired": "Enter an access token.",
+      "unreachable": "Could not reach the server. Check the URL and your connection, then try again."
+    },
     "startPoint": {
       "fetchFailed": "Failed to fetch {{ref}}: {{detail}}",
       "folderUnsupported": "Folder mode does not support creating worktrees.",
