@@ -11,17 +11,21 @@ import { getAgentPaneExecutionHost } from '@/store/slices/agent-status/pane-auth
 import type { AgentStatusEntry } from '../../../../../../shared/agent-status/contracts/agent-status-types'
 import { isFreshNonDoneAgentStatus } from '../../../../../../shared/agent-status/contracts/agent-status-freshness'
 import { resolveAgentStatusWorktreeId } from '../../../../../../shared/agent-status/identity/agent-status-worktree-attribution'
-import type { ExecutionHostId } from '../../../../../../shared/execution-host/execution-host'
+import {
+  LOCAL_EXECUTION_HOST_ID,
+  type ExecutionHostId
+} from '../../../../../../shared/execution-host/execution-host'
+import { getPtyExecutionHost } from '../../../../../../shared/terminal/pty/lifecycle/terminal-execution-host'
 import type { GroupHeaderRow } from '../../../../../../shared/sidebar-list/row-types'
 import {
   countHostAgentActivity,
   type HostAgentActivityCounts
 } from '../../../../../../shared/sidebar-list/hosts/host-agent-activity'
-import { worktreeHasRunningTerminal } from '../listing/desktop-workspace-row-facts'
 import {
   getVisibleWorktreeTerminalActivityTabs,
   type TerminalActivityTab
 } from '../listing/visible-worktree-activity-inputs'
+import { createPaneOwnershipProjection } from './project-activity-ownership'
 
 export type ProjectActivityCounts = HostAgentActivityCounts & { terminals: number }
 /** The workspace ids a header draws, per machine. */
@@ -66,6 +70,26 @@ function liveAgentsOnHost(
   return getLiveAgentStatusByWorktreeId(new Map(onHost), terminalTabs, now)
 }
 
+/** Hostless PTY ids are local; a malformed prefixed id ('foreign') matches no machine. */
+function hasLiveTerminalOnHost(
+  state: PaneHostState,
+  terminalTabs: TerminalTabs,
+  ptyIdsByTabId: Record<string, string[]>,
+  worktreeId: string,
+  hostId: ExecutionHostId
+): boolean {
+  return (terminalTabs[worktreeId] ?? []).some((tab) =>
+    (ptyIdsByTabId[tab.id] ?? []).some((ptyId) =>
+      isExecutionHostForWorktree(
+        state,
+        worktreeId,
+        hostId,
+        getPtyExecutionHost(ptyId) ?? LOCAL_EXECUTION_HOST_ID
+      )
+    )
+  )
+}
+
 /** Agents by state, plus workspaces that still hold a live terminal, summed over the header's machines. */
 export function countHeaderActivity(
   state: PaneHostState,
@@ -87,45 +111,48 @@ export function countHeaderActivity(
     totals.needsYou += agents.needsYou
     totals.working += agents.working
     totals.terminals += ids.filter((id) =>
-      worktreeHasRunningTerminal(terminalTabs, ptyIdsByTabId, id)
+      hasLiveTerminalOnHost(state, terminalTabs, ptyIdsByTabId, id, hostId)
     ).length
   }
   return totals
 }
 
-/** A header's live activity; recomputes on agent-status epochs, scope or PTY changes and a 30s clock. */
+/** A header's live activity; recomputes on agent-status epochs, scope, pane ownership or PTY changes and a 30s clock. */
 export function useProjectActivityCounts(scope: HeaderWorkspaceScope): ProjectActivityCounts {
   // Same freshness clock as the workspace cards, so header and rows expire stale agents together.
   const now = useNow(30_000)
-  const select = useMemo(
-    () =>
-      createAgentStatusEpochSelector(
+  const { selectOwnership, select } = useMemo(
+    () => ({
+      selectOwnership: createPaneOwnershipProjection(),
+      select: createAgentStatusEpochSelector(
         (
-          state: AppState,
+          // Typed down to the epoch-keyed agent map; every other read goes through a cache input.
+          state: Pick<AppState, 'agentStatusEpoch' | 'agentStatusByPaneKey'>,
+          ownership: PaneHostState,
           headerScope: HeaderWorkspaceScope,
           terminalTabs: TerminalTabs,
-          ptyIdsByTabId: AppState['ptyIdsByTabId'],
           clock: number
         ) =>
           countHeaderActivity(
-            state,
+            ownership,
             state.agentStatusByPaneKey,
             headerScope,
             terminalTabs,
-            ptyIdsByTabId,
+            ownership.ptyIdsByTabId,
             clock
           )
-      ),
+      )
+    }),
     []
   )
   return useAppStore(
     useShallow((state) =>
       select(
         state,
+        selectOwnership(state),
         scope,
         // Title writes replace the raw tab map; the id-only projection keeps its identity.
         getVisibleWorktreeTerminalActivityTabs(state.tabsByWorktree),
-        state.ptyIdsByTabId,
         now
       )
     )

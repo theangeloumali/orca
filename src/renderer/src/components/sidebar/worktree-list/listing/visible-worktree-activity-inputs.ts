@@ -1,6 +1,9 @@
 import type { BrowserWorkspace } from '../../../../../../shared/browser/workspaces/browser-workspace-types'
 import type { Tab } from '../../../../../../shared/workspace-layout/tab-groups/tab-types'
-import type { TerminalTab } from '../../../../../../shared/workspace-layout/terminal-tab-types'
+import type {
+  TerminalLayoutSnapshot,
+  TerminalTab
+} from '../../../../../../shared/workspace-layout/terminal-tab-types'
 import {
   getStructuredAgentSessionTabs,
   structuredTabPaneKey,
@@ -81,4 +84,33 @@ export function getStructuredChatWorktreeIds(
   return showSleepingWorkspaces
     ? EMPTY_STRUCTURED_CHAT_WORKTREE_IDS
     : getWorktreeIdsWithStructuredChat(unifiedTabsByWorktree, structuredChatSleptAtByPaneKey)
+}
+
+export type TerminalLeafPtyIds = Pick<TerminalLayoutSnapshot, 'ptyIdsByLeafId'>
+let leafPtySource: Record<string, TerminalLayoutSnapshot> | null = null
+let leafPtyIds: Record<string, TerminalLeafPtyIds> = {}
+
+/** Leaf PTY ids per tab; the same object while no tab's PTY map changed, so title writes stay quiet. */
+export function getTerminalLeafPtyIds(
+  terminalLayoutsByTabId: Record<string, TerminalLayoutSnapshot>
+): Record<string, TerminalLeafPtyIds> {
+  if (terminalLayoutsByTabId === leafPtySource) {
+    return leafPtyIds
+  }
+  leafPtySource = terminalLayoutsByTabId
+  const tabIds = Object.keys(terminalLayoutsByTabId)
+  const unchanged =
+    tabIds.length === Object.keys(leafPtyIds).length &&
+    tabIds.every(
+      (tabId) => leafPtyIds[tabId]?.ptyIdsByLeafId === terminalLayoutsByTabId[tabId]?.ptyIdsByLeafId
+    )
+  if (!unchanged) {
+    leafPtyIds = Object.fromEntries(
+      tabIds.map((tabId) => [
+        tabId,
+        { ptyIdsByLeafId: terminalLayoutsByTabId[tabId]?.ptyIdsByLeafId }
+      ])
+    )
+  }
+  return leafPtyIds
 }

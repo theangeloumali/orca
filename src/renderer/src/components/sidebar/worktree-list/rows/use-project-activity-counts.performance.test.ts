@@ -2,13 +2,34 @@
 import { act, cleanup, renderHook } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { useAppStore } from '@/store'
-import { makeTab } from '@/store/terminals/testing/terminal-tab.test-fixture'
+import { makeLayout, makeTab } from '@/store/terminals/testing/terminal-tab.test-fixture'
 import { repo, worktree } from '../grouping/worktree-list-groups-test-fixtures'
 import { useProjectActivityCounts } from './use-project-activity-counts'
 
 const SCOPE = new Map([['local' as const, [worktree.id]]])
-const withTitle = (title: string) => ({
-  [worktree.id]: [makeTab({ id: 'tab-1', worktreeId: worktree.id, title })]
+const LEAF_PTYS = { 'leaf-1': 'pty-1' }
+// A terminal title write replaces the terminal tab, its unified tab and its layout titles.
+const titleWrite = (title: string) => ({
+  tabsByWorktree: { [worktree.id]: [makeTab({ id: 'tab-1', worktreeId: worktree.id, title })] },
+  unifiedTabsByWorktree: {
+    [worktree.id]: [
+      {
+        id: 'tab-1',
+        entityId: 'tab-1',
+        groupId: 'group-1',
+        worktreeId: worktree.id,
+        contentType: 'terminal' as const,
+        label: title,
+        customLabel: null,
+        color: null,
+        sortOrder: 0,
+        createdAt: 0
+      }
+    ]
+  },
+  terminalLayoutsByTabId: {
+    'tab-1': { ...makeLayout(), ptyIdsByLeafId: LEAF_PTYS, titlesByLeafId: { 'leaf-1': title } }
+  }
 })
 
 afterEach(() => {
@@ -19,11 +40,10 @@ afterEach(() => {
 
 // Guards the project header badge from rescanning every agent on each terminal title write.
 it('recounts a project header on a PTY change, never on a terminal title write', () => {
-  const tabsByWorktree = withTitle('zsh')
   useAppStore.setState({
     repos: [repo],
     worktreesByRepo: { [repo.id]: [worktree] },
-    tabsByWorktree
+    ...titleWrite('zsh')
   })
   // Each recount walks the accepted agent map once; the spy only counts those walks.
   const scans = vi.spyOn(useAppStore.getState().agentStatusByPaneKey, Symbol.iterator)
@@ -32,8 +52,7 @@ it('recounts a project header on a PTY change, never on a terminal title write',
 
   for (let write = 0; write < 20; write++) {
     act(() => {
-      const tabsByWorktree = withTitle(`vim ${write}`)
-      useAppStore.setState({ tabsByWorktree })
+      useAppStore.setState(titleWrite(`vim ${write}`))
     })
   }
   expect(scans.mock.calls.length - mounted).toBe(0)
