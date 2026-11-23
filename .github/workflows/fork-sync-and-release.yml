@@ -71,6 +71,14 @@ jobs:
           # Keep the fork's own workflows exactly as they were before the merge.
           git rm -rqf --ignore-unmatch .github/workflows
           git checkout HEAD -- .github/workflows
+          # Locale catalogs conflict on most syncs (both sides add strings): merge them key by key.
+          unresolved="$(git diff --name-only --diff-filter=U)"
+          if [ -n "$unresolved" ] && ! printf '%s\n' "$unresolved" | grep -qv '^src/renderer/src/i18n/locales/[^/]*\.json$'; then
+            for file in $unresolved; do
+              node .github/scripts/merge-locale-json.mjs "$file"
+              git add -- "$file"
+            done
+          fi
           if [ -n "$(git diff --name-only --diff-filter=U)" ]; then
             git merge --abort
             echo "conflict=true" >>"$GITHUB_OUTPUT"
