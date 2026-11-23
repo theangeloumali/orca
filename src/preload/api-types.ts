@@ -35,7 +35,7 @@ import type { GithubAccountApi } from './api/github/github-account-api'
 import type { GithubPullRequestApi } from './api/github/github-pull-request-api'
 import type { GithubWorkItemApi } from './api/github/github-work-item-api'
 import type { GitLabApi } from './api/gitlab/gitlab-api'
-import type { BitbucketApi, HostedReviewApi } from './api/hosted-review/hosted-review-api'
+import type { BitbucketApi, GiteaApi, HostedReviewApi } from './api/hosted-review/hosted-review-api'
 import type { JiraApi } from './api/work-items/jira-api'
 import type { LinearApi } from './api/work-items/linear-api'
 import type { MobileApi } from './api/mobile/mobile-api'
@@ -119,6 +119,7 @@ export type PreloadApi = {
   hostedReview: HostedReviewApi
   gl: GitLabApi
   bitbucket: BitbucketApi
+  gitea: GiteaApi
   linear: LinearApi
   jira: JiraApi
   starNag: StarNagApi

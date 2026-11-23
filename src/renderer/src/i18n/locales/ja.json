@@ -11562,13 +11562,7 @@
                   "793a06e899": "再確認",
                   "1a9475dace": "詳しく見る",
                   "19fb419c12": "Gitea の認証情報は設定されていますが、認証できませんでした。トークン、API ベース URL、リポジトリの権限を確認し、環境変数を変更した場合は Orca を再起動してください。",
-                  "60708f23da": "は、Orca がリモートから API URL を取得できない場合のみ設定します。",
-                  "709057ad91": "ORCA_GITEA_API_BASE_URL",
-                  "6da9dfa5de": "（プライベートリポジトリ用）。また、",
-                  "6d5c2a3005": "ORCA_GITEA_TOKEN",
-                  "fcbe0469fd": "パブリックリポジトリは git リモートから検出されます。設定:",
                   "0613928cb3": "このランタイムでは、Gitea の状態をまだ取得できません。",
-                  "05863d2599": "Gitea REST API 経由の PR とコミットステータス。",
                   "52f75876be": "検出されたリポジトリの PR とコミットステータス",
                   "0b5242f8a2": "{{value0}} · PR とコミットステータス",
                   "40f678df73": "Azure DevOps の認証情報は設定されていますが、認証できませんでした。トークン、API ベース URL、リポジトリの権限を確認し、環境変数を変更した場合は Orca を再起動してください。",
@@ -13689,6 +13683,42 @@
           "shownPluginCount_one": "これを含む {{count}} 件の一致するプラグインを表示",
           "shownPluginCount_other": "これを含む {{count}} 件の一致するプラグインを表示",
           "samePublisher": "{{value0}} として掲載された他のプラグイン"
+        },
+        "gitea": {
+          "credentials": {
+            "dialog": {
+              "connectFailed": "接続に失敗しました",
+              "title": "Gitea / Forgejo を接続",
+              "environmentManaged": "ORCA_GITEA_* 環境変数で設定されています。ここでトークンを保存するには、これらを解除してください。",
+              "serverUrl": "サーバー URL",
+              "serverUrlPlaceholder": "https://git.example.com",
+              "token": "アクセストークン",
+              "tokenPlaceholder": "Gitea または Forgejo のアクセストークン",
+              "tokenNeeds": "リポジトリの読み取り権限と、プルリクエストを作成するための書き込み権限が必要です。",
+              "close": "閉じる",
+              "cancel": "キャンセル",
+              "verifying": "確認中…",
+              "connect": "接続"
+            }
+          },
+          "integration": {
+            "card": {
+              "disconnectFailed": "保存された Gitea / Forgejo のトークンを削除できませんでした。",
+              "description": "Gitea および Forgejo サーバーのプルリクエストとコミットステータス。",
+              "edit": "トークンを編集",
+              "connect": "接続",
+              "credentialName": "Gitea / Forgejo のトークン",
+              "accountUnknown": "Gitea / Forgejo サーバー",
+              "disconnect": "Gitea / Forgejo の接続を解除",
+              "statusLoadFailed": "保存された Gitea / Forgejo のトークンを確認できませんでした。",
+              "storedAuthFailed": "保存されたトークンで認証できませんでした。トークンを編集するか、まだリポジトリを読み取れるか確認してください。",
+              "envManaged": "環境変数で設定されています。ORCA_GITEA_TOKEN は ORCA_GITEA_API_BASE_URL のサーバーにのみ送信されます。Orca でこのトークンを管理するには、ORCA_GITEA_* 変数の設定を解除してください。",
+              "storedCredential": "このマシンの Orca に保存されています。ORCA_GITEA_* 環境変数が設定されている場合はそちらが優先されます。",
+              "notConfigured": "公開リポジトリはトークンなしで利用できます。非公開リポジトリやプルリクエストの作成には、アクセストークンでサーバーを接続してください。",
+              "notCheckedSinceRestart": "保存済み · 再起動後は未確認",
+              "desktopOnly": "デスクトップアプリから Gitea / Forgejo に接続してください"
+            }
+          }
         }
       },
       "right": {
@@ -22707,7 +22737,9 @@
         "stackRegistrationUnavailable": "PR は作成されましたが、このリポジトリでは GitHub スタックを利用できません。",
         "stackRegistrationFailed": "PR は作成されましたが、GitHub がスタックに追加できませんでした。再試行してスタックへの登録を完了してください。"
       },
-      "baseHeadTitleRequired": "ベースブランチ、ヘッドブランチ、タイトルは必須です。"
+      "baseHeadTitleRequired": "ベースブランチ、ヘッドブランチ、タイトルは必須です。",
+      "authRequiredGitea": "Gitea が認証されていません。次の手順: 設定 > 連携 で Gitea / Forgejo を接続するか、この環境で ORCA_GITEA_API_BASE_URL と ORCA_GITEA_TOKEN を設定してください。",
+      "signInHintGitea": "設定 > 連携 で Gitea / Forgejo を接続してください"
     },
     "model": {
       "auto": "自動",
@@ -25017,6 +25049,14 @@
       "emailAndApiTokenRequired": "メールアドレスと APIトークンの両方を入力してください。",
       "rejected": "Bitbucket が認証情報を拒否しました。メールアドレスとトークンを確認して、もう一度お試しください。",
       "unreachable": "Bitbucket に接続できませんでした。接続状況または API ベース URL を確認して、もう一度お試しください。"
+    },
+    "giteaConnect": {
+      "invalidInput": "Gitea の認証情報が無効です",
+      "invalidBaseUrl": "ユーザー名、クエリ、#フラグメントを含まない https:// のサーバー URL を入力してください。http:// は localhost でのみ使用できます。",
+      "tokenRequired": "アクセストークンを入力してください。",
+      "rejected": "サーバーがこのトークンを拒否しました。リポジトリを読み取れるか確認してから、もう一度お試しください。",
+      "unreachable": "サーバーに接続できませんでした。URL と接続を確認してから、もう一度お試しください。",
+      "notGiteaServer": "この URL は Gitea または Forgejo のサーバーではありません。アドレスを確認してから、もう一度お試しください。"
     }
   },
   "featureWall": {

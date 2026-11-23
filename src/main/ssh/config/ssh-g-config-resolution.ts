@@ -192,14 +192,17 @@ export async function resolveWithSshG(host: string): Promise<SshResolvedConfig |
 }
 
 /** `ssh` with `-G` among `args`: prints the resolved config and exits, never connecting. */
-export async function runSshG(args: string[]): Promise<SshResolvedConfig | null> {
+export async function runSshG(
+  args: string[],
+  timeoutMs = SSH_G_TIMEOUT_MS
+): Promise<SshResolvedConfig | null> {
   // -- prevents option injection; process-host hides console windows and bounds this probe (#10488).
   try {
     const result = await runProcess({
       // Honor the user's explicit ssh override; otherwise PATH ssh, which may be newer than the system one.
       program: process.env.ORCA_SYSTEM_SSH_PATH || 'ssh',
       args,
-      timeoutMs: SSH_G_TIMEOUT_MS
+      timeoutMs
     })
     if (result.code !== 0 || result.timedOut) {
       return null

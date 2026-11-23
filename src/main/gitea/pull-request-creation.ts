@@ -16,35 +16,26 @@ import { readHostedPullRequestTemplate } from '../source-control/pull-request-te
 import { getGiteaPullRequestForBranch, invalidateGiteaPullRequestScanForRepo } from './client'
 import { mapGiteaPullRequest, type RawGiteaPullRequest } from './pull-request-mappers'
 import { getGiteaRepoRef, type GiteaRepoRef } from './repository-ref'
+import { hasGiteaCredentialForRepo, resolveGiteaAuthForRepo } from './resolve-auth'
+import {
+  getHostedReviewLocalGitOptions,
+  type HostedReviewExecutionOptions
+} from '../source-control/hosted-review-git-options'
 
 const CREATE_REQUEST_TIMEOUT_MS = 60_000
 
-function envValue(name: string): string | null {
-  const value = process.env[name]?.trim() ?? ''
-  return value.length > 0 ? value : null
-}
-
-function normalizeApiBaseUrl(value: string): string {
-  const trimmed = value.trim().replace(/\/+$/, '')
-  return /\/api\/v1$/i.test(trimmed) ? trimmed : `${trimmed}/api/v1`
-}
-
-function configuredApiBaseUrl(repo: GiteaRepoRef): string {
-  const configured = envValue('ORCA_GITEA_API_BASE_URL')
-  return configured ? normalizeApiBaseUrl(configured) : repo.apiBaseUrl
-}
-
-export function isGiteaReviewCreationAuthenticated(): boolean {
-  return envValue('ORCA_GITEA_TOKEN') !== null
-}
-
-function authHeaders(): Record<string, string> {
-  const token = envValue('ORCA_GITEA_TOKEN')
-  return token ? { Authorization: `token ${token}` } : {}
-}
-
-function apiUrl(repo: GiteaRepoRef, path: string): URL {
-  return new URL(`${configuredApiBaseUrl(repo).replace(/\/+$/, '')}${path}`)
+// Sidebar eligibility must avoid keychain prompts; creation validates the actual credential.
+export async function isGiteaReviewCreationAuthenticated(
+  repoPath: string,
+  executionHostId: ExecutionHostId,
+  options: HostedReviewExecutionOptions = {}
+): Promise<boolean> {
+  const repo = await getGiteaRepoRef(
+    repoPath,
+    hostedReviewSshConnectionId(executionHostId),
+    getHostedReviewLocalGitOptions(options)
+  )
+  return repo !== null && hasGiteaCredentialForRepo(repo)
 }
 
 function encodedRepoPath(repo: GiteaRepoRef): string {
@@ -73,7 +64,7 @@ function classifyCreateError(error: unknown): CreateHostedReviewResult {
       ok: false,
       code: 'auth_required',
       error:
-        'Create PR failed: Gitea is not authenticated. Next step: set ORCA_GITEA_TOKEN in this environment.',
+        'Create PR failed: Gitea is not authenticated. Next step: connect Gitea in Settings > Integrations.',
       reason: 'auth_required'
     }
   }
@@ -118,7 +109,7 @@ async function findExistingPullRequest(
   // A create attempt may already have mutated the remote; discard pre-POST listings.
   const repo = await getGiteaRepoRef(repoPath, connectionId)
   if (repo) {
-    invalidateGiteaPullRequestScanForRepo(repo)
+    await invalidateGiteaPullRequestScanForRepo(repo)
   }
   const existing = await getGiteaPullRequestForBranch(repoPath, head, null, connectionId)
   return existing ? { number: existing.number, url: existing.url } : null
@@ -183,15 +174,17 @@ export async function createGiteaPullRequest(
     ...(input.draft ? { draft: true } : {})
   }
 
+  const auth = await resolveGiteaAuthForRepo(repo)
+  const apiBaseUrl = (auth.apiBaseUrl ?? repo.apiBaseUrl).replace(/\/+$/, '')
   try {
     const raw = await requestHostedReviewJson<RawGiteaPullRequest>(
-      apiUrl(repo, `/repos/${encodedRepoPath(repo)}/pulls`),
+      new URL(`${apiBaseUrl}/repos/${encodedRepoPath(repo)}/pulls`),
       {
         method: 'POST',
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json',
-          ...authHeaders()
+          ...(auth.token ? { Authorization: `token ${auth.token}` } : {})
         },
         body: JSON.stringify(requestBody)
       },
@@ -199,7 +192,7 @@ export async function createGiteaPullRequest(
     )
     const created = mapGiteaPullRequest(raw, 'neutral')
     if (created) {
-      invalidateGiteaPullRequestScanForRepo(repo)
+      await invalidateGiteaPullRequestScanForRepo(repo)
       return { ok: true, number: created.number, url: created.url }
     }
     const found = await findExistingPullRequest(repoPath, head, connectionId).catch(() => null)

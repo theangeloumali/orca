@@ -11410,13 +11410,7 @@
                   "793a06e899": "重新檢查",
                   "1a9475dace": "瞭解更多",
                   "19fb419c12": "Gitea 憑證已設定但無法通過身分驗證。請檢查權杖、API 基礎 URL 和存放庫權限；如果環境變數已變更，請重新啟動 Orca。",
-                  "60708f23da": "僅當 Orca 無法從遠端推導出 API URL 時。",
-                  "709057ad91": "ORCA_GITEA_API_BASE_URL",
-                  "6da9dfa5de": "用於私有存放庫，並設定",
-                  "6d5c2a3005": "ORCA_GITEA_TOKEN",
-                  "fcbe0469fd": "公開存放庫會從其 git remote 偵測。設定",
                   "0613928cb3": "此執行環境尚無法提供 Gitea 狀態。",
-                  "05863d2599": "透過 Gitea REST API 取得 PR 和提交狀態。",
                   "52f75876be": "已偵測存放庫的 PR 和提交狀態",
                   "0b5242f8a2": "{{value0}} · PR 和提交狀態",
                   "40f678df73": "Azure DevOps 憑證已設定但無法通過身分驗證。請檢查權杖、API 基礎 URL 和存放庫權限；如果環境變數已變更，請重新啟動 Orca。",
@@ -13428,6 +13422,42 @@
           "shownPluginCount_one": "顯示 {{count}} 個符合的外掛，包括此外掛",
           "shownPluginCount_other": "顯示 {{count}} 個符合的外掛，包括此外掛",
           "samePublisher": "更多列為 {{value0}} 的外掛"
+        },
+        "gitea": {
+          "credentials": {
+            "dialog": {
+              "connectFailed": "連線失敗",
+              "title": "連結 Gitea / Forgejo",
+              "environmentManaged": "由 ORCA_GITEA_* 環境變數設定。取消設定這些變數後才能在此儲存權杖。",
+              "serverUrl": "伺服器 URL",
+              "serverUrlPlaceholder": "https://git.example.com",
+              "token": "存取權杖",
+              "tokenPlaceholder": "Gitea 或 Forgejo 存取權杖",
+              "tokenNeeds": "需要存放庫讀取權限，以及建立提取要求所需的寫入權限。",
+              "close": "關閉",
+              "cancel": "取消",
+              "verifying": "正在驗證…",
+              "connect": "連結"
+            }
+          },
+          "integration": {
+            "card": {
+              "disconnectFailed": "無法移除已儲存的 Gitea / Forgejo 權杖。",
+              "description": "Gitea 與 Forgejo 伺服器的提取要求和提交狀態。",
+              "edit": "編輯權杖",
+              "connect": "連結",
+              "credentialName": "你的 Gitea / Forgejo 權杖",
+              "accountUnknown": "Gitea / Forgejo 伺服器",
+              "disconnect": "中斷 Gitea / Forgejo 連線",
+              "statusLoadFailed": "無法檢查是否有已儲存的 Gitea / Forgejo 權杖。",
+              "storedAuthFailed": "已儲存的權杖無法通過身分驗證。請編輯權杖，或檢查它是否仍能讀取存放庫。",
+              "envManaged": "透過環境變數設定。ORCA_GITEA_TOKEN 僅會傳送到 ORCA_GITEA_API_BASE_URL 指定的伺服器。取消設定 ORCA_GITEA_* 變數即可在 Orca 中管理此權杖。",
+              "storedCredential": "已儲存在這台裝置的 Orca 中。設定 ORCA_GITEA_* 環境變數時，以環境變數為準。",
+              "notConfigured": "公開存放庫不需權杖即可使用。如需存取私人存放庫和建立提取要求，請使用存取權杖連結你的伺服器。",
+              "notCheckedSinceRestart": "已儲存 · 重新啟動後尚未檢查",
+              "desktopOnly": "請在桌面應用程式中連接 Gitea / Forgejo"
+            }
+          }
         }
       },
       "right": {
@@ -21256,7 +21286,9 @@
         "stackRegistrationUnavailable": "PR 已建立，但此存放庫無法使用 GitHub 堆疊。",
         "stackRegistrationFailed": "PR 已建立，但 GitHub 無法將其加入堆疊。請重試以完成堆疊註冊。"
       },
-      "baseHeadTitleRequired": "必須提供基底分支、來源分支和標題。"
+      "baseHeadTitleRequired": "必須提供基底分支、來源分支和標題。",
+      "authRequiredGitea": "Gitea 尚未通過身分驗證。下一步：在「設定 > 整合」中連結 Gitea / Forgejo，或在此環境中設定 ORCA_GITEA_API_BASE_URL 和 ORCA_GITEA_TOKEN。",
+      "signInHintGitea": "在「設定 > 整合」中連結 Gitea / Forgejo"
     },
     "model": {
       "auto": "自動",
@@ -23358,6 +23390,14 @@
       "emailAndApiTokenRequired": "請同時輸入電子郵件地址和 API 權杖。",
       "rejected": "Bitbucket 拒絕了這些憑證。請檢查電子郵件地址和權杖後再試一次。",
       "unreachable": "無法連線至 Bitbucket。請檢查網路連線或 API 基礎 URL 後再試一次。"
+    },
+    "giteaConnect": {
+      "invalidInput": "Gitea 認證無效",
+      "invalidBaseUrl": "請輸入不含使用者名稱、查詢參數或 #片段的 https:// 伺服器 URL。純 http:// 僅適用於 localhost。",
+      "tokenRequired": "請輸入存取權杖。",
+      "rejected": "伺服器拒絕了此權杖。請檢查它能否讀取存放庫，然後再試一次。",
+      "unreachable": "無法連線到伺服器。請檢查 URL 和網路連線，然後再試一次。",
+      "notGiteaServer": "此 URL 不是 Gitea 或 Forgejo 伺服器。請檢查位址後再試一次。"
     }
   },
   "featureWall": {

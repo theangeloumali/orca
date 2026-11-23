@@ -1,5 +1,6 @@
 import { createRemoteRefProbeCache } from '../git/remotes/remote-ref-probe-cache'
 import { getPublicForgeProviderForHost } from '../../shared/git/remotes/public-forge-host'
+import { lookUpSshConfigHostname, type SshHostnameContext } from './ssh-config-hostname'
 
 export type GiteaRepoRef = {
   host: string
@@ -7,6 +8,8 @@ export type GiteaRepoRef = {
   repo: string
   apiBaseUrl: string
   webBaseUrl: string
+  // The host an SSH or scp remote connects to; null for http(s). Its port is the SSH port, never the API's.
+  sshHostname: string | null
 }
 
 type LocalGitExecOptions = {
@@ -60,7 +63,12 @@ function apiBaseUrlFromWebBase(webBaseUrl: string): string {
   return `${webBaseUrl.replace(/\/+$/, '')}/api/v1`
 }
 
-function makeRepoRef(host: string, path: string, webOrigin: string): GiteaRepoRef | null {
+function makeRepoRef(
+  host: string,
+  path: string,
+  webOrigin: string,
+  isSshRemote: boolean
+): GiteaRepoRef | null {
   const normalizedHost = host.toLowerCase()
   const owner = getPublicForgeProviderForHost(normalizedHost)
   if (!normalizedHost || (owner && owner !== 'gitea')) {
@@ -81,7 +89,8 @@ function makeRepoRef(host: string, path: string, webOrigin: string): GiteaRepoRe
     owner: parsed.owner,
     repo: parsed.repo,
     apiBaseUrl: apiBaseUrlFromWebBase(webBaseUrl),
-    webBaseUrl
+    webBaseUrl,
+    sshHostname: isSshRemote ? normalizedHost : null
   }
 }
 
@@ -92,7 +101,7 @@ export function parseGiteaRepoRef(remoteUrl: string): GiteaRepoRef | null {
     if (scpLike) {
       const host = scpLike[1]
       const path = scpLike[2]
-      return makeRepoRef(host, path, `https://${host.toLowerCase()}`)
+      return makeRepoRef(host, path, `https://${host.toLowerCase()}`, true)
     }
   }
 
@@ -108,13 +117,30 @@ export function parseGiteaRepoRef(remoteUrl: string): GiteaRepoRef | null {
       return null
     }
 
-    const webOrigin =
-      protocol === 'http:' || protocol === 'https:'
-        ? `${protocol}//${url.host}`
-        : `https://${url.hostname.toLowerCase()}`
-    return makeRepoRef(url.hostname, url.pathname, webOrigin)
+    const isSshRemote = protocol !== 'http:' && protocol !== 'https:'
+    const webOrigin = isSshRemote
+      ? `https://${url.hostname.toLowerCase()}`
+      : `${protocol}//${url.host}`
+    return makeRepoRef(url.hostname, url.pathname, webOrigin, isSshRemote)
   } catch {
     return null
+  }
+}
+
+// Git follows ~/.ssh/config Host aliases, so match the server by the HostName ssh -G reports.
+export async function resolveGiteaSshHostname(
+  repo: GiteaRepoRef,
+  context: SshHostnameContext,
+  resolveHostname: typeof lookUpSshConfigHostname = lookUpSshConfigHostname
+): Promise<GiteaRepoRef> {
+  if (repo.sshHostname === null) {
+    return repo
+  }
+  try {
+    const { hostname } = await resolveHostname(repo.sshHostname, context)
+    return hostname ? { ...repo, sshHostname: hostname.toLowerCase() } : repo
+  } catch {
+    return repo
   }
 }
 
@@ -124,7 +150,10 @@ export async function getGiteaRepoRefForRemote(
   connectionId?: string | null,
   localGitOptions: LocalGitExecOptions = {}
 ): Promise<GiteaRepoRef | null> {
-  return repoRefProbeCache.get(repoPath, remoteName, connectionId, localGitOptions)
+  const repo = await repoRefProbeCache.get(repoPath, remoteName, connectionId, localGitOptions)
+  return repo
+    ? resolveGiteaSshHostname(repo, { connectionId, wslDistro: localGitOptions.wslDistro })
+    : null
 }
 
 export async function getGiteaRepoRef(

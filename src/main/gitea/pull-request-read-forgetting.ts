@@ -13,6 +13,6 @@ export async function forgetGiteaPullRequestReads(
     context
   )
   if (repo) {
-    invalidateGiteaPullRequestScanForRepo(repo)
+    await invalidateGiteaPullRequestScanForRepo(repo)
   }
 }

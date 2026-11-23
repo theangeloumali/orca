@@ -9,10 +9,7 @@ import {
 
 // Commands and variable names stay untranslated.
 const SIGN_IN_COMMANDS = { github: 'gh auth login', gitlab: 'glab auth login' } as const
-const SIGN_IN_VARIABLES = {
-  'azure-devops': 'ORCA_AZURE_DEVOPS_TOKEN',
-  gitea: 'ORCA_GITEA_TOKEN'
-} as const
+const SIGN_IN_VARIABLES = { 'azure-devops': 'ORCA_AZURE_DEVOPS_TOKEN' } as const
 
 export function authRequiredDetail(
   provider: SupportedHostedReviewCopyProvider,
@@ -23,6 +20,12 @@ export function authRequiredDetail(
     return t(
       'sourceControl.createReviewFailure.authRequiredBitbucket',
       'Bitbucket is not authenticated. Next step: connect Bitbucket in Settings > Integrations, or set ORCA_BITBUCKET_* in this environment.'
+    )
+  }
+  if (provider === 'gitea') {
+    return t(
+      'sourceControl.createReviewFailure.authRequiredGitea',
+      'Gitea is not authenticated. Next step: connect Gitea / Forgejo in Settings > Integrations, or set ORCA_GITEA_API_BASE_URL and ORCA_GITEA_TOKEN in this environment.'
     )
   }
   if (provider === 'github' || provider === 'gitlab') {
@@ -49,6 +52,12 @@ export function hostedReviewSignInHint(
     return t(
       'sourceControl.createReviewFailure.signInHintBitbucket',
       'Connect Bitbucket in Settings > Integrations'
+    )
+  }
+  if (supported === 'gitea') {
+    return t(
+      'sourceControl.createReviewFailure.signInHintGitea',
+      'Connect Gitea / Forgejo in Settings > Integrations'
     )
   }
   if (supported === 'github' || supported === 'gitlab') {

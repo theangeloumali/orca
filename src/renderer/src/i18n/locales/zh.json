@@ -12047,13 +12047,7 @@
                   "793a06e899": "重新检查",
                   "1a9475dace": "了解更多",
                   "19fb419c12": "Gitea 凭据已配置但无法通过身份验证，请检查 token、API 基础 URL 和仓库权限，如果环境变量已更改，请重启 Orca",
-                  "60708f23da": "仅在 Orca 无法从 Git 远程地址推导出 API URL 时才需要设置",
-                  "709057ad91": "ORCA_GITEA_API_BASE_URL",
-                  "6da9dfa5de": "用于私有仓库",
-                  "6d5c2a3005": "ORCA_GITEA_TOKEN",
-                  "fcbe0469fd": "公开仓库会根据 Git 远程地址自动检测，请设置",
                   "0613928cb3": "此运行时暂不支持 Gitea 状态",
-                  "05863d2599": "通过 Gitea REST API 获取拉取请求和提交状态",
                   "52f75876be": "已检测仓库的拉取请求和提交状态",
                   "0b5242f8a2": "{{value0}} · 拉取请求和提交状态",
                   "40f678df73": "Azure DevOps 凭据已配置但无法通过身份验证，请检查 token、API 基础 URL 和仓库权限，如果环境变量已更改，请重启 Orca",
@@ -14184,6 +14178,42 @@
           "cancel": "取消",
           "confirm": "移除",
           "unknownHost": "未知主机"
+        },
+        "gitea": {
+          "credentials": {
+            "dialog": {
+              "connectFailed": "连接失败",
+              "title": "连接 Gitea / Forgejo",
+              "environmentManaged": "由 ORCA_GITEA_* 环境变量设置。取消设置这些变量后才能在此处保存令牌。",
+              "serverUrl": "服务器 URL",
+              "serverUrlPlaceholder": "https://git.example.com",
+              "token": "访问令牌",
+              "tokenPlaceholder": "Gitea 或 Forgejo 访问令牌",
+              "tokenNeeds": "需要仓库读取权限，以及创建拉取请求所需的写入权限。",
+              "close": "关闭",
+              "cancel": "取消",
+              "verifying": "正在验证…",
+              "connect": "连接"
+            }
+          },
+          "integration": {
+            "card": {
+              "disconnectFailed": "无法移除已保存的 Gitea / Forgejo 令牌。",
+              "description": "Gitea 和 Forgejo 服务器的拉取请求和提交状态。",
+              "edit": "编辑令牌",
+              "connect": "连接",
+              "credentialName": "你的 Gitea / Forgejo 令牌",
+              "accountUnknown": "Gitea / Forgejo 服务器",
+              "disconnect": "断开 Gitea / Forgejo",
+              "statusLoadFailed": "无法检查是否有已保存的 Gitea / Forgejo 令牌。",
+              "storedAuthFailed": "已保存的令牌无法通过身份验证。请编辑令牌，或检查它是否仍能读取仓库。",
+              "envManaged": "通过环境变量配置。ORCA_GITEA_TOKEN 仅发送到 ORCA_GITEA_API_BASE_URL 指定的服务器。取消设置 ORCA_GITEA_* 变量即可在 Orca 中管理此令牌。",
+              "storedCredential": "已保存在这台设备的 Orca 中。设置 ORCA_GITEA_* 环境变量时，以环境变量为准。",
+              "notConfigured": "公开仓库无需令牌即可使用。如需访问私有仓库和创建拉取请求，请使用访问令牌连接你的服务器。",
+              "notCheckedSinceRestart": "已保存 · 重启后尚未检查",
+              "desktopOnly": "请在桌面应用中连接 Gitea / Forgejo"
+            }
+          }
         }
       },
       "right": {
@@ -24048,7 +24078,9 @@
         "stackRegistrationUnavailable": "PR 已创建，但此仓库不支持 GitHub 堆栈",
         "stackRegistrationFailed": "PR 已创建，但 GitHub 无法将其添加到堆栈。请重试以完成堆栈注册"
       },
-      "baseHeadTitleRequired": "必须提供基础分支、源分支和标题"
+      "baseHeadTitleRequired": "必须提供基础分支、源分支和标题",
+      "authRequiredGitea": "Gitea 未通过身份验证。下一步：在“设置 > 集成”中连接 Gitea / Forgejo，或在此环境中设置 ORCA_GITEA_API_BASE_URL 和 ORCA_GITEA_TOKEN。",
+      "signInHintGitea": "在“设置 > 集成”中连接 Gitea / Forgejo"
     },
     "model": {
       "auto": "自动",
@@ -26502,6 +26534,14 @@
       "emailAndApiTokenRequired": "请输入电子邮件地址和 API 令牌",
       "rejected": "Bitbucket 拒绝了这些凭据。请检查电子邮件地址和令牌，然后重试",
       "unreachable": "无法连接到 Bitbucket。请检查网络连接或 API 基础 URL，然后重试"
+    },
+    "giteaConnect": {
+      "invalidInput": "Gitea 凭据无效",
+      "invalidBaseUrl": "请输入不含用户名、查询参数或 #片段的 https:// 服务器 URL。纯 http:// 仅适用于 localhost。",
+      "tokenRequired": "请输入访问令牌。",
+      "rejected": "服务器拒绝了此令牌。请检查它能否读取仓库，然后重试。",
+      "unreachable": "无法连接到服务器。请检查 URL 和网络连接，然后重试。",
+      "notGiteaServer": "此 URL 不是 Gitea 或 Forgejo 服务器。请检查地址后重试。"
     }
   },
   "featureWall": {

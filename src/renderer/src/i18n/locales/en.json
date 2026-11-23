@@ -12837,13 +12837,7 @@
                   "793a06e899": "Re-check",
                   "1a9475dace": "Learn more",
                   "19fb419c12": "Gitea credentials are configured but could not authenticate. Check the token, API base URL, and repository permissions, then restart Orca if environment variables changed.",
-                  "60708f23da": "only when Orca cannot derive the API URL from the remote.",
-                  "709057ad91": "ORCA_GITEA_API_BASE_URL",
-                  "6da9dfa5de": "for private repositories, and set",
-                  "6d5c2a3005": "ORCA_GITEA_TOKEN",
-                  "fcbe0469fd": "Public repositories are detected from their git remote. Set",
                   "0613928cb3": "Gitea status is not available in this runtime yet.",
-                  "05863d2599": "Pull requests and commit statuses via the Gitea REST API.",
                   "52f75876be": "Pull requests and commit statuses for detected repositories",
                   "0b5242f8a2": "{{value0}} · Pull requests and commit statuses",
                   "40f678df73": "Azure DevOps credentials are configured but could not authenticate. Check the token, API base URL, and repository permissions, then restart Orca if environment variables changed.",
@@ -14986,6 +14980,42 @@
           "cancel": "Cancel",
           "confirm": "Remove",
           "unknownHost": "Unknown host"
+        },
+        "gitea": {
+          "credentials": {
+            "dialog": {
+              "connectFailed": "Connection failed",
+              "title": "Connect Gitea / Forgejo",
+              "environmentManaged": "Set by ORCA_GITEA_* environment variables. Unset them to save a token here.",
+              "serverUrl": "Server URL",
+              "serverUrlPlaceholder": "https://git.example.com",
+              "token": "Access token",
+              "tokenPlaceholder": "Gitea or Forgejo access token",
+              "tokenNeeds": "Needs repository read access, plus write access to create pull requests.",
+              "close": "Close",
+              "cancel": "Cancel",
+              "verifying": "Verifying…",
+              "connect": "Connect"
+            }
+          },
+          "integration": {
+            "card": {
+              "disconnectFailed": "Could not remove the saved Gitea / Forgejo token.",
+              "description": "Pull requests and commit statuses for Gitea and Forgejo servers.",
+              "edit": "Edit token",
+              "connect": "Connect",
+              "credentialName": "Your Gitea / Forgejo token",
+              "accountUnknown": "Gitea / Forgejo server",
+              "disconnect": "Disconnect Gitea / Forgejo",
+              "statusLoadFailed": "Could not check for a saved Gitea / Forgejo token.",
+              "storedAuthFailed": "The saved token could not authenticate. Edit it, or check that it can still read repositories.",
+              "envManaged": "Configured via environment variables. ORCA_GITEA_TOKEN is sent only to the ORCA_GITEA_API_BASE_URL server. Unset the ORCA_GITEA_* variables to manage this token in Orca.",
+              "storedCredential": "Saved in Orca on this machine. ORCA_GITEA_* environment variables take precedence when set.",
+              "notConfigured": "Public repositories work without a token. Connect your server with an access token for private repositories and creating pull requests.",
+              "notCheckedSinceRestart": "Saved · not checked since restart",
+              "desktopOnly": "Connect Gitea / Forgejo from the desktop app"
+            }
+          }
         }
       },
       "right": {
@@ -24563,7 +24593,9 @@
         "stackRegistrationUnavailable": "The pull request was created, but GitHub stacks are not available for this repository.",
         "stackRegistrationFailed": "The pull request was created, but GitHub could not add it to the stack. Retry to finish stack registration."
       },
-      "baseHeadTitleRequired": "base branch, head branch, and title are required."
+      "baseHeadTitleRequired": "base branch, head branch, and title are required.",
+      "authRequiredGitea": "Gitea is not authenticated. Next step: connect Gitea / Forgejo in Settings > Integrations, or set ORCA_GITEA_API_BASE_URL and ORCA_GITEA_TOKEN in this environment.",
+      "signInHintGitea": "Connect Gitea / Forgejo in Settings > Integrations"
     },
     "variables": {
       "basePrompt": "Orca’s built-in prompt for this action, including the context Orca knows how to gather safely.",
@@ -27061,6 +27093,14 @@
       "emailAndApiTokenRequired": "Enter both an email and an API token.",
       "rejected": "Bitbucket rejected these credentials. Check the email and token, then try again.",
       "unreachable": "Could not reach Bitbucket. Check your connection or the API base URL, then try again."
+    },
+    "giteaConnect": {
+      "invalidInput": "Invalid Gitea credentials",
+      "invalidBaseUrl": "Enter an https:// server URL without a username, query, or #fragment. Plain http:// works only for localhost.",
+      "tokenRequired": "Enter an access token.",
+      "rejected": "The server rejected this token. Check it can read repositories, then try again.",
+      "unreachable": "Could not reach the server. Check the URL and your connection, then try again.",
+      "notGiteaServer": "This URL isn't a Gitea or Forgejo server. Check the address, then try again."
     }
   },
   "featureWall": {
