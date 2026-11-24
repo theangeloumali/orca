@@ -29,7 +29,6 @@ import {
   getWorkspaceCardLayoutEntry
 } from './appearance-sidebar-search'
 import { getReduceVisualEffectsEntries } from './appearance-reduce-visual-effects-search'
-import { getSidebarColorsEntry } from './appearance-sidebar-colors-search'
 import { SidebarColorsSetting } from './SidebarColorsSetting'
 import { getTerminalAppearanceSearchEntries } from '../terminal/terminal-search'
 import { TerminalAppearanceSection } from '../terminal/appearance/TerminalAppearanceSection'
@@ -131,8 +130,7 @@ export function AppearancePane({
     ...getLayoutEntries(),
     ...(tilingWindowModeEntry ? [tilingWindowModeEntry] : []),
     getLeftSidebarAppearanceEntry(),
-    getWorkspaceCardLayoutEntry(),
-    getSidebarColorsEntry()
+    getWorkspaceCardLayoutEntry()
   ]
 
   const interfaceMatches = matchesSettingsSearch(searchQuery, interfaceSearchEntries)

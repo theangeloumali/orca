@@ -1,7 +1,8 @@
 import type { CSSProperties } from 'react'
 import {
+  indexProjectGroupColorOwners,
   resolveProjectGroupColor,
-  resolveProjectGroupTint,
+  resolveProjectGroupRowTint,
   type ProjectGroupColorLink,
   type ProjectGroupTint,
   type ProjectGroupTints
@@ -48,46 +49,36 @@ function rowProjectGroupId(row: GroupLinkedRow): string | null {
   return 'repo' in row ? (row.repo?.projectGroupId ?? null) : null
 }
 
-/** A group checked out on several hosts has one copy per host; the colored copy speaks for it. */
-function indexColoredCopies(
-  groups: readonly ProjectGroupColorLink[]
-): Map<string, ProjectGroupColorLink> {
-  const groupsById = new Map<string, ProjectGroupColorLink>()
-  for (const group of groups) {
-    if (!groupsById.get(group.id)?.color) {
-      groupsById.set(group.id, group)
-    }
-  }
-  return groupsById
-}
-
-/** One pass; rows that resolve to the same colored group share one appearance object. */
+/** One pass; rows with the same color owner and background share one appearance object. */
 export function buildGroupRowAppearance(
   rows: readonly GroupLinkedRow[],
   groups: readonly ProjectGroupColorLink[],
   tints: ProjectGroupTints | undefined,
   palettes: readonly SidebarContrastPalette[] | null = SIDEBAR_CONTRAST_THEMES
 ): (GroupRowAppearance | null)[] {
-  const groupsById = indexColoredCopies(groups)
+  const groupsById = indexProjectGroupColorOwners(groups)
   const byGroupId = new Map<string, GroupRowAppearance | null>()
+  const byOwnerAndTint = new Map<string, GroupRowAppearance>()
   const appearanceFor = (groupId: string): GroupRowAppearance | null => {
     if (byGroupId.has(groupId)) {
       return byGroupId.get(groupId) ?? null
     }
     const resolved = resolveProjectGroupColor(groupsById, groupId)
-    const owner = resolved ? byGroupId.get(resolved.groupId) : undefined
+    const tint = resolved ? resolveProjectGroupRowTint(tints, groupId, resolved.groupId) : null
+    const key = resolved && `${resolved.groupId}|${tint}`
     const appearance =
-      owner ??
-      (resolved && {
-        groupId: resolved.groupId,
-        color: resolved.color,
-        tint: resolveProjectGroupTint(tints, resolved.groupId),
-        tintPercents: hostTintPercents(resolved.color, palettes)
-      })
-    byGroupId.set(groupId, appearance)
-    if (appearance) {
-      byGroupId.set(appearance.groupId, appearance)
+      resolved && tint && key
+        ? (byOwnerAndTint.get(key) ?? {
+            groupId: resolved.groupId,
+            color: resolved.color,
+            tint,
+            tintPercents: hostTintPercents(resolved.color, palettes)
+          })
+        : null
+    if (appearance && key) {
+      byOwnerAndTint.set(key, appearance)
     }
+    byGroupId.set(groupId, appearance)
     return appearance
   }
   return rows.map((row) => {

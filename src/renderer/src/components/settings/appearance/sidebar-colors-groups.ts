@@ -1,18 +1,16 @@
 import type { ProjectGroup } from '../../../../../shared/project/groups/project-group-types'
 import { buildProjectGroupChildIndex } from '../../../../../shared/project/groups/project-groups'
-import { normalizeRepoBadgeColor } from '../../../../../shared/repository/appearance/repo-badge-color'
+import {
+  indexProjectGroupColorOwners,
+  resolveProjectGroupColor
+} from '../../../../../shared/project/groups/project-group-appearance'
 
-export type SidebarColorGroup = { group: ProjectGroup; depth: number }
+/** ownerGroupId is the group whose color the row shows (itself or a parent), for its background. */
+export type SidebarColorGroup = { group: ProjectGroup; depth: number; ownerGroupId: string }
 
 /** One entry per group id in sidebar tree order; a group on two machines keeps its colored copy. */
 export function orderSidebarColorGroups(groups: readonly ProjectGroup[]): SidebarColorGroup[] {
-  const byId = new Map<string, ProjectGroup>()
-  for (const group of groups) {
-    const kept = byId.get(group.id)
-    if (!kept || (!normalizeRepoBadgeColor(kept.color) && normalizeRepoBadgeColor(group.color))) {
-      byId.set(group.id, group)
-    }
-  }
+  const byId = indexProjectGroupColorOwners(groups)
   const unique = [...byId.values()].sort((a, b) => a.tabOrder - b.tabOrder)
   const childIds = buildProjectGroupChildIndex(unique)
   const ordered: SidebarColorGroup[] = []
@@ -22,7 +20,8 @@ export function orderSidebarColorGroups(groups: readonly ProjectGroup[]): Sideba
       return
     }
     visited.add(group.id)
-    ordered.push({ group, depth })
+    const ownerGroupId = resolveProjectGroupColor(byId, group.id)?.groupId ?? group.id
+    ordered.push({ group, depth, ownerGroupId })
     for (const childId of childIds.get(group.id) ?? []) {
       const child = byId.get(childId)
       if (child) {

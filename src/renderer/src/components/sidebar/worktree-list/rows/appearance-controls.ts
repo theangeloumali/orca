@@ -1,5 +1,8 @@
 import { useAppStore } from '@/store/index'
-import type { ExecutionHostId } from '../../../../../../shared/execution-host/execution-host'
+import {
+  getRepoExecutionHostId,
+  type ExecutionHostId
+} from '../../../../../../shared/execution-host/execution-host'
 import {
   clearHostColor,
   HOST_COLOR_NONE,
@@ -9,10 +12,9 @@ import {
   setHostSectionTint
 } from '../../../../../../shared/execution-host/host-appearance'
 import type { HostSectionTint } from '../../../../../../shared/execution-host/host-setting-overrides'
-import { normalizeRepoBadgeColor } from '../../../../../../shared/repository/appearance/repo-badge-color'
 import {
   projectGroupColorUpdate,
-  resolveProjectGroupTint,
+  resolveProjectGroupRowTint,
   setProjectGroupTint
 } from '../../../../../../shared/project/groups/project-group-appearance'
 import { SIDEBAR_COLORS_SETTING_ID } from '../../../settings/appearance/appearance-sidebar-colors-search'
@@ -54,28 +56,30 @@ export function useHostAppearanceControls(hostId: ExecutionHostId): AppearanceCo
   return { colorValue: selected, customColor: custom, tint, selectColor, selectTint }
 }
 
-/** Color syncs with the group (via its owner host); background strength is this computer's. */
+/** What the row shows: its color and the group that owns it (the group itself or a parent). */
+export type ShownGroupColor = { color: string | null; ownerGroupId: string }
+
+/** Color syncs to every copy of the group; background strength is this computer's. */
 export function useProjectGroupAppearanceControls(
   groupId: string,
-  hostId?: ExecutionHostId
+  shown: ShownGroupColor
 ): AppearanceControls {
-  const updateProjectGroup = useAppStore((s) => s.updateProjectGroup)
+  const updateProjectGroups = useAppStore((s) => s.updateProjectGroups)
   const updateSettings = useAppStore((s) => s.updateSettings)
-  // A group on two machines has a copy per host; the colored copy is the one the sidebar shows.
-  const storedColor = useAppStore((s) =>
-    s.projectGroups
-      ?.filter((group) => group.id === groupId)
-      .map((group) => normalizeRepoBadgeColor(group.color))
-      .find((color) => color !== null)
+  const tint = useAppStore((s) =>
+    resolveProjectGroupRowTint(s.settings?.projectGroupTints, groupId, shown.ownerGroupId)
   )
-  const tint = useAppStore((s) => resolveProjectGroupTint(s.settings?.projectGroupTints, groupId))
-  const { selected, custom } = getHostColorMenuValue(storedColor ?? HOST_COLOR_NONE)
+  const { selected, custom } = getHostColorMenuValue(shown.color ?? HOST_COLOR_NONE)
 
   const selectColor = (value: string): void => {
-    const update = projectGroupColorUpdate(value === HOST_COLOR_NONE ? null : value)
-    if (update) {
-      void updateProjectGroup(groupId, update, { hostId })
+    const updates = projectGroupColorUpdate(value === HOST_COLOR_NONE ? null : value)
+    if (!updates) {
+      return
     }
+    const copies = useAppStore.getState().projectGroups.filter((group) => group.id === groupId)
+    void updateProjectGroups(
+      copies.map((copy) => ({ groupId, updates, hostId: getRepoExecutionHostId(copy) }))
+    )
   }
   const selectTint = (value: string): void => {
     const nextTint = parseTint(value)

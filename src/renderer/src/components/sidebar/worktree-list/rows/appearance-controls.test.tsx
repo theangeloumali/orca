@@ -1,11 +1,13 @@
 // @vitest-environment happy-dom
 
 import { act, cleanup, renderHook } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { useAppStore } from '@/store'
 import { getDefaultSettings } from '../../../../../../shared/orca-profiles/constants'
 import type { ProjectGroup } from '../../../../../../shared/project/groups/project-group-types'
+import { getRepoExecutionHostId } from '../../../../../../shared/execution-host/execution-host'
 import { HOST_COLOR_NONE } from '../../../../../../shared/execution-host/host-appearance'
+import { projectGroupOwnerColor } from '../../../../../../shared/project/groups/project-group-appearance'
 import {
   openSidebarColorsSettings,
   useHostAppearanceControls,
@@ -28,14 +30,34 @@ const group = (overrides: Partial<ProjectGroup>): ProjectGroup => ({
   ...overrides
 })
 
-const updateProjectGroup = vi.fn(async () => true)
+type GroupWrite = { groupId: string; color: string | null | undefined; hostId?: string }
+let groupWrites: GroupWrite[] = []
 
 beforeEach(() => {
-  updateProjectGroup.mockClear()
+  groupWrites = []
   useAppStore.setState({
     settings: { ...getDefaultSettings('/home/test'), hostSettingOverrides: {} },
     projectGroups: [group({ executionHostId: 'runtime:a' }), group({ color: '#123456' })],
-    updateProjectGroup,
+    // Applies each write to the copy on that host, like the runtime echo does.
+    updateProjectGroups: async (mutations) => {
+      groupWrites.push(
+        ...mutations.map(({ groupId, updates, hostId }) => ({
+          groupId,
+          color: updates.color,
+          hostId
+        }))
+      )
+      useAppStore.setState((state) => ({
+        projectGroups: state.projectGroups.map((copy) => {
+          const write = mutations.find(
+            (mutation) =>
+              mutation.groupId === copy.id && mutation.hostId === getRepoExecutionHostId(copy)
+          )
+          return write ? { ...copy, color: write.updates.color ?? null } : copy
+        })
+      }))
+      return true
+    },
     updateSettings: async (updates) => {
       useAppStore.setState((state) => ({
         settings: state.settings ? { ...state.settings, ...updates } : state.settings
@@ -45,30 +67,62 @@ beforeEach(() => {
 })
 afterEach(cleanup)
 
+// The header passes the color its row shows, so the menu reads the same owner as the sidebar.
+function renderGroupControls(groupId = 'clients', ownerGroupId = groupId) {
+  return renderHook(() =>
+    useProjectGroupAppearanceControls(groupId, {
+      color: useAppStore((s) => projectGroupOwnerColor(s.projectGroups, groupId)),
+      ownerGroupId
+    })
+  )
+}
+
 describe('useProjectGroupAppearanceControls', () => {
   it('reads the colored copy and shows a non-swatch hex as custom', () => {
-    const { result } = renderHook(() => useProjectGroupAppearanceControls('clients'))
+    const { result } = renderGroupControls()
     expect(result.current.colorValue).toBe('#123456')
     expect(result.current.customColor).toBe('#123456')
     expect(result.current.tint).toBe('subtle')
   })
 
-  it('saves swatches, clears on None and ignores an invalid hex', () => {
-    const { result } = renderHook(() => useProjectGroupAppearanceControls('clients', 'runtime:a'))
-    act(() => result.current.selectColor('#22c55e'))
-    act(() => result.current.selectColor(HOST_COLOR_NONE))
-    act(() => result.current.selectColor('not-a-color'))
-    expect(updateProjectGroup.mock.calls).toEqual([
-      ['clients', { color: '#22c55e' }, { hostId: 'runtime:a' }],
-      ['clients', { color: null }, { hostId: 'runtime:a' }]
+  it('writes None to every copy, so a group on two hosts shows no color anywhere', async () => {
+    const { result } = renderGroupControls()
+    await act(async () => result.current.selectColor(HOST_COLOR_NONE))
+    expect(groupWrites).toEqual([
+      { groupId: 'clients', color: null, hostId: 'runtime:a' },
+      { groupId: 'clients', color: null, hostId: 'local' }
     ])
+    expect(useAppStore.getState().projectGroups.map((copy) => copy.color)).toEqual([null, null])
+    expect(result.current.colorValue).toBe(HOST_COLOR_NONE)
+  })
+
+  it('saves swatches on every copy and ignores an invalid hex', async () => {
+    const { result } = renderGroupControls()
+    await act(async () => result.current.selectColor('#22c55e'))
+    await act(async () => result.current.selectColor('not-a-color'))
+    expect(groupWrites.map(({ color }) => color)).toEqual(['#22c55e', '#22c55e'])
+    expect(result.current.colorValue).toBe('#22c55e')
   })
 
   it('keeps the background strength in this computer settings', () => {
-    const { result } = renderHook(() => useProjectGroupAppearanceControls('clients'))
+    const { result } = renderGroupControls()
     act(() => result.current.selectTint('strong'))
     expect(useAppStore.getState().settings?.projectGroupTints).toEqual({ clients: 'strong' })
     expect(result.current.tint).toBe('strong')
+  })
+
+  it('shows a nested group the background it inherits until it picks its own', () => {
+    act(() => {
+      void useAppStore.getState().updateSettings({ projectGroupTints: { clients: 'strong' } })
+    })
+    const { result } = renderGroupControls('acme', 'clients')
+    expect(result.current.tint).toBe('strong')
+    act(() => result.current.selectTint('subtle'))
+    expect(useAppStore.getState().settings?.projectGroupTints).toEqual({
+      clients: 'strong',
+      acme: 'subtle'
+    })
+    expect(result.current.tint).toBe('subtle')
   })
 })
 

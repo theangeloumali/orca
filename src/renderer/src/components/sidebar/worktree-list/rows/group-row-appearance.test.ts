@@ -50,6 +50,28 @@ describe('group row appearance', () => {
     expect(header).toMatchObject({ groupId: 'plain', color: '#22c55e' })
   })
 
+  it('ignores an invalid hex on one copy and takes the next valid copy', () => {
+    const brokenCopy = { ...PLAIN, color: 'not-a-color' }
+    const validCopy = { ...PLAIN, color: '#22c55e' }
+    const [header] = buildGroupRowAppearance(
+      [groupHeader('plain')],
+      [brokenCopy, validCopy],
+      undefined
+    )
+    expect(header).toMatchObject({ groupId: 'plain', color: '#22c55e' })
+  })
+
+  it("lets a nested group's own background win over the parent it takes its color from", () => {
+    const rows = [groupHeader('red'), project('red'), groupHeader('nested'), project('nested')]
+    const byRow = buildGroupRowAppearance(rows, GROUPS, { red: 'strong', nested: 'off' })
+    expect(byRow.map((appearance) => [appearance?.groupId, appearance?.tint])).toEqual([
+      ['red', 'strong'],
+      ['red', 'strong'],
+      ['red', 'off'],
+      ['red', 'off']
+    ])
+  })
+
   it('keeps the color but turns the background off when the tint is off', () => {
     const [header] = buildGroupRowAppearance([groupHeader('red')], GROUPS, { red: 'off' })
     expect(header).toMatchObject({ color: '#ef4444', tint: 'off' })

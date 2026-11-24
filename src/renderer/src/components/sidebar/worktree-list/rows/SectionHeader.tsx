@@ -27,6 +27,7 @@ import { getSidebarHeaderVisual } from './header-visuals'
 import { resolveProjectGroupHeaderColor } from './project-header-color'
 import { ProjectHeaderActions } from './ProjectHeaderActions'
 import { HeaderCollapseAffordance } from './HeaderCollapseAffordance'
+import { ColorDot } from './AppearanceMenuItems'
 import { groupColorStyle, type GroupRowAppearance } from './group-row-appearance'
 import {
   getProjectGroupHeaderPaddingLeft,
@@ -157,7 +158,7 @@ export function renderWorktreeSectionHeaderRow(
         projectGroupId: folderBackedProjectGroup.id
       })
     : null
-  // Only the group that owns the color marks its icon; nested and project headers just carry the tint.
+  // Only the group that owns the color shows its dot; nested and project headers just carry the tint.
   const groupIconColor =
     groupAppearance?.groupId === projectGroupIdForHeader ? groupAppearance?.color : undefined
   const collapseKey = row.collapseKey ?? row.key
@@ -315,7 +316,6 @@ export function renderWorktreeSectionHeaderRow(
                 'flex size-4 shrink-0 items-center justify-center rounded-[4px]',
                 repoHeaderColor ? 'text-muted-foreground' : headerVisual.tone
               )}
-              style={{ color: groupIconColor }}
             >
               {row.repo ? (
                 <RepoIconGlyph
@@ -331,6 +331,7 @@ export function renderWorktreeSectionHeaderRow(
 
             <div className="min-w-0 flex-1">
               <div className="flex min-w-0 items-center gap-1.5">
+                {groupIconColor ? <ColorDot color={groupIconColor} /> : null}
                 <div className="min-w-0 truncate text-[13px] font-semibold leading-4">{label}</div>
                 {hostContext ? <ProjectHeaderHostLabel context={hostContext} /> : null}
                 <RepoForkIndicator upstream={row.repo?.upstream} />
@@ -352,6 +353,10 @@ export function renderWorktreeSectionHeaderRow(
             {isProjectGroupHeader && !row.repo && projectGroupIdForHeader ? (
               <ProjectGroupHeaderMenu
                 groupId={projectGroupIdForHeader}
+                shownColor={{
+                  color: groupIconColor ?? null,
+                  ownerGroupId: groupAppearance?.groupId ?? projectGroupIdForHeader
+                }}
                 hostId={projectGroupHostIdForHeader}
                 label={label}
                 projectGroup={folderBackedProjectGroup}

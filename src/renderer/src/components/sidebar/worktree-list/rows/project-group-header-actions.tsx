@@ -16,11 +16,9 @@ import type { ProjectGroup } from '../../../../../../shared/project/groups/proje
 import type { FolderWorkspacePathStatus } from '../../../../../../shared/folder-workspaces/folder-workspace-path-status'
 import type { ExecutionHostId } from '../../../../../../shared/execution-host/execution-host'
 import { getFolderProjectGroupRefreshHandler } from './project-group-folder-refresh'
-import { useProjectGroupAppearanceControls } from './appearance-controls'
+import { useProjectGroupAppearanceControls, type ShownGroupColor } from './appearance-controls'
 import { AppearanceMenuItems } from './AppearanceMenuItems'
-import { CustomColorDialog } from '../../CustomColorDialog'
-import { DEFAULT_REPO_BADGE_COLOR } from '../../../../../../shared/repository/appearance/repo-badge-color'
-import { HOST_COLOR_NONE } from '../../../../../../shared/execution-host/host-appearance'
+import { useOpenGroupColorDialog } from './GroupColorDialogHost'
 import { ProjectGroupMoveSubmenu } from './ProjectGroupMoveSubmenu'
 import { useRuntimeEnvironmentCapability } from '@/runtime/rpc/compatibility/use-runtime-environment-capability'
 import { PROJECT_GROUP_PARENT_UPDATE_RUNTIME_CAPABILITY } from '../../../../../../shared/remote-runtime/protocol/worktree-runtime-capabilities'
@@ -43,6 +41,7 @@ import {
 
 export function ProjectGroupHeaderMenu({
   groupId,
+  shownColor,
   hostId,
   label,
   projectGroup,
@@ -56,6 +55,8 @@ export function ProjectGroupHeaderMenu({
   onToggleSubtree
 }: {
   groupId: string
+  /** The color this header shows, from the row-appearance map. */
+  shownColor: ShownGroupColor
   /** The list's displayed fold, so collapse-all follows the filter session. */
   collapsedGroups: ReadonlySet<string>
   onToggleSubtree: (groupId: string) => boolean
@@ -82,8 +83,8 @@ export function ProjectGroupHeaderMenu({
     PROJECT_GROUP_PARENT_UPDATE_RUNTIME_CAPABILITY
   )
   const nestingSupported = runtimeEnvironmentId === null || remoteSupportsNesting
-  const appearance = useProjectGroupAppearanceControls(groupId, hostId)
-  const [colorOpen, setColorOpen] = React.useState(false)
+  const appearance = useProjectGroupAppearanceControls(groupId, shownColor)
+  const openColorDialog = useOpenGroupColorDialog()
   return (
     <>
       <ProjectGroupCollapseAllButton
@@ -157,7 +158,7 @@ export function ProjectGroupHeaderMenu({
                 }
               )
             }
-            onCustomColor={() => setColorOpen(true)}
+            onCustomColor={() => openColorDialog({ groupId, ...shownColor })}
           />
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={() => onRename(groupId, label, hostId)}>
@@ -167,28 +168,6 @@ export function ProjectGroupHeaderMenu({
             {t('auto.components.sidebar.WorktreeList.902115cdbe', 'Delete group')}
           </DropdownMenuItem>
         </DropdownMenuContent>
-        <CustomColorDialog
-          open={colorOpen}
-          onOpenChange={setColorOpen}
-          currentColor={
-            appearance.colorValue === HOST_COLOR_NONE
-              ? DEFAULT_REPO_BADGE_COLOR
-              : appearance.colorValue
-          }
-          title={t(
-            'auto.components.sidebar.WorktreeList.groupColorDialogTitle',
-            'Custom group color'
-          )}
-          description={t(
-            'auto.components.sidebar.WorktreeList.groupColorDialogDescription',
-            'Group colors sync with the group; background strength stays on this computer.'
-          )}
-          pickerLabel={t(
-            'auto.components.sidebar.WorktreeList.groupColorPickerLabel',
-            'Group color'
-          )}
-          onSave={appearance.selectColor}
-        />
       </DropdownMenu>
     </>
   )

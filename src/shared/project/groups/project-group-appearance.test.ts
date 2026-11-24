@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   projectGroupColorUpdate,
+  projectGroupOwnerColor,
   resolveProjectGroupColor,
   resolveProjectGroupTint,
   setProjectGroupTint
@@ -58,8 +59,21 @@ describe('project group appearance', () => {
     expect(resolveProjectGroupTint({ root: 'off' }, 'root')).toBe('off')
   })
 
-  it('stores no key for the default subtle tint', () => {
-    expect(setProjectGroupTint({ root: 'off' }, 'root', 'subtle')).toEqual({})
+  it('stores every explicit choice, so a nested group can pick Subtle under a Strong parent', () => {
+    expect(setProjectGroupTint({ root: 'strong' }, 'child', 'subtle')).toEqual({
+      root: 'strong',
+      child: 'subtle'
+    })
     expect(setProjectGroupTint(undefined, 'root', 'strong')).toEqual({ root: 'strong' })
+  })
+
+  it('reads a group color from its first copy with a valid hex', () => {
+    const copies = [
+      { ...PLAIN, color: 'not-a-color' },
+      { ...PLAIN, color: '#22C55E' },
+      { ...PLAIN, color: '#ef4444' }
+    ]
+    expect(projectGroupOwnerColor(copies, 'plain')).toBe('#22c55e')
+    expect(projectGroupOwnerColor([PLAIN], 'plain')).toBeNull()
   })
 })

@@ -7,6 +7,11 @@ import { getDefaultSettings } from '../../../../../shared/orca-profiles/constant
 import type { ProjectGroup } from '../../../../../shared/project/groups/project-group-types'
 import { SidebarColorsSetting } from './SidebarColorsSetting'
 
+const configuredDevices = vi.hoisted(() => ({ hosts: [{ id: 'local', label: 'This Mac' }] }))
+vi.mock('../notifications/use-notification-source-options', () => ({
+  useNotificationSourceOptions: () => configuredDevices.hosts
+}))
+
 const group = (overrides: Partial<ProjectGroup>): ProjectGroup => ({
   id: 'clients',
   name: 'Clients',
@@ -21,10 +26,11 @@ const group = (overrides: Partial<ProjectGroup>): ProjectGroup => ({
   ...overrides
 })
 
-const updateProjectGroup = vi.fn(async () => true)
+const updateProjectGroups = vi.fn(async () => true)
 
 beforeEach(() => {
-  updateProjectGroup.mockClear()
+  updateProjectGroups.mockClear()
+  configuredDevices.hosts = [{ id: 'local', label: 'This Mac' }]
   useAppStore.setState({
     settingsSearchQuery: '',
     settings: { ...getDefaultSettings('/home/test'), hostSettingOverrides: {} },
@@ -34,7 +40,7 @@ beforeEach(() => {
       group({ color: '#123456', tabOrder: 1 }),
       group({ id: 'oss', name: 'Open source', tabOrder: 0 })
     ],
-    updateProjectGroup,
+    updateProjectGroups,
     updateSettings: async (updates) => {
       useAppStore.setState((state) => ({
         settings: state.settings ? { ...state.settings, ...updates } : state.settings
@@ -63,13 +69,26 @@ describe('SidebarColorsSetting', () => {
   it('saves a group swatch and its background strength', () => {
     render(<SidebarColorsSetting />)
     fireEvent.click(screen.getByRole('button', { name: 'Use Green for Acme' }))
-    expect(updateProjectGroup).toHaveBeenCalledWith(
-      'acme',
-      { color: '#22c55e' },
-      { hostId: undefined }
-    )
+    expect(updateProjectGroups).toHaveBeenCalledWith([
+      { groupId: 'acme', updates: { color: '#22c55e' }, hostId: 'local' }
+    ])
     const acme = within(screen.getByRole('radiogroup', { name: 'Background for Acme' }))
     fireEvent.click(acme.getByRole('radio', { name: 'Strong' }))
     expect(useAppStore.getState().settings?.projectGroupTints).toEqual({ acme: 'strong' })
+  })
+
+  it('lists configured devices with Automatic, saves a device swatch to hostSettingOverrides, and bounds the list with search and an overflow note', () => {
+    configuredDevices.hosts = Array.from({ length: 55 }, (_, index) => ({
+      id: `ssh:box-${index}`,
+      label: `Box ${index}`
+    }))
+    render(<SidebarColorsSetting />)
+    expect(screen.getAllByRole('button', { name: 'Automatic' })).toHaveLength(50)
+    fireEvent.click(screen.getByRole('button', { name: 'Use Green for Box 3' }))
+    expect(useAppStore.getState().settings?.hostSettingOverrides?.['ssh:box-3']?.color).toBe(
+      '#22c55e'
+    )
+    expect(screen.getByRole('textbox', { name: 'Search hosts…' })).toBeTruthy()
+    expect(screen.getByText('5 more hosts. Search by name to find one.')).toBeTruthy()
   })
 })

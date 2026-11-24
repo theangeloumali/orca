@@ -9,11 +9,11 @@ import {
   HOST_SECTION_TINTS
 } from '../../../../../shared/execution-host/host-appearance'
 import type { HostSectionTint } from '../../../../../shared/execution-host/host-setting-overrides'
-import { DEFAULT_REPO_BADGE_COLOR } from '../../../../../shared/repository/appearance/repo-badge-color'
 import {
-  normalizeExecutionHostId,
-  type ExecutionHostId
-} from '../../../../../shared/execution-host/execution-host'
+  DEFAULT_REPO_BADGE_COLOR,
+  normalizeRepoBadgeColor
+} from '../../../../../shared/repository/appearance/repo-badge-color'
+import type { ExecutionHostId } from '../../../../../shared/execution-host/execution-host'
 import { pickerExecutionHosts } from '../../../../../shared/execution-host/managed-orcad-execution-host'
 import { translateHostDisplayLabel } from '../../../runtime/hosts/display/execution-host-label'
 import { useBoundedHostRows } from '../../host-picker/use-bounded-host-rows'
@@ -116,9 +116,11 @@ function HostColorRow({
 }
 
 function GroupColorRow({ entry }: { entry: SidebarColorGroup }): React.JSX.Element {
-  const { group, depth } = entry
-  const hostId = normalizeExecutionHostId(group.executionHostId) ?? undefined
-  const controls = useProjectGroupAppearanceControls(group.id, hostId)
+  const { group, depth, ownerGroupId } = entry
+  const controls = useProjectGroupAppearanceControls(group.id, {
+    color: normalizeRepoBadgeColor(group.color),
+    ownerGroupId
+  })
   return (
     <SidebarColorRow
       name={group.name}
