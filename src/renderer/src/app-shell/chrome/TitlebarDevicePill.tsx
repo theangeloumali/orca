@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import { useAppStore } from '@/store'
 import { useActiveWorktree } from '@/store/workspaces/selection/use-selected-worktree'
 import { useRepoById } from '@/store/repos/use-repository-catalog'
@@ -18,8 +19,15 @@ export function TitlebarDevicePill(): React.JSX.Element | null {
   if (!device) {
     return null
   }
+  // Only the dot carries the full color; the pill takes a light tint of it via CSS.
+  const hostColor: (CSSProperties & { '--host-color': string }) | undefined = device.color
+    ? { '--host-color': device.color }
+    : undefined
   return (
-    <span className="ml-2 inline-flex h-5 min-w-0 max-w-40 shrink items-center gap-1.5 rounded-full border border-border px-2 text-[11px] font-medium leading-none text-foreground">
+    <span
+      className="titlebar-device-pill ml-2 inline-flex h-5 min-w-0 max-w-40 shrink items-center gap-1.5 rounded-full border border-border px-2 text-[11px] font-medium leading-none"
+      style={hostColor}
+    >
       {device.color ? (
         <span
           aria-hidden="true"

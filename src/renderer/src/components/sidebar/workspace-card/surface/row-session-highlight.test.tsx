@@ -3,7 +3,6 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { cleanup, render } from '@testing-library/react'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { useAppStore } from '@/store'
-import StatusIndicator from './StatusIndicator'
 import { WorktreeCardStatusSlot } from './WorktreeCardStatusSlot'
 
 const noop = (): void => {}
@@ -35,19 +34,21 @@ describe('row session highlight', () => {
     expect(highlightOf(container)).toBeNull()
   })
 
-  it('lights the row from its own status, not the lane glyph', () => {
-    const idleParent = render(
+  it('keeps an unread working card highlighted when the bell replaces its glyph', () => {
+    const { container } = render(
       <TooltipProvider>
-        <StatusIndicator status="working" rowStatus="inactive" />
+        <WorktreeCardStatusSlot
+          worktreeId="wt-working"
+          status="working"
+          showStatus
+          showUnreadAction
+          isUnread
+          unreadTooltip=""
+          onToggleUnread={noop}
+          onPointerDown={noop}
+        />
       </TooltipProvider>
     )
-    expect(highlightOf(idleParent.container)).toBeNull()
-    cleanup()
-    const workingParent = render(
-      <TooltipProvider>
-        <StatusIndicator status="working" rowStatus="working" />
-      </TooltipProvider>
-    )
-    expect(highlightOf(workingParent.container)).toBe('working')
+    expect(highlightOf(container)).toBe('working')
   })
 })

@@ -1663,6 +1663,17 @@ html.native-shell .app-layout {
   color: var(--worktree-sidebar-foreground);
 }
 
+/* Text from the surface's own tokens over a light host tint, so custom themes stay readable. */
+.titlebar-device-pill {
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--host-color) 14%, transparent);
+}
+
+.titlebar-left:not(.titlebar-left-floating) .titlebar-device-pill {
+  color: var(--worktree-sidebar-foreground);
+  background: color-mix(in srgb, var(--host-color) 14%, transparent);
+}
+
 .titlebar-app-name-main {
   flex: 0 0 auto;
 }

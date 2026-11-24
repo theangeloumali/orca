@@ -82,7 +82,7 @@ export function WorktreeLineageToggle({
                         data-child-worktree-status={status}
                         aria-hidden="true"
                       >
-                        <StatusIndicator status={status} showTooltip={false} rowStatus={null} />
+                        <StatusIndicator status={status} showTooltip={false} />
                         <span>{counts.get(status)}</span>
                       </span>
                     ))}

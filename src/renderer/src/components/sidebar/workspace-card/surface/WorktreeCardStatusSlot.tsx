@@ -14,6 +14,7 @@ import { checksLabel } from '../review/workspace-review-check-label'
 import StatusIndicator from './StatusIndicator'
 import { useWorktreeActivityStatus } from '../activity/use-worktree-activity-status'
 import { laneStatusWithLineage } from './worktree-card-lineage-lane-status'
+import { getSessionHighlight } from '../activity/session-highlight'
 import { useShallow } from 'zustand/react/shallow'
 import { useAppStore } from '@/store/index'
 import {
@@ -153,8 +154,10 @@ export function WorktreeCardStatusSlot({
   const isReviewStale = reviewStale || Boolean(collectionChecks?.stale)
   const ownStatus = useWorktreeActivityStatus(worktreeId)
   const status = statusOverride ?? laneStatusWithLineage(ownStatus, lineageStatus)
-  // A collapsed child's state may take the lane, but only the workspace's own lights its row.
-  const rowStatus = statusOverride ?? ownStatus
+  // Hidden, so the row lights from its own status whichever glyph (or bell) the lane draws.
+  const rowHighlight = (
+    <span hidden data-session-highlight={getSessionHighlight(statusOverride ?? ownStatus)} />
+  )
   // One subscription per card: rows mount by the hundreds, and every listener runs on each store write.
   const { isSleeping, vmRuntime, vmWaking } = useAppStore(
     useShallow((state) => ({
@@ -241,12 +244,7 @@ export function WorktreeCardStatusSlot({
   ) : newCardStyle && showStatus ? (
     <>
       <span className={cn('inline-flex size-5 items-center justify-center', className)}>
-        <StatusIndicator
-          status={status}
-          rowStatus={rowStatus}
-          aria-hidden="true"
-          tooltipSide="right"
-        />
+        <StatusIndicator status={status} aria-hidden="true" tooltipSide="right" />
       </span>
       <span className="sr-only">{passiveStatusAnnouncement}</span>
     </>
@@ -254,7 +252,6 @@ export function WorktreeCardStatusSlot({
     <>
       <StatusIndicator
         status={status}
-        rowStatus={rowStatus}
         aria-hidden="true"
         className={className}
         tooltipSide="right"
@@ -272,7 +269,7 @@ export function WorktreeCardStatusSlot({
   // A VM that is not running cannot have live activity; its lifecycle is the row's status.
   // The classic card's unread toggle keeps its button and shows the VM state inside it.
   if (vmState && showStatus && !unreadActionEnabled) {
-    return overlayNewCardUnreadStatus(
+    const vmBadge = overlayNewCardUnreadStatus(
       <WorktreeCardVmStateBadge
         state={vmState}
         failure={vmFailure}
@@ -281,10 +278,21 @@ export function WorktreeCardStatusSlot({
       />,
       newCardStyle && isUnread
     )
+    return (
+      <>
+        {rowHighlight}
+        {vmBadge}
+      </>
+    )
   }
 
   if (!unreadActionEnabled) {
-    return overlayNewCardUnreadStatus(passiveStatus, showNewCardUnreadAlert)
+    return (
+      <>
+        {rowHighlight}
+        {overlayNewCardUnreadStatus(passiveStatus, showNewCardUnreadAlert)}
+      </>
+    )
   }
 
   const actionLabel = isUnread
@@ -296,6 +304,7 @@ export function WorktreeCardStatusSlot({
 
   return (
     <>
+      {rowHighlight}
       <Tooltip>
         <TooltipTrigger asChild>
           <button
@@ -329,12 +338,7 @@ export function WorktreeCardStatusSlot({
                   {branchStatusIcon}
                 </span>
               ) : showStatus ? (
-                <StatusIndicator
-                  status={status}
-                  rowStatus={rowStatus}
-                  aria-hidden="true"
-                  showTooltip={false}
-                />
+                <StatusIndicator status={status} aria-hidden="true" showTooltip={false} />
               ) : (
                 <span className="sr-only">{actionLabel}</span>
               )
@@ -349,7 +353,6 @@ export function WorktreeCardStatusSlot({
                 ) : (
                   <StatusIndicator
                     status={status}
-                    rowStatus={rowStatus}
                     aria-hidden="true"
                     showTooltip={false}
                     className="transition-opacity group-hover/unread:opacity-0 group-focus-within/unread:opacity-0"
