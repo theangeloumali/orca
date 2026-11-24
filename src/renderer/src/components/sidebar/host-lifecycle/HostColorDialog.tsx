@@ -32,13 +32,24 @@ export function HostColorDialog({
   const t = useTranslate()
   const updateSettings = useAppStore((s) => s.updateSettings)
 
-  const applyColor = (color: string): void => {
-    const settings = useAppStore.getState().settings
-    void updateSettings({ hostSettingOverrides: setHostColor(settings, hostId, color) })
+  // Picks stay a draft so Cancel/Escape discards them; Done is the only save.
+  const [draft, setDraft] = React.useState<string | null>(null)
+
+  const close = (): void => {
+    setDraft(null)
+    onOpenChange(false)
+  }
+
+  const saveAndClose = (): void => {
+    if (draft) {
+      const settings = useAppStore.getState().settings
+      void updateSettings({ hostSettingOverrides: setHostColor(settings, hostId, draft) })
+    }
+    close()
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(next) => (next ? onOpenChange(true) : close())}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>
@@ -52,13 +63,13 @@ export function HostColorDialog({
           </DialogDescription>
         </DialogHeader>
         <ColorPicker
-          value={currentColor}
-          onChange={applyColor}
+          value={draft ?? currentColor}
+          onChange={setDraft}
           label={t('auto.components.sidebar.HostColorDialog.pickerLabel', 'Device color')}
           showHexInTrigger
         />
         <DialogFooter>
-          <Button type="button" onClick={() => onOpenChange(false)}>
+          <Button type="button" onClick={saveAndClose}>
             {t('auto.components.sidebar.HostColorDialog.done', 'Done')}
           </Button>
         </DialogFooter>

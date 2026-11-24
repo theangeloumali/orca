@@ -7421,6 +7421,13 @@
           "color": "颜色",
           "colorAuto": "自动",
           "colorSwatch": "为此设备使用 {{color}}",
+          "colorRed": "红色",
+          "colorOrange": "橙色",
+          "colorYellow": "黄色",
+          "colorGreen": "绿色",
+          "colorTeal": "蓝绿色",
+          "colorPurple": "紫色",
+          "colorPink": "粉色",
           "colorNone": "无",
           "colorCustom": "自定义…",
           "background": "背景"

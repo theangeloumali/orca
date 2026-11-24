@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildHostRowAppearance } from './host-row-appearance'
+import { buildHostRowAppearance, getHostHeaderPaint } from './host-row-appearance'
 
 const header = (hostId: 'local' | 'ssh:m1') => ({ type: 'host-header' as const, hostId })
 const item = { type: 'item' as const }
@@ -24,5 +24,18 @@ describe('host row appearance', () => {
       null,
       null
     ])
+  })
+
+  it('keeps the host color off blocked, disconnected and suspended headers', () => {
+    const appearance = { hostId: 'ssh:m1' as const, color: '#ef4444', tint: 'subtle' as const }
+    expect(getHostHeaderPaint(appearance, 'available')).toEqual({ colored: true, tinted: true })
+    for (const health of ['blocked', 'disconnected', 'suspended'] as const) {
+      expect(getHostHeaderPaint(appearance, health)).toEqual({ colored: false, tinted: false })
+    }
+    expect(getHostHeaderPaint({ ...appearance, tint: 'off' }, 'available')).toEqual({
+      colored: true,
+      tinted: false
+    })
+    expect(getHostHeaderPaint(null, 'available')).toEqual({ colored: false, tinted: false })
   })
 })

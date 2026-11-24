@@ -12626,6 +12626,13 @@
           "color": "Cor",
           "colorAuto": "Automática",
           "colorSwatch": "Usar {{color}} para este dispositivo",
+          "colorRed": "Vermelho",
+          "colorOrange": "Laranja",
+          "colorYellow": "Amarelo",
+          "colorGreen": "Verde",
+          "colorTeal": "Verde-azulado",
+          "colorPurple": "Roxo",
+          "colorPink": "Rosa",
           "colorNone": "Nenhuma",
           "colorCustom": "Personalizada…",
           "background": "Fundo"

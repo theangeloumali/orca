@@ -7321,6 +7321,13 @@
           "color": "Цвет",
           "colorAuto": "Автоматически",
           "colorSwatch": "Использовать {{color}} для этого устройства",
+          "colorRed": "Красный",
+          "colorOrange": "Оранжевый",
+          "colorYellow": "Жёлтый",
+          "colorGreen": "Зелёный",
+          "colorTeal": "Бирюзовый",
+          "colorPurple": "Фиолетовый",
+          "colorPink": "Розовый",
           "colorNone": "Нет",
           "colorCustom": "Свой…",
           "background": "Фон"

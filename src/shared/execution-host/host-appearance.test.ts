@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { REPO_COLORS } from '../repository/appearance/repo-badge-color'
+import { DEFAULT_REPO_BADGE_COLOR, REPO_COLORS } from '../repository/appearance/repo-badge-color'
 import type { ExecutionHostId } from './execution-host'
 import {
   clearHostColor,
@@ -49,5 +49,18 @@ describe('host appearance', () => {
     // Persisted settings are untrusted JSON, so an unknown tint can reach the resolver.
     const bogus = { hostSettingOverrides: JSON.parse('{"local":{"sectionTint":"loud"}}') }
     expect(resolveHostSectionTint(bogus, 'local')).toBe('subtle')
+  })
+
+  it('stores no key for the default subtle tint', () => {
+    const strong = { hostSettingOverrides: setHostSectionTint({}, 'local', 'strong') }
+    expect(setHostSectionTint(strong, 'local', 'subtle')).toEqual({})
+    const colored = {
+      hostSettingOverrides: { local: { color: '#22c55e', sectionTint: 'off' as const } }
+    }
+    expect(setHostSectionTint(colored, 'local', 'subtle')).toEqual({ local: { color: '#22c55e' } })
+  })
+
+  it('gives a host missing from the order the neutral color, not the first preset', () => {
+    expect(resolveHostColor({}, 'ssh:unlisted', order)).toBe(DEFAULT_REPO_BADGE_COLOR)
   })
 })

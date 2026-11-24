@@ -6976,6 +6976,13 @@
           "color": "色",
           "colorAuto": "自動",
           "colorSwatch": "このデバイスに {{color}} を使用",
+          "colorRed": "赤",
+          "colorOrange": "オレンジ",
+          "colorYellow": "黄",
+          "colorGreen": "緑",
+          "colorTeal": "ティール",
+          "colorPurple": "紫",
+          "colorPink": "ピンク",
           "colorNone": "なし",
           "colorCustom": "カスタム…",
           "background": "背景"

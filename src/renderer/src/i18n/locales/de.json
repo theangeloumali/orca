@@ -7020,6 +7020,13 @@
           "color": "Farbe",
           "colorAuto": "Automatisch",
           "colorSwatch": "{{color}} für dieses Gerät verwenden",
+          "colorRed": "Rot",
+          "colorOrange": "Orange",
+          "colorYellow": "Gelb",
+          "colorGreen": "Grün",
+          "colorTeal": "Petrol",
+          "colorPurple": "Lila",
+          "colorPink": "Pink",
           "colorNone": "Keine",
           "colorCustom": "Benutzerdefiniert…",
           "background": "Hintergrund"

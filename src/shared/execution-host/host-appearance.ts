@@ -1,6 +1,10 @@
 import type { ExecutionHostId } from './execution-host'
 import type { GlobalSettings } from '../settings/global-settings-types'
-import { normalizeRepoBadgeColor, REPO_COLORS } from '../repository/appearance/repo-badge-color'
+import {
+  DEFAULT_REPO_BADGE_COLOR,
+  normalizeRepoBadgeColor,
+  REPO_COLORS
+} from '../repository/appearance/repo-badge-color'
 import {
   clearHostSettingOverride,
   setHostSettingOverride,
@@ -12,8 +16,12 @@ export const HOST_COLOR_NONE = 'none'
 export const DEFAULT_HOST_SECTION_TINT: HostSectionTint = 'subtle'
 export const HOST_SECTION_TINTS: readonly HostSectionTint[] = ['off', 'subtle', 'strong']
 
-// Neutral gray reads as "no color", so auto presets skip it.
-const AUTO_HOST_COLORS = REPO_COLORS.filter((color) => color !== '#737373')
+export type AutoHostColor = Exclude<(typeof REPO_COLORS)[number], typeof DEFAULT_REPO_BADGE_COLOR>
+
+// Neutral gray reads as "no color", so auto presets and swatches skip it.
+export const AUTO_HOST_COLORS: readonly AutoHostColor[] = REPO_COLORS.filter(
+  (color): color is AutoHostColor => color !== DEFAULT_REPO_BADGE_COLOR
+)
 
 type HostSettingsSlice = Pick<GlobalSettings, 'hostSettingOverrides'>
 type HostOverridesMap = Partial<Record<ExecutionHostId, HostSettingOverrides>>
@@ -32,8 +40,27 @@ export function resolveHostColor(
   if (custom) {
     return custom
   }
-  const index = Math.max(orderedHostIds.indexOf(hostId), 0)
+  const index = orderedHostIds.indexOf(hostId)
+  // An unordered host must not borrow the first host's color.
+  if (index === -1) {
+    return DEFAULT_REPO_BADGE_COLOR
+  }
   return AUTO_HOST_COLORS[index % AUTO_HOST_COLORS.length] ?? null
+}
+
+/** A paired host owns only display labels; this browser keeps every other per-host key. */
+export function mergeRuntimeHostOverrides(
+  local: HostOverridesMap | undefined,
+  runtime: HostOverridesMap
+): HostOverridesMap {
+  const hostIds = new Set([...Object.keys(local ?? {}), ...Object.keys(runtime)])
+  const merged = [...hostIds].flatMap((hostId) => {
+    const { displayLabel: _hostOwned, ...browserOwned } = local?.[hostId] ?? {}
+    const displayLabel = runtime[hostId]?.displayLabel
+    const overrides = displayLabel ? { ...browserOwned, displayLabel } : browserOwned
+    return Object.keys(overrides).length > 0 ? [[hostId, overrides]] : []
+  })
+  return Object.fromEntries(merged)
 }
 
 export function resolveHostSectionTint(
@@ -69,6 +96,9 @@ export function setHostSectionTint(
   hostId: ExecutionHostId,
   tint: HostSectionTint
 ): HostOverridesMap {
+  if (tint === DEFAULT_HOST_SECTION_TINT) {
+    return clearHostSettingOverride(settings, hostId, 'sectionTint')
+  }
   const current = settings?.hostSettingOverrides ?? {}
   return { ...current, [hostId]: { ...current[hostId], sectionTint: tint } }
 }

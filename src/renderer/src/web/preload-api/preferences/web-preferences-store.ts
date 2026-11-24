@@ -12,6 +12,7 @@ import {
 import { readStoredWebRuntimeEnvironment } from '../../pairing/web-runtime-environment'
 import {
   mergeSettings,
+  withBrowserHostOverrides,
   stripRetiredWebChatSettings,
   migrateStoredWebSettings,
   needsChatUiChoiceCarry,
@@ -107,7 +108,8 @@ export function writeStoredSettings(
 }
 
 function settleRuntimeSettings(patch: Partial<GlobalSettings>): GlobalSettings {
-  const next = mergeSettings(getStoredSettings(), patch)
+  const local = getStoredSettings()
+  const next = mergeSettings(local, withBrowserHostOverrides(local, patch))
   writeStoredSettings(next)
   return next
 }

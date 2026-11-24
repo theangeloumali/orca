@@ -7,6 +7,7 @@ import {
 } from '../../../../../../shared/execution-host/host-appearance'
 import type { GlobalSettings } from '../../../../../../shared/settings/global-settings-types'
 import type { RenderRow } from '../listing/render-row'
+import type { HostHeaderRow } from '../../../../../../shared/sidebar-list/hosts/host-section-rows'
 
 export type HostRowAppearance = {
   hostId: ExecutionHostId
@@ -36,6 +37,17 @@ export function buildHostRowAppearance(
     }
     return current
   })
+}
+
+const UNPAINTED_HEALTH = new Set<HostHeaderRow['health']>(['blocked', 'disconnected', 'suspended'])
+
+/** Blocked, disconnected and suspended headers keep their own state fills, so no color edge or tint. */
+export function getHostHeaderPaint(
+  appearance: HostRowAppearance | null | undefined,
+  health: HostHeaderRow['health']
+): { colored: boolean; tinted: boolean } {
+  const colored = Boolean(appearance) && !UNPAINTED_HEALTH.has(health)
+  return { colored, tinted: colored && appearance?.tint !== 'off' }
 }
 
 export function hostColorStyle(

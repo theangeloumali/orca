@@ -6654,6 +6654,13 @@
           "color": "Color",
           "colorAuto": "Automático",
           "colorSwatch": "Usar {{color}} para este dispositivo",
+          "colorRed": "Rojo",
+          "colorOrange": "Naranja",
+          "colorYellow": "Amarillo",
+          "colorGreen": "Verde",
+          "colorTeal": "Verde azulado",
+          "colorPurple": "Morado",
+          "colorPink": "Rosa",
           "colorNone": "Ninguno",
           "colorCustom": "Personalizado…",
           "background": "Fondo"

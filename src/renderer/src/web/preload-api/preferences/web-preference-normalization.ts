@@ -11,6 +11,7 @@ import {
 } from '../../../../../shared/native-chat/settings/native-chat-providers'
 import { normalizeAutoRenameBranchFromWorkDefaultOn } from '../../../../../shared/source-control/ai/settings/auto-rename-branch-from-work-settings'
 import { getDefaultSettings } from '../../../../../shared/orca-profiles/constants'
+import { mergeRuntimeHostOverrides } from '../../../../../shared/execution-host/host-appearance'
 
 import type { GlobalSettings } from '../../../../../shared/settings/global-settings-types'
 import { normalizeTerminalCustomThemes } from '../../../../../shared/terminal-themes/terminal-custom-themes'
@@ -110,6 +111,21 @@ function migrateBrowserSavedAgentPermission(stored: Partial<GlobalSettings>) {
     null
   )
   return permission
+}
+
+/** A paired host's settings patch, with this browser's own per-host colors kept. */
+export function withBrowserHostOverrides(
+  local: GlobalSettings,
+  runtime: Partial<GlobalSettings>
+): Partial<GlobalSettings> {
+  if (!runtime.hostSettingOverrides) {
+    return runtime
+  }
+  const hostSettingOverrides = mergeRuntimeHostOverrides(
+    local.hostSettingOverrides,
+    runtime.hostSettingOverrides
+  )
+  return { ...runtime, hostSettingOverrides }
 }
 
 export function mergeSettings(

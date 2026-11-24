@@ -4,7 +4,7 @@
 }
 
 [data-host-header-color][data-host-header-tinted] {
-  background-color: color-mix(in srgb, var(--host-color) 14%, transparent);
+  background-color: color-mix(in srgb, var(--host-color) 7%, transparent);
 }
 
 [data-host-tint]:not([data-host-tint='off'])::before {
@@ -17,16 +17,16 @@
 }
 
 [data-host-tint='subtle'] {
-  background-color: color-mix(in srgb, var(--host-color) 5%, transparent);
+  background-color: color-mix(in srgb, var(--host-color) 4%, transparent);
 }
 
 [data-host-tint='strong'] {
-  background-color: color-mix(in srgb, var(--host-color) 10%, transparent);
+  background-color: color-mix(in srgb, var(--host-color) 7%, transparent);
 }
 
 /* Running sessions read the card's own status glyph, so no row subscribes to agent state. */
 [data-worktree-item-row]:has([data-session-highlight='working']) {
-  background-color: color-mix(in srgb, var(--host-color, var(--agent-working)) 18%, transparent);
+  background-color: color-mix(in srgb, var(--host-color, var(--agent-working)) 8%, transparent);
 }
 
 [data-worktree-item-row]:has([data-session-highlight='working'])::before {
@@ -41,7 +41,7 @@
 
 /* Needs-you comes last so it wins when one agent waits while another works. */
 [data-worktree-item-row]:has([data-session-highlight='needs-you']) {
-  background-color: color-mix(in srgb, var(--agent-question) 16%, transparent);
+  background-color: color-mix(in srgb, var(--agent-question) 7%, transparent);
 }
 
 [data-worktree-item-row]:has([data-session-highlight='needs-you'])::before {
@@ -52,6 +52,23 @@
   background-color: var(--agent-question);
   pointer-events: none;
   animation: none;
+}
+
+/* The selected wash over a tint drops muted text under AA, so lift it (host-appearance-contrast.test). */
+:is(
+    [data-host-tint='subtle'],
+    [data-host-tint='strong'],
+    [data-worktree-item-row]:has(
+      [data-session-highlight='working'],
+      [data-session-highlight='needs-you']
+    )
+  )
+  [data-worktree-card-active='primary'] {
+  --muted-foreground: color-mix(
+    in srgb,
+    var(--worktree-sidebar-foreground) 72%,
+    var(--worktree-sidebar)
+  );
 }
 
 @keyframes host-rail-pulse {

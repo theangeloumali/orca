@@ -6877,6 +6877,13 @@
           "color": "Couleur",
           "colorAuto": "Automatique",
           "colorSwatch": "Utiliser {{color}} pour cet appareil",
+          "colorRed": "Rouge",
+          "colorOrange": "Orange",
+          "colorYellow": "Jaune",
+          "colorGreen": "Vert",
+          "colorTeal": "Sarcelle",
+          "colorPurple": "Violet",
+          "colorPink": "Rose",
           "colorNone": "Aucune",
           "colorCustom": "Personnalisée…",
           "background": "Arrière-plan"

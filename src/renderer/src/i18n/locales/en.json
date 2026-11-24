@@ -8149,6 +8149,13 @@
           "color": "Color",
           "colorAuto": "Automatic",
           "colorSwatch": "Use {{color}} for this device",
+          "colorRed": "Red",
+          "colorOrange": "Orange",
+          "colorYellow": "Yellow",
+          "colorGreen": "Green",
+          "colorTeal": "Teal",
+          "colorPurple": "Purple",
+          "colorPink": "Pink",
           "colorNone": "None",
           "colorCustom": "Custom…",
           "background": "Background"

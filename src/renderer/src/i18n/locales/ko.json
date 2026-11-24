@@ -7279,6 +7279,13 @@
           "color": "색상",
           "colorAuto": "자동",
           "colorSwatch": "이 기기에 {{color}} 사용",
+          "colorRed": "빨강",
+          "colorOrange": "주황",
+          "colorYellow": "노랑",
+          "colorGreen": "초록",
+          "colorTeal": "청록",
+          "colorPurple": "보라",
+          "colorPink": "분홍",
           "colorNone": "없음",
           "colorCustom": "사용자 지정…",
           "background": "배경"

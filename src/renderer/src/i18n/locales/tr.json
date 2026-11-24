@@ -7104,6 +7104,13 @@
           "color": "Renk",
           "colorAuto": "Otomatik",
           "colorSwatch": "Bu cihaz için {{color}} kullan",
+          "colorRed": "Kırmızı",
+          "colorOrange": "Turuncu",
+          "colorYellow": "Sarı",
+          "colorGreen": "Yeşil",
+          "colorTeal": "Camgöbeği",
+          "colorPurple": "Mor",
+          "colorPink": "Pembe",
           "colorNone": "Yok",
           "colorCustom": "Özel…",
           "background": "Arka plan"

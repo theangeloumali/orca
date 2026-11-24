@@ -6853,6 +6853,13 @@
           "color": "顏色",
           "colorAuto": "自動",
           "colorSwatch": "為此裝置使用 {{color}}",
+          "colorRed": "紅色",
+          "colorOrange": "橙色",
+          "colorYellow": "黃色",
+          "colorGreen": "綠色",
+          "colorTeal": "藍綠色",
+          "colorPurple": "紫色",
+          "colorPink": "粉紅色",
           "colorNone": "無",
           "colorCustom": "自訂…",
           "background": "背景"

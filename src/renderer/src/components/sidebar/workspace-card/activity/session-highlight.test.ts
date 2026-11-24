@@ -12,4 +12,10 @@ describe('session highlight', () => {
       expect(getSessionHighlight(status)).toBeUndefined()
     }
   })
+
+  it('does not light a parent whose own session is idle while a child works', () => {
+    const parentGlyph = getSessionHighlight('active')
+    const childSummaryChip = getSessionHighlight('working', { highlightsRow: false })
+    expect([parentGlyph, childSummaryChip].filter(Boolean)).toEqual([])
+  })
 })

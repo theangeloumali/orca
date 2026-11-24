@@ -18,6 +18,8 @@ type StatusIndicatorProps = Omit<React.ComponentProps<'span'>, 'title'> & {
   status: Status
   showTooltip?: boolean
   tooltipSide?: StateIndicatorTooltipSide
+  /** False for glyphs that summarize other workspaces, so they leave the row untinted. */
+  highlightsRow?: boolean
 }
 
 const AGENT_STATUS_TOOLTIP_STATUSES = new Set<Status>([
@@ -35,12 +37,13 @@ const StatusIndicator = React.memo(function StatusIndicator({
   className,
   showTooltip = true,
   tooltipSide,
+  highlightsRow,
   ...rest
 }: StatusIndicatorProps) {
   const tooltipLabel =
     showTooltip && AGENT_STATUS_TOOLTIP_STATUSES.has(status) ? getWorktreeStatusLabel(status) : null
   // Row CSS reads this to tint running and needs-you sessions without its own subscription.
-  const sessionHighlight = getSessionHighlight(status)
+  const sessionHighlight = getSessionHighlight(status, { highlightsRow })
   let indicator: React.JSX.Element
 
   if (status === 'working') {

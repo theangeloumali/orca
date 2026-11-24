@@ -21,6 +21,7 @@ import {
 import { selectWorktreeListReviewCacheInputs } from './review-cache-inputs'
 import type { VirtualizedScrollAnchor } from '@/lib/list-interaction/virtualized-scrolling/useVirtualizedScrollAnchor'
 import { SidebarWorktreeListDialogs } from '../rows/ProjectGroupDialogs'
+import { usePublishSidebarDrawnHosts } from '../rows/sidebar-drawn-hosts'
 import { useClientGroupingHintRows } from '../client-grouping/use-client-suggestions'
 import { SidebarWorktreeListEmptyState } from './EmptyState'
 import { VirtualizedWorktreeViewport } from '../viewport/VirtualizedWorktreeViewport'
@@ -162,6 +163,7 @@ const WorktreeList = React.memo(function WorktreeList({
     () => new Map(rowModel.occurrencePlan.sections.map(({ key, group }) => [key, group.repoIds])),
     [rowModel.occurrencePlan]
   )
+  usePublishSidebarDrawnHosts(rowModel.hostOptions, defaultHostId)
   const effectiveCollapsedGroups = rowModel.effectiveCollapsedGroups
   const projectCollapseKeys = useMemo(
     () => (groupBy === 'repo' ? getRenderedProjectCollapseKeys(rowModel.sectionRows) : []),
