@@ -20,6 +20,7 @@ import {
   type HiddenProjects
 } from '../../../../../../shared/project/catalog/hidden-projects'
 import { isInactiveWorkspace } from '@/lib/workspace/activity/worktree-activity-state'
+import { hasLiveTerminalOnHost, type TerminalHostState } from './live-terminal-on-host'
 import { tabHasLivePty } from '../../../../../../shared/workspace-layout/terminal-surfaces/tab-has-live-pty'
 
 export type DesktopWorkspaceRowFactInputs = {
@@ -37,6 +38,8 @@ export type DesktopWorkspaceRowFactInputs = {
   sleepingSweepExemptWorktreeIds?: ReadonlySet<string>
   /** Wired only while Needs you is on; absent keeps every row. */
   worktreeNeedsYou?: (worktree: Worktree) => boolean
+  /** Present: a twin id's PTY counts only on the machine it runs on, as on the header badge. */
+  terminalHostState?: TerminalHostState
 }
 
 /** The slice of the agent-status projection that ranks a workspace's attention. */
@@ -94,7 +97,15 @@ export function buildDesktopWorkspaceRowFactReader(
     isMainWorktree: (worktree) => worktree.isMainWorktree,
     needsYou: inputs.worktreeNeedsYou,
     hasRunningTerminal: (worktree) =>
-      worktreeHasRunningTerminal(inputs.tabsByWorktree, inputs.ptyIdsByTabId, worktree.id),
+      inputs.terminalHostState
+        ? hasLiveTerminalOnHost(
+            inputs.terminalHostState,
+            inputs.tabsByWorktree ?? {},
+            inputs.ptyIdsByTabId ?? {},
+            worktree.id,
+            hostId(worktree) ?? inputs.defaultHostId
+          )
+        : worktreeHasRunningTerminal(inputs.tabsByWorktree, inputs.ptyIdsByTabId, worktree.id),
     isSleeping: (worktree) =>
       inputs.sleepingSweepExemptWorktreeIds?.has(worktree.id) !== true &&
       isInactiveWorkspace(

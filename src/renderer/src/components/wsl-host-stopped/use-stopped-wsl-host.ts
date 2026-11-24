@@ -5,7 +5,7 @@ import {
   selectConnectingWslDistro,
   selectStoppedWslDistro
 } from '@/runtime/hosts/wsl/wsl-host-stopped-status'
-import { selectWorkspaceRuntimeEnvironmentId } from '../../lib/workspace/ownership/workspace-runtime-environment'
+import { selectWorkspaceRuntimeEnvironmentId } from '../../lib/workspace/ownership/workspace-runtime-environment-id'
 import { selectWslHostEnvironmentUnavailableReason } from '../../runtime/hosts/wsl/wsl-host-availability'
 
 export type StoppedWslHost = { environmentId: string; distro: string }

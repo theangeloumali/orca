@@ -7,7 +7,7 @@ import {
   showDropOverlay
 } from './pane-drag-reorder'
 
-const DRAG_THRESHOLD = 5
+export const PANE_DRAG_THRESHOLD_PX = 5
 
 export function beginPaneDragFromPointerDown(
   handle: HTMLElement,
@@ -93,7 +93,7 @@ export function beginPaneDragFromPointerDown(
     }
     const dx = ev.clientX - startX
     const dy = ev.clientY - startY
-    if (!dragging && Math.hypot(dx, dy) >= DRAG_THRESHOLD) {
+    if (!dragging && Math.hypot(dx, dy) >= PANE_DRAG_THRESHOLD_PX) {
       dragging = true
       state.dragSourcePaneId = paneId
       callbacks.getRoot().classList.add('is-pane-dragging')

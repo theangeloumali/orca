@@ -30,6 +30,7 @@ import {
   useProjectGroupSubtreeIds
 } from './use-project-group-agent-activity-counts'
 import { useAppStore } from '@/store/index'
+import { selectHidesEmptyProjectGroups } from '../controls/sidebar-filter-actions'
 import { getProjectGroupHeaderKey } from '../../../../../../shared/sidebar-list/sections/group-keys'
 import {
   handleRepoHeaderActionPointerDown,
@@ -147,8 +148,11 @@ export function ProjectGroupFoldedSummary({
 }: {
   groupId: string
 }): React.JSX.Element | null {
-  const isCollapsed = useAppStore((state) =>
-    state.collapsedGroups.has(getProjectGroupHeaderKey(groupId))
+  // Why: filtering opens every group, so the saved fold must not summarize it.
+  const isCollapsed = useAppStore(
+    (state) =>
+      state.collapsedGroups.has(getProjectGroupHeaderKey(groupId)) &&
+      !selectHidesEmptyProjectGroups(state)
   )
   // Why split: an open group mounts no counting subscriptions at all.
   return isCollapsed ? <FoldedGroupCounts groupId={groupId} /> : null

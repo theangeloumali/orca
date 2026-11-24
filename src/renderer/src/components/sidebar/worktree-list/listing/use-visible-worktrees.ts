@@ -28,7 +28,10 @@ import type { WorkspaceSortBy as SortBy } from '../../../../../../shared/workspa
 import type { SidebarWorktreeFilters } from './use-filters'
 import { useReusedArrayIdentity } from './use-reused-array-identity'
 import { useSleepingSweepRetention } from './use-sleeping-sweep-retention'
-import { selectWorktreesByRepo } from '@/store/workspaces/catalog/workspace-record-fields'
+import {
+  selectFolderWorkspaces,
+  selectWorktreesByRepo
+} from '@/store/workspaces/catalog/workspace-record-fields'
 import { useBotListedWorktreeIdentities } from '@/components/bots/use-bot-listed-worktree-identities'
 import {
   readHiddenVmCheckouts,
@@ -107,6 +110,24 @@ export function useVisibleSidebarWorktrees(args: {
     needsActivityMaps ? getVisibleWorktreeTerminalActivityTabs(s.tabsByWorktree) : null
   )
   const ptyIdsByTabId = useAppStore((s) => (needsActivityMaps ? s.ptyIdsByTabId : null))
+  const folderWorkspaces = useAppStore((s) => selectFolderWorkspaces(s))
+  const projectGroups = useAppStore((s) => s.projectGroups)
+  const wslHostStatuses = useAppStore((s) => s.wslHostStatuses)
+  // Live reads PTYs per machine, so a twin id lists only where its terminal runs.
+  const terminalHostState = useMemo(
+    () =>
+      showOnlyRunningTerminals
+        ? { repos, worktreesByRepo, folderWorkspaces, projectGroups, wslHostStatuses }
+        : undefined,
+    [
+      showOnlyRunningTerminals,
+      repos,
+      worktreesByRepo,
+      folderWorkspaces,
+      projectGroups,
+      wslHostStatuses
+    ]
+  )
   const browserTabsByWorktree = useAppStore((s) =>
     !showSleepingWorkspaces ? getVisibleWorktreeBrowserActivityTabs(s.browserTabsByWorktree) : null
   )
@@ -147,6 +168,7 @@ export function useVisibleSidebarWorktrees(args: {
       worktreeIdsWithLiveAgent,
       sleepingSweepExemptWorktreeIds,
       botListedWorktreeIdentities,
+      terminalHostState,
       hideDefaultBranchWorkspace,
       hideAutomationGeneratedWorkspaces,
       hideCliCreatedWorkspaces,
@@ -180,6 +202,7 @@ export function useVisibleSidebarWorktrees(args: {
     worktreeIdsWithLiveAgent,
     sleepingSweepExemptWorktreeIds,
     botListedWorktreeIdentities,
+    terminalHostState,
     filterRepoIds,
     showSleepingWorkspaces,
     hideDefaultBranchWorkspace,

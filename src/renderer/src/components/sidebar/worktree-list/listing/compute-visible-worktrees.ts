@@ -14,7 +14,10 @@ import {
   withoutBotListedWorktrees
 } from '../../../../../../shared/sidebar-list/selection/visible-worktrees'
 import type { SidebarLineageParentIdentities } from '../../../../../../shared/sidebar-list/lineage/worktree-lineage-projection'
-import { buildDesktopWorkspaceRowFactReader } from './desktop-workspace-row-facts'
+import {
+  buildDesktopWorkspaceRowFactReader,
+  type DesktopWorkspaceRowFactInputs
+} from './desktop-workspace-row-facts'
 import { sidebarWorkspaceRowFilters } from '../controls/sidebar-filter-actions'
 import {
   matchesFindQuery,
@@ -68,6 +71,7 @@ export type VisibleWorktreeOptions = {
   sleepingSweepExemptWorktreeIds?: ReadonlySet<string>
   /** Host identities listed under their bot instead of their project; not a filter, so muting and filter counts ignore it. */
   botListedWorktreeIdentities?: ReadonlySet<string>
+  terminalHostState?: DesktopWorkspaceRowFactInputs['terminalHostState']
 }
 
 export function computeVisibleWorktrees(

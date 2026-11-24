@@ -56,6 +56,7 @@ import { orderMainWorktreeFirst } from './sections/section-order'
 import { appendImportedWorktreeLines } from './sections/imported-worktree-lines'
 import { withRepoSectionDisplayLabels } from './sections/project-section-order'
 import { buildOrderedGroups } from './sections/worktree-grouping'
+import { getListedNoticeCandidates } from './catalog/listed-notice-candidates'
 import type { WorkspaceSortBy } from '../workspace-view/workspace-row-sort'
 
 type SidebarOccurrenceSection = WorktreeOccurrenceSection<Worktree> & { group: WorktreeGroupEntry }
@@ -113,8 +114,6 @@ export function planSidebarRows(inputs: SidebarRowPlanInputs) {
     nestLineage,
     projectGroups,
     placeholderRepoIds,
-    importedWorktreesByRepo,
-    newExternalWorktreesInboxByRepo,
     pendingCreations,
     projectGrouping,
     folderWorkspaces,
@@ -123,6 +122,8 @@ export function planSidebarRows(inputs: SidebarRowPlanInputs) {
     pinnedDisplayPolicy,
     filterRepoIds
   } = inputs
+  const { importedWorktreesByRepo, newExternalWorktreesInboxByRepo } =
+    getListedNoticeCandidates(inputs)
   const projectIndex = buildProjectGroupingIndex(projectGrouping)
   const repoOf = repoOfWorktree ?? ((worktree: Worktree) => repoMap.get(worktree.repoId))
   // Resolve folder membership before groupBy; every mode renders the same set (#15362).
