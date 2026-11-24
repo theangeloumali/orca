@@ -6,7 +6,12 @@ import type { GlobalSettings } from '../settings/global-settings-types'
 export type HostSettingOverrides = {
   displayLabel?: string
   defaultWorktreeLocation?: string
+  /** Normalized hex, or 'none' to opt the host out of coloring. */
+  color?: string
+  sectionTint?: HostSectionTint
 }
+
+export type HostSectionTint = 'off' | 'subtle' | 'strong'
 
 // Share host override ?? client default across UI/registry/tests.
 

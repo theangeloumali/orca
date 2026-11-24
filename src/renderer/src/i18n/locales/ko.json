@@ -7272,7 +7272,16 @@
           "2d3e4f5a6b": "연결 확인",
           "3c4d5e6f7a": "호스트 관리…",
           "6e7f8a9b0c": "호스트 제거…",
-          "repair": "Re-pair…"
+          "repair": "Re-pair…",
+          "tintOff": "끄기",
+          "tintSubtle": "은은하게",
+          "tintStrong": "강하게",
+          "color": "색상",
+          "colorAuto": "자동",
+          "colorSwatch": "이 기기에 {{color}} 사용",
+          "colorNone": "없음",
+          "colorCustom": "사용자 지정…",
+          "background": "배경"
         },
         "WorkspaceKanbanDrawer": {
           "1975a4e480": "작업 상태 동기화 실패",
@@ -7740,6 +7749,12 @@
           "workspacesWithTerminals_other": "터미널 열림: {{count}}",
           "agentsNeedYou": "응답 필요: {{count}}",
           "agentsWorking": "작업 중: {{count}}"
+        },
+        "HostColorDialog": {
+          "title": "사용자 지정 기기 색상",
+          "description": "색상은 이 컴퓨터에만 저장됩니다.",
+          "pickerLabel": "기기 색상",
+          "done": "완료"
         }
       },
       "shared": {

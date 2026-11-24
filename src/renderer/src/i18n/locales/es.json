@@ -6647,7 +6647,16 @@
           "2d3e4f5a6b": "Verificar conexión",
           "3c4d5e6f7a": "Administrar host…",
           "6e7f8a9b0c": "Quitar host…",
-          "repair": "Re-pair…"
+          "repair": "Re-pair…",
+          "tintOff": "Desactivado",
+          "tintSubtle": "Sutil",
+          "tintStrong": "Intenso",
+          "color": "Color",
+          "colorAuto": "Automático",
+          "colorSwatch": "Usar {{color}} para este dispositivo",
+          "colorNone": "Ninguno",
+          "colorCustom": "Personalizado…",
+          "background": "Fondo"
         },
         "WorkspaceKanbanDrawer": {
           "1975a4e480": "Falló la sincronización del estado de la tarea",
@@ -7143,6 +7152,12 @@
           "workspacesWithTerminals_other": "{{count}} con terminales abiertas",
           "agentsNeedYou": "Te necesitan: {{count}}",
           "agentsWorking": "Trabajando: {{count}}"
+        },
+        "HostColorDialog": {
+          "title": "Color de dispositivo personalizado",
+          "description": "Los colores solo se guardan en este equipo.",
+          "pickerLabel": "Color del dispositivo",
+          "done": "Listo"
         }
       },
       "shared": {

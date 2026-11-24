@@ -12619,7 +12619,16 @@
           "2d3e4f5a6b": "Verificar conexão",
           "3c4d5e6f7a": "Gerenciar host…",
           "6e7f8a9b0c": "Remover host…",
-          "repair": "Parear novamente…"
+          "repair": "Parear novamente…",
+          "tintOff": "Desligado",
+          "tintSubtle": "Sutil",
+          "tintStrong": "Forte",
+          "color": "Cor",
+          "colorAuto": "Automática",
+          "colorSwatch": "Usar {{color}} para este dispositivo",
+          "colorNone": "Nenhuma",
+          "colorCustom": "Personalizada…",
+          "background": "Fundo"
         },
         "add": {
           "repo": {
@@ -13467,6 +13476,12 @@
           "workspacesWithTerminals_other": "{{count}} com terminais abertos",
           "agentsNeedYou": "Precisam de você: {{count}}",
           "agentsWorking": "Trabalhando: {{count}}"
+        },
+        "HostColorDialog": {
+          "title": "Cor personalizada do dispositivo",
+          "description": "As cores são salvas apenas neste computador.",
+          "pickerLabel": "Cor do dispositivo",
+          "done": "Concluído"
         }
       },
       "editor": {

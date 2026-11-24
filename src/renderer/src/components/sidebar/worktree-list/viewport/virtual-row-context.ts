@@ -19,6 +19,7 @@ import type { WorktreeVirtualRowContext } from '../rows/virtual-row-dispatch'
 import type { RepoHeaderProjectActions } from '../rows/repo-header-project-actions'
 
 import type { ProjectHeaderHostContext } from '../rows/project-header-host-context'
+import type { HostRowAppearance } from '../rows/host-row-appearance'
 
 type BuildArgs = {
   props: VirtualizedWorktreeViewportProps
@@ -28,6 +29,7 @@ type BuildArgs = {
   projection: LineageRowProjection
   activeFamilyRoots: ReadonlySet<number>
   renderRows: RenderRow[]
+  hostAppearanceByRow: readonly (HostRowAppearance | null)[]
   firstHeaderIndex: number
   virtualization: WorktreeListVirtualizer
   measureVirtualRowElement: (element: HTMLDivElement | null) => void
@@ -70,6 +72,7 @@ export function buildWorktreeVirtualRowContext(args: BuildArgs): WorktreeVirtual
     activeWorktreeId: props.activeWorktreeId,
     worktreeDragState: runtime.worktreeDragState,
     orderedHostIds: headerDrag.orderedHostIds,
+    hostAppearanceByRow: args.hostAppearanceByRow,
     hostDrag: headerDrag.hostDrag,
     toggleGroupWithScrollAnchor: args.toggleGroupWithScrollAnchor,
     importedWorktreeCardActionState: props.importedWorktreeCardActionState,

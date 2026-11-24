@@ -7013,7 +7013,16 @@
           "2d3e4f5a6b": "Verbindung prüfen",
           "3c4d5e6f7a": "Host verwalten…",
           "6e7f8a9b0c": "Host entfernen…",
-          "repair": "Erneut koppeln…"
+          "repair": "Erneut koppeln…",
+          "tintOff": "Aus",
+          "tintSubtle": "Dezent",
+          "tintStrong": "Kräftig",
+          "color": "Farbe",
+          "colorAuto": "Automatisch",
+          "colorSwatch": "{{color}} für dieses Gerät verwenden",
+          "colorNone": "Keine",
+          "colorCustom": "Benutzerdefiniert…",
+          "background": "Hintergrund"
         },
         "LinearAgentSkillSetupPrompt": {
           "modalTitle": "Zugriff auf Linear-Tickets aktivieren",
@@ -7522,6 +7531,12 @@
           "workspacesWithTerminals_other": "{{count}} mit offenen Terminals",
           "agentsNeedYou": "Warten auf dich: {{count}}",
           "agentsWorking": "In Arbeit: {{count}}"
+        },
+        "HostColorDialog": {
+          "title": "Benutzerdefinierte Gerätefarbe",
+          "description": "Farben werden nur auf diesem Computer gespeichert.",
+          "pickerLabel": "Gerätefarbe",
+          "done": "Fertig"
         }
       },
       "shared": {

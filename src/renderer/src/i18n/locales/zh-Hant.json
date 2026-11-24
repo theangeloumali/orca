@@ -6846,7 +6846,16 @@
           "2d3e4f5a6b": "檢查連線",
           "3c4d5e6f7a": "管理主機…",
           "6e7f8a9b0c": "移除主機…",
-          "repair": "重新配對…"
+          "repair": "重新配對…",
+          "tintOff": "關閉",
+          "tintSubtle": "淡",
+          "tintStrong": "濃",
+          "color": "顏色",
+          "colorAuto": "自動",
+          "colorSwatch": "為此裝置使用 {{color}}",
+          "colorNone": "無",
+          "colorCustom": "自訂…",
+          "background": "背景"
         },
         "LinearAgentSkillSetupPrompt": {
           "modalTitle": "啟用 Linear 議題存取",
@@ -7340,6 +7349,12 @@
           "workspacesWithTerminals_other": "終端機已開啟：{{count}}",
           "agentsNeedYou": "需要你處理：{{count}}",
           "agentsWorking": "工作中：{{count}}"
+        },
+        "HostColorDialog": {
+          "title": "自訂裝置顏色",
+          "description": "顏色只會儲存在這台電腦上。",
+          "pickerLabel": "裝置顏色",
+          "done": "完成"
         }
       },
       "shared": {

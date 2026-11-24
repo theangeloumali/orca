@@ -12,6 +12,7 @@ import {
   ContextMenuTrigger
 } from '@/components/ui/context-menu'
 import { shouldShowWorktreeHistoryControls } from './titlebar-worktree-history-controls'
+import { TitlebarDevicePill } from './TitlebarDevicePill'
 import {
   canGoBackWorktreeHistory,
   canGoForwardWorktreeHistory
@@ -119,6 +120,7 @@ export function TitlebarLeftControls({ layout }: { layout: AppChromeLayout }): R
             </TooltipContent>
           </Tooltip>
         )}
+        <TitlebarDevicePill />
       </div>
       {/* Show shared workspace/page history wherever its shortcut is available. */}
       {shouldShowWorktreeHistoryControls(layout.activeView) && (

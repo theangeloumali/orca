@@ -10,6 +10,7 @@ import {
 } from '@/components/agent/status/StateIndicatorTooltip'
 import { getWorktreeStatusLabel } from '@/lib/workspace/activity/worktree-status'
 import type { WorktreeStatus } from '../../../../../../shared/worktree/row-display/worktree-status-rollup'
+import { getSessionHighlight } from '../activity/session-highlight'
 
 export type Status = WorktreeStatus
 
@@ -38,6 +39,8 @@ const StatusIndicator = React.memo(function StatusIndicator({
 }: StatusIndicatorProps) {
   const tooltipLabel =
     showTooltip && AGENT_STATUS_TOOLTIP_STATUSES.has(status) ? getWorktreeStatusLabel(status) : null
+  // Row CSS reads this to tint running and needs-you sessions without its own subscription.
+  const sessionHighlight = getSessionHighlight(status)
   let indicator: React.JSX.Element
 
   if (status === 'working') {
@@ -45,6 +48,7 @@ const StatusIndicator = React.memo(function StatusIndicator({
       <span
         className={cn('inline-flex h-3 w-3 shrink-0 items-center justify-center', className)}
         {...rest}
+        data-session-highlight={sessionHighlight}
       >
         <AgentWorkingSpinner className="size-2" />
       </span>
@@ -54,6 +58,7 @@ const StatusIndicator = React.memo(function StatusIndicator({
       <span
         className={cn('inline-flex h-3 w-3 shrink-0 items-center justify-center', className)}
         {...rest}
+        data-session-highlight={sessionHighlight}
       >
         <Activity className="size-3 text-agent-working" aria-hidden="true" />
       </span>
@@ -63,6 +68,7 @@ const StatusIndicator = React.memo(function StatusIndicator({
       <span
         className={cn('inline-flex h-3 w-3 shrink-0 items-center justify-center', className)}
         {...rest}
+        data-session-highlight={sessionHighlight}
       >
         <span className="block size-1.5 rounded-full bg-red-500" />
       </span>
@@ -73,6 +79,7 @@ const StatusIndicator = React.memo(function StatusIndicator({
       <span
         className={cn('inline-flex h-3 w-3 shrink-0 items-center justify-center', className)}
         {...rest}
+        data-session-highlight={sessionHighlight}
       >
         <span className="block size-1.5 rounded-full bg-muted-foreground" />
       </span>
@@ -83,6 +90,7 @@ const StatusIndicator = React.memo(function StatusIndicator({
       <span
         className={cn('inline-flex h-3 w-3 shrink-0 items-center justify-center', className)}
         {...rest}
+        data-session-highlight={sessionHighlight}
       >
         <AgentStateDot state="unconfirmed" size="md" title={null} />
       </span>
@@ -92,6 +100,7 @@ const StatusIndicator = React.memo(function StatusIndicator({
       <span
         className={cn('inline-flex h-3 w-3 shrink-0 items-center justify-center', className)}
         {...rest}
+        data-session-highlight={sessionHighlight}
       >
         <AgentQuestionIcon className="size-3" />
       </span>
@@ -101,6 +110,7 @@ const StatusIndicator = React.memo(function StatusIndicator({
       <span
         className={cn('inline-flex h-3 w-3 shrink-0 items-center justify-center', className)}
         {...rest}
+        data-session-highlight={sessionHighlight}
       >
         <span
           className={cn(
