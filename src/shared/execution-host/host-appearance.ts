@@ -53,10 +53,13 @@ export function mergeRuntimeHostOverrides(
   local: HostOverridesMap | undefined,
   runtime: HostOverridesMap
 ): HostOverridesMap {
-  const hostIds = new Set([...Object.keys(local ?? {}), ...Object.keys(runtime)])
+  // Maps keep string keys typed, which a host-id-keyed record cannot be indexed by.
+  const localById = new Map(Object.entries(local ?? {}))
+  const runtimeById = new Map(Object.entries(runtime))
+  const hostIds = new Set([...localById.keys(), ...runtimeById.keys()])
   const merged = [...hostIds].flatMap((hostId) => {
-    const { displayLabel: _hostOwned, ...browserOwned } = local?.[hostId] ?? {}
-    const displayLabel = runtime[hostId]?.displayLabel
+    const { displayLabel: _hostOwned, ...browserOwned } = localById.get(hostId) ?? {}
+    const displayLabel = runtimeById.get(hostId)?.displayLabel
     const overrides = displayLabel ? { ...browserOwned, displayLabel } : browserOwned
     return Object.keys(overrides).length > 0 ? [[hostId, overrides]] : []
   })

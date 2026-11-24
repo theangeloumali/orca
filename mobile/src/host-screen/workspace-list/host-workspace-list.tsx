@@ -33,6 +33,7 @@ import { getWorktreeCardDetails } from '../../../../src/shared/worktree/row-disp
 import { hostScreenStyles as styles } from '../host-screen-styles'
 import { useRepoLookById } from '../catalog/host-repo-looks'
 import { HostSectionHeader } from './host-section-header'
+import { HostMachineSectionHeader } from './host-machine-section-header'
 import { useSlowPendingKeys } from './use-slow-pending-keys'
 import { useHostMutationDrafts } from '../../query/host-mutation-drafts'
 import { workspaceRenameDraftKey } from '../workspace-actions/workspace-rename-sheet'
@@ -121,9 +122,26 @@ export function HostWorkspaceList({
   const { openWorktreeSession } = actions
   const statusLive = connState === 'connected'
 
+  const machineKeys = useMemo(() => sections.flatMap((s) => (s.machine ? [s.key] : [])), [sections])
+  const allMachinesCollapsed = machineKeys.every((key) => collapsedGroups.has(key))
   const renderSectionHeader = useCallback(
     ({ section }: { section: Section }) => {
       const collapseKey = section.collapseKey ?? section.key
+      if (section.machine) {
+        const collapseAll = () => settings.setGroupsCollapsed(machineKeys, !allMachinesCollapsed)
+        return (
+          <HostMachineSectionHeader
+            machine={section.machine}
+            pending={pendingCollapseKeys.has(collapseKey)}
+            onToggle={toggleCollapsed}
+            collapseAll={
+              machineKeys[0] === section.key
+                ? { allCollapsed: allMachinesCollapsed, onPress: collapseAll }
+                : null
+            }
+          />
+        )
+      }
       return (
         bots.header(section, collapsedGroups, pendingCollapseKeys, toggleCollapsed) ?? (
           <HostSectionHeader
@@ -150,7 +168,10 @@ export function HostWorkspaceList({
       groupBy,
       repoLookById,
       toggleCollapsed,
-      bots
+      bots,
+      machineKeys,
+      allMachinesCollapsed,
+      settings
     ]
   )
 
@@ -160,7 +181,7 @@ export function HostWorkspaceList({
   )
 
   const renderItem = useCallback(
-    ({ item: { row: item, view } }: { item: WorkspaceListItem }) =>
+    ({ item: { row: item, view }, section }: { item: WorkspaceListItem; section: Section }) =>
       bots.groupRow(item, view, isReadOnly) ?? (
         <WorktreeListRow
           item={item}
@@ -180,6 +201,7 @@ export function HostWorkspaceList({
           onToggleLineage={toggleWorktreeLineage}
           unsavedName={unsavedRename(renameDrafts, hostId, item)}
           pairedHostId={hostId ?? null}
+          machineColor={section.machineColor ?? null}
         />
       ),
     [

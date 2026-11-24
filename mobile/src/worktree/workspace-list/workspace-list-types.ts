@@ -1,4 +1,5 @@
 import type { ExecutionHostId } from '../../../../src/shared/execution-host/execution-host'
+import type { HostSettingOverrides } from '../../../../src/shared/execution-host/host-setting-overrides'
 import type { RuntimeWorktreePsSummary } from '../../../../src/shared/worktree/catalog/runtime-worktree-contracts'
 import type { ProjectSectionRepo } from '../../../../src/shared/sidebar-list/sections/project-section-grouping'
 import type { WorkspaceRowFilters } from '../../../../src/shared/workspace-view/workspace-row-filters'
@@ -97,6 +98,21 @@ export type SectionPendingCreation = { key: string; repoName: string | null }
 /** One quiet line after a Bots list, keyed by the computer it is about. */
 export type BotsListEndLine = { key: string; text: string }
 
+export type HostAppearanceOverride = Pick<HostSettingOverrides, 'color' | 'sectionTint'>
+
+/** A machine's header when the list groups by computer; its sections follow it. */
+export type MachineSectionHeader = {
+  hostId: ExecutionHostId
+  label: string
+  /** null when the desktop chose None. */
+  color: string | null
+  /** The AA-safe header wash, 0 for none. */
+  tintPercent: number
+  count: number
+  status: 'online' | 'offline' | null
+  collapsed: boolean
+}
+
 export type Section = {
   /** The list identity; unique even when one header repeats in several host sections. */
   key: string
@@ -125,5 +141,8 @@ export type Section = {
     paused: boolean
     attention?: boolean
   }[]
+  machine?: MachineSectionHeader
+  /** The color of the machine a project section sits under; its rows tint by it. */
+  machineColor?: string | null
   data: WorkspaceListItem[]
 }

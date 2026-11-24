@@ -48,6 +48,7 @@ export function useHostRepoMetadata(args: {
   const { client, hostId, state, subscribed } = args
   const {
     setHostLabelById,
+    setHostAppearanceById,
     setHostHealthById,
     setDesktopRepos,
     setHostPlatform,
@@ -100,11 +101,13 @@ export function useHostRepoMetadata(args: {
     if (needsLabels && labels.data) {
       setHostHealthById(buildSshHostHealthById(labels.data.sshTargetSummaries))
       setHostLabelById(new Map(labels.data.hostLabels))
+      setHostAppearanceById(new Map(labels.data.hostAppearance))
       setHostPlatform(labels.data.platform)
     } else if (repos.data && !needsLabels) {
       // Clear labels for departed hosts so stale metadata cannot badge remaining rows.
       setHostHealthById(new Map())
       setHostLabelById(new Map())
+      setHostAppearanceById(new Map())
     }
   }, [needsLabels, labels.data, repos.data, hostId])
 }

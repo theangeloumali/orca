@@ -1,4 +1,4 @@
-import type { WorktreeStatus } from '../../../../../../shared/worktree/row-display/worktree-status-rollup'
+import type { WorktreeStatus } from './worktree-status-rollup'
 
 export type SessionHighlight = 'working' | 'needs-you'
 

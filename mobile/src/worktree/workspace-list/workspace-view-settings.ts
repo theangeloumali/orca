@@ -57,6 +57,8 @@ export type MobileViewState = {
   /** Desktop settings, not UI state: read with settings.get; Card layout writes the first. */
   compactWorktreeCards: boolean
   newCardStyle: boolean
+  /** This phone's own choice, never sent: machine headers when rows span computers. A view cached before it reads as on. */
+  groupByMachine: boolean
 }
 
 export const INITIAL_MOBILE_VIEW: MobileViewState = {
@@ -70,7 +72,8 @@ export const INITIAL_MOBILE_VIEW: MobileViewState = {
   agentActivityDisplayMode: 'compact',
   sharesOtherClientFilter: null,
   compactWorktreeCards: false,
-  newCardStyle: false
+  newCardStyle: false,
+  groupByMachine: true
 }
 
 // Patch only touched fields; compactWorktreeCards is written as a setting after host acceptance.
@@ -178,6 +181,7 @@ export function applyDesktopViewSettings(
     // Each ui.get is the desktop's whole state, so the field's absence means it keeps the filter.
     sharesOtherClientFilter: settings.hideWorkspacesFromOtherDevices !== undefined,
     compactWorktreeCards: current.compactWorktreeCards,
-    newCardStyle: current.newCardStyle
+    newCardStyle: current.newCardStyle,
+    groupByMachine: current.groupByMachine
   }
 }

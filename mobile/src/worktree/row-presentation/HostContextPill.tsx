@@ -7,17 +7,23 @@ import { worktreeListRowStyles as styles } from './worktree-list-row-styles'
 export function HostContextPill({
   hostId,
   label,
-  healthLabel
+  healthLabel,
+  dotColor = null
 }: {
   hostId: ExecutionHostId | undefined
   label: string | undefined
   healthLabel: string | undefined
+  /** The machine's color, so the pill matches its section header. */
+  dotColor?: string | null
 }) {
   return (
     <View
       style={[styles.childBadge, styles.hostBadge]}
       accessibilityLabel={[label, healthLabel].filter(Boolean).join(', ')}
     >
+      {dotColor ? (
+        <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: dotColor }} />
+      ) : null}
       <HostKindIcon hostId={hostId} size={10} />
       {label ? (
         <Text style={[styles.childBadgeText, styles.hostBadgeText]} numberOfLines={1}>

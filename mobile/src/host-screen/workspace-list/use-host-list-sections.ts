@@ -33,6 +33,7 @@ import { useHostBotSections } from '../../bots/use-host-bot-sections'
 import type { LastVisitedWorktreeOnHost } from '../../worktree/row-presentation/host-list-highlight'
 import { indexHiddenProjects } from '../../../../src/shared/project/catalog/hidden-projects'
 import { LOCAL_EXECUTION_HOST_ID } from '../../../../src/shared/execution-host/execution-host'
+import { useMachineSections } from './use-machine-sections'
 
 export type HostListSectionsInputs = {
   client: RpcClient | null
@@ -279,13 +280,16 @@ export function useHostListSections(inputs: HostListSectionsInputs): HostListSec
           ),
     [displayWorktrees, botSections, state.repoHostIdByRepoId]
   )
-  const base = useBaseHostListSections({
-    ...inputs,
-    displayWorktrees: listRows,
-    allHostRows: displayWorktrees,
-    botListedIdentities: botSections.listedIdentities,
-    lastVisited
-  })
+  const base = useMachineSections(
+    state,
+    useBaseHostListSections({
+      ...inputs,
+      displayWorktrees: listRows,
+      allHostRows: displayWorktrees,
+      botListedIdentities: botSections.listedIdentities,
+      lastVisited
+    })
+  )
   return useMemo(() => {
     if (botSections.sections.length === 0) {
       return base

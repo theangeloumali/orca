@@ -264,6 +264,19 @@ export function useHostViewSettings(args: {
     },
     [client, applyViewState, persistViewSettings, pendingChanges, refused]
   )
+  const setGroupByMachine = useCallback(
+    (value: boolean) => persistViewSettings({ groupByMachine: value }),
+    [persistViewSettings]
+  )
+  // Collapse all / Expand all over the machine headers in one write.
+  const setGroupsCollapsed = useCallback(
+    (keys: readonly string[], collapsed: boolean) => {
+      const next = new Set(viewRef.current.collapsedGroups)
+      keys.forEach((key) => (collapsed ? next.add(key) : next.delete(key)))
+      persistViewSettings({ collapsedGroups: [...next] })
+    },
+    [persistViewSettings]
+  )
   const toggleWorktreeLineage = useCallback(
     ({ row, view }: WorkspaceListItem) =>
       toggleCollapsed(view.lineageGroupKey ?? getMobileWorkspaceLineageGroupKey(row)),
@@ -281,6 +294,8 @@ export function useHostViewSettings(args: {
     handleSortChange,
     syncViewSettingsFromDesktop,
     toggleCollapsed,
+    setGroupByMachine,
+    setGroupsCollapsed,
     setFilter,
     toggleRepoFilter,
     toggleWorktreeLineage

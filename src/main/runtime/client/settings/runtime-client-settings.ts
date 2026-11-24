@@ -13,7 +13,6 @@ import { haveSameDisabledTuiAgents } from '../../../../shared/agent-launch/catal
 import { normalizeSourceControlGroupOrder } from '../../../../shared/source-control/listing/source-control-group-order'
 import { applyNativeChatSessionOptionSettingsMutation } from '../../../../shared/native-chat/input/session-options/native-chat-session-option-defaults'
 import type { NativeChatSessionOptionSettingsMutation } from '../../../../shared/native-chat/input/native-chat-session-options'
-import { getHostDisplayLabelOverrides } from '../../../../shared/execution-host/host-setting-overrides'
 import { getSettingsFocusedExecutionHostId } from '../../../../shared/execution-host/execution-host'
 import { getDefaultWorkspaceCleanupRules } from '../../../../shared/workspace-cleanup/workspace-cleanup-policy'
 import { nativeChatQueueFollowUps } from '../../../../shared/native-chat/input/composer/native-chat-follow-up-behavior'
@@ -38,9 +37,9 @@ import { composeAgentLaunchProfile } from '../../../../shared/agent-launch/choic
 import { agentLaunchSettingsRollbackUpdates } from '../../terminal/launch/agent-launch-settings-rollback'
 import type {
   RuntimeClientSettings,
-  RuntimeClientSettingsUpdate,
-  RuntimeHostDisplayLabelOverrides
+  RuntimeClientSettingsUpdate
 } from './runtime-client-settings-shape'
+import { projectRuntimeHostOverrides } from './runtime-host-overrides-projection'
 import { normalizeNewTabMenuLayout } from '../../../../shared/new-tab-menu/new-tab-menu-layout'
 import { hostNativeChatDefaults } from '../../../../shared/native-chat/settings/native-chat-providers'
 import { getDefaultNotificationSettings } from '../../../../shared/notifications/notification-settings-defaults'
@@ -145,11 +144,7 @@ export class RuntimeClientSettingsController {
       // the agent saved for each one as the desktop does. Absent on older hosts.
       sourceControlAi: projectSourceControlLaunchRecipes(settings),
       nativeChatDefaults: hostNativeChatDefaults(settings, this.isHeadless()),
-      hostSettingOverrides: Object.fromEntries(
-        [
-          ...getHostDisplayLabelOverrides({ hostSettingOverrides: settings.hostSettingOverrides })
-        ].map(([hostId, displayLabel]) => [hostId, { displayLabel }])
-      ) as RuntimeHostDisplayLabelOverrides
+      hostSettingOverrides: projectRuntimeHostOverrides(settings.hostSettingOverrides)
     }
   }
 

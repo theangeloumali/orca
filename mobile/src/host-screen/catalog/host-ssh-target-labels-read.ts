@@ -6,6 +6,7 @@ import type { RpcResponse } from '../../transport/rpc/rpc-wire-types'
 import '../../worktree/row-presentation/worktree-host-context-labels'
 import { buildHostLabelById } from '../../../../src/shared/worktree/row-display/host-context-labels'
 import { hostSshTargetSummariesRead } from '../host-screen-operations'
+import { readHostAppearanceOverrides } from './host-appearance-overrides'
 
 export async function settledMetadataReply(
   send: () => Promise<RpcResponse>
@@ -46,13 +47,12 @@ export async function readHostSshTargetLabels(client: RpcClient) {
   const hostSettingsResult = hostSettings ? optionalSettingsRead.interpret(hostSettings) : null
   const sshTargetSummaries =
     acceptedMetadata(sshTargets, hostSshTargetSummariesRead.interpret) ?? []
+  const hostSettingOverrides = readHostSettingOverrides(
+    hostSettingsResult?.accepted ? hostSettingsResult.value : undefined
+  )
   return {
     sshTargetSummaries,
-    hostLabelById: buildHostLabelById({
-      sshTargets: sshTargetSummaries,
-      hostSettingOverrides: readHostSettingOverrides(
-        hostSettingsResult?.accepted ? hostSettingsResult.value : undefined
-      )
-    })
+    hostLabelById: buildHostLabelById({ sshTargets: sshTargetSummaries, hostSettingOverrides }),
+    hostAppearance: readHostAppearanceOverrides(hostSettingOverrides)
   }
 }

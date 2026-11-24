@@ -35,6 +35,7 @@ import {
   readHostSshTargetLabels,
   settledMetadataReply
 } from './host-ssh-target-labels-read'
+import { storedHostAppearanceSchema } from './host-appearance-overrides'
 
 // The host-wide lists: one per paired host, read on the desktop itself.
 export const HOST_LIST_TARGET: HostQueryTarget = { exec: 'local' }
@@ -233,6 +234,7 @@ export type HostRepoLabels = {
   sshTargetSummaries: z.output<typeof hostSshTargetSummarySchema>[]
   // Entries rather than a Map, so the record can be stored.
   hostLabels: [ExecutionHostId, string][]
+  hostAppearance: z.output<typeof storedHostAppearanceSchema>[]
   platform: NodeJS.Platform | null
 }
 
@@ -251,6 +253,7 @@ export const hostRepoLabelsQuery = defineHostQuery<typeof NO_HOST_LIST_INPUT, Ho
     return {
       sshTargetSummaries: labels.sshTargetSummaries,
       hostLabels: [...labels.hostLabelById],
+      hostAppearance: labels.hostAppearance,
       platform: acceptedMetadata(platform, hostPlatformRead.interpret) ?? null
     }
   },
@@ -260,10 +263,12 @@ export const hostRepoLabelsQuery = defineHostQuery<typeof NO_HOST_LIST_INPUT, Ho
   // SSH health and the host's own label overrides.
   signal: { events: ['reposChanged', 'sshStateChanged'] },
   persist: {
-    version: 1,
+    // 2: machine colors and tints.
+    version: 2,
     dataSchema: z.object({
       sshTargetSummaries: z.array(hostSshTargetSummarySchema),
       hostLabels: z.array(storedHostLabelSchema),
+      hostAppearance: z.array(storedHostAppearanceSchema),
       platform: z.enum(NODE_PLATFORM_NAMES).nullable()
     })
   }

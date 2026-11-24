@@ -34,6 +34,8 @@ import { WorktreeMetaGlyphs, prStateColor } from './WorktreeMetaGlyphs'
 import { worktreeListRowStyles as styles } from './worktree-list-row-styles'
 import { PrStateIcon } from '../../source-control/review/status/PrStateIcon'
 import { WorktreeUnsavedName } from './WorktreeUnsavedName'
+import { getSessionHighlight } from '../../../../src/shared/worktree/row-display/session-highlight'
+import { rowSessionHighlightStyle } from './row-session-highlight'
 
 type Props = {
   item: Worktree
@@ -58,6 +60,8 @@ type Props = {
   unsavedName?: string
   /** The paired computer, for a bot row's usage-limit stops. */
   pairedHostId?: string | null
+  /** The color of the machine section the row sits under. */
+  machineColor?: string | null
 }
 
 function WorktreeListRowComponent({
@@ -76,7 +80,8 @@ function WorktreeListRowComponent({
   onLongPress,
   onToggleLineage,
   unsavedName,
-  pairedHostId = null
+  pairedHostId = null,
+  machineColor = null
 }: Props) {
   useMobileColorScheme()
   const t = useMobileTranslation()
@@ -167,6 +172,10 @@ function WorktreeListRowComponent({
         styles.worktreeRow,
         indent > 0 && { paddingLeft: spacing.lg + indent },
         item.isActive && styles.worktreeRowActive,
+        rowSessionHighlightStyle(getSessionHighlight(status), machineColor, {
+          working: colors.accentBlue,
+          needsYou: colors.statusAmber
+        }),
         view.dimmed && styles.worktreeRowDimmed,
         pressed && (item.isActive ? styles.worktreeRowActivePressed : styles.worktreeRowPressed)
       ]}
@@ -266,6 +275,7 @@ function WorktreeListRowComponent({
                 hostId={hostId}
                 label={view.hostContextLabel}
                 healthLabel={view.hostContextHealthLabel}
+                dotColor={machineColor}
               />
             ) : null}
             {/* Show repo identity only outside grouping/title-chip cases; Folder fallback matches desktop. */}

@@ -30,6 +30,7 @@ export function useHostScreenIdentity(args: {
     setCatalogError,
     setError,
     setHostLabelById,
+    setHostAppearanceById,
     setServedProjectSections,
     setDesktopRepos,
     setHostProjectGroups,
@@ -81,6 +82,7 @@ export function useHostScreenIdentity(args: {
     viewRef.current = seedView
     setView(seedView)
     setHostLabelById(new Map())
+    setHostAppearanceById(new Map())
     setServedProjectSections(null)
     setDesktopRepos([])
     setHostProjectGroups([])
