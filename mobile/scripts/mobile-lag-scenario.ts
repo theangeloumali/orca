@@ -39,10 +39,14 @@ export function createMockRepos(count: number): MockRepo[] {
   })
 }
 
+/** MOCK_MACHINES=1 puts every other row on a second computer, as a fork desktop paired to an M1 would. */
+export const MOCK_SECOND_MACHINE_ID = 'ssh:m1-max'
+
 export function createMockWorktrees(
   repos: readonly MockRepo[],
   count: number,
-  now = Date.now()
+  now = Date.now(),
+  spreadAcrossMachines = false
 ): RuntimeWorktreePsSummary[] {
   if (repos.length === 0) {
     return []
@@ -51,7 +55,14 @@ export function createMockWorktrees(
   return Array.from({ length: count }, (_, index) => {
     const repo = repos[index % repos.length]!
     const name = `${WORKTREE_NAMES[index % WORKTREE_NAMES.length]}-${index + 1}`
-    const status = index % 17 === 0 ? 'working' : index % 11 === 0 ? 'done' : 'active'
+    const status =
+      index % 17 === 0
+        ? 'working'
+        : index % 7 === 3
+          ? 'permission'
+          : index % 11 === 0
+            ? 'done'
+            : 'active'
     const agents = index % 4 === 0 ? [createMockAgent(index, now)] : []
     const linkedPR =
       index % 9 === 0 ? { number: 1000 + index, state: index % 18 === 0 ? 'draft' : 'open' } : null
@@ -84,7 +95,8 @@ export function createMockWorktrees(
       lastOutputAt: now - index * 23_000,
       preview: `$ pnpm test --filter mobile-${index + 1}`,
       status,
-      agents
+      agents,
+      ...(spreadAcrossMachines && index % 2 === 1 ? { hostId: MOCK_SECOND_MACHINE_ID } : {})
     }
   })
 }
