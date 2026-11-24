@@ -8142,7 +8142,23 @@
           "2d3e4f5a6b": "Check connection",
           "3c4d5e6f7a": "Manage host…",
           "6e7f8a9b0c": "Remove host…",
-          "repair": "Re-pair…"
+          "repair": "Re-pair…",
+          "tintOff": "Off",
+          "tintSubtle": "Subtle",
+          "tintStrong": "Strong",
+          "color": "Color",
+          "colorAuto": "Automatic",
+          "colorSwatch": "Use {{color}} for this device",
+          "colorRed": "Red",
+          "colorOrange": "Orange",
+          "colorYellow": "Yellow",
+          "colorGreen": "Green",
+          "colorTeal": "Teal",
+          "colorPurple": "Purple",
+          "colorPink": "Pink",
+          "colorNone": "None",
+          "colorCustom": "Custom…",
+          "background": "Background"
         },
         "LinearAgentSkillSetupPrompt": {
           "modalTitle": "Enable Linear ticket access",
@@ -8678,6 +8694,12 @@
           "workspacesWithTerminals_other": "{{count}} with open terminals",
           "agentsNeedYou": "{{count}} need you",
           "agentsWorking": "{{count}} working"
+        },
+        "HostColorDialog": {
+          "title": "Custom device color",
+          "description": "Colors are saved only on this computer.",
+          "pickerLabel": "Device color",
+          "done": "Done"
         }
       },
       "shared": {

@@ -7414,7 +7414,23 @@
           "2d3e4f5a6b": "检查连接",
           "3c4d5e6f7a": "管理主机…",
           "6e7f8a9b0c": "删除主机...",
-          "repair": "Re-pair…"
+          "repair": "Re-pair…",
+          "tintOff": "关闭",
+          "tintSubtle": "淡",
+          "tintStrong": "浓",
+          "color": "颜色",
+          "colorAuto": "自动",
+          "colorSwatch": "为此设备使用 {{color}}",
+          "colorRed": "红色",
+          "colorOrange": "橙色",
+          "colorYellow": "黄色",
+          "colorGreen": "绿色",
+          "colorTeal": "蓝绿色",
+          "colorPurple": "紫色",
+          "colorPink": "粉色",
+          "colorNone": "无",
+          "colorCustom": "自定义…",
+          "background": "背景"
         },
         "WorkspaceKanbanDrawer": {
           "1975a4e480": "任务状态同步失败",
@@ -7879,6 +7895,12 @@
           "workspacesWithTerminals_other": "终端已打开：{{count}}",
           "agentsNeedYou": "需要你处理：{{count}}",
           "agentsWorking": "工作中：{{count}}"
+        },
+        "HostColorDialog": {
+          "title": "自定义设备颜色",
+          "description": "颜色仅保存在这台电脑上。",
+          "pickerLabel": "设备颜色",
+          "done": "完成"
         }
       },
       "shared": {

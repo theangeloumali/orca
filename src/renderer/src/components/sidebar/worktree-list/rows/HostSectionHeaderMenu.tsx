@@ -41,6 +41,9 @@ import type { HostHeaderRow } from '../../../../../../shared/sidebar-list/hosts/
 import { buildHostHeaderMenuModel } from '../../host-lifecycle/host-header-menu-items'
 import { selectStartableStoppedWslDistro } from '../../../wsl-host-stopped/use-stopped-wsl-host'
 import { HostRenameDialog } from '../../host-lifecycle/HostRenameDialog'
+import { HostColorDialog } from '../../host-lifecycle/HostColorDialog'
+import { DEFAULT_REPO_BADGE_COLOR } from '../../../../../../shared/repository/appearance/repo-badge-color'
+import { HostAppearanceMenuItems } from './HostAppearanceMenuItems'
 import { HostRemoveDialog } from '../../host-lifecycle/HostRemoveDialog'
 import { RuntimeRepairDialog } from '../../../runtime-access/RuntimeRepairDialog'
 import { resolveHostRemoval } from '../../host-lifecycle/host-rename-remove'
@@ -73,13 +76,20 @@ function openManageHost(row: HostHeaderRow): void {
   state.openSettingsPage()
 }
 
-export function HostSectionHeaderMenu({ row }: { row: HostHeaderRow }): React.JSX.Element {
+export function HostSectionHeaderMenu({
+  row,
+  hostColor
+}: {
+  row: HostHeaderRow
+  hostColor?: string
+}): React.JSX.Element {
   const t = useTranslate()
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const [renameOpen, setRenameOpen] = useState(false)
   const [removeOpen, setRemoveOpen] = useState(false)
   const [repairOpen, setRepairOpen] = useState(false)
+  const [colorOpen, setColorOpen] = useState(false)
   const mountedRef = useMountedRef()
   const sshStatus = useAppStore((s) => {
     const parsed = parseExecutionHostId(row.hostId)
@@ -296,6 +306,8 @@ export function HostSectionHeaderMenu({ row }: { row: HostHeaderRow }): React.JS
           </DropdownMenuItem>
         )}
         <DropdownMenuSeparator />
+        <HostAppearanceMenuItems hostId={row.hostId} onCustomColor={() => setColorOpen(true)} />
+        <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={handleManage}>
           <Settings2 className="size-3.5" />
           {t('auto.components.sidebar.HostSectionHeaderMenu.3c4d5e6f7a', 'Manage host…')}
@@ -318,6 +330,12 @@ export function HostSectionHeaderMenu({ row }: { row: HostHeaderRow }): React.JS
         onOpenChange={setRenameOpen}
         hostId={row.hostId}
         derivedLabel={row.label}
+      />
+      <HostColorDialog
+        open={colorOpen}
+        onOpenChange={setColorOpen}
+        hostId={row.hostId}
+        currentColor={hostColor ?? DEFAULT_REPO_BADGE_COLOR}
       />
       {runtimeEnvironmentId && (
         <RuntimeRepairDialog

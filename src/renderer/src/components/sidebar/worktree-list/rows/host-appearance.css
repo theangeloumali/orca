@@ -1,0 +1,89 @@
+/* Device colors: rows read --host-color from their wrapper, so a color change repaints without re-rendering.
+   --host-tint-* is that color's AA-safe share (host-tint-contrast.ts); fallbacks are the targets. */
+[data-host-header-color] {
+  border-left: 3px solid var(--host-color);
+}
+
+[data-host-header-color][data-host-header-tinted] {
+  background-color: color-mix(in srgb, var(--host-color) var(--host-tint-header, 7%), transparent);
+}
+
+[data-host-tint]:not([data-host-tint='off'])::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2px;
+  background-color: var(--host-color);
+  pointer-events: none;
+}
+
+[data-host-tint='subtle'] {
+  background-color: color-mix(in srgb, var(--host-color) var(--host-tint-subtle, 4%), transparent);
+}
+
+[data-host-tint='strong'] {
+  background-color: color-mix(in srgb, var(--host-color) var(--host-tint-strong, 7%), transparent);
+}
+
+/* Running sessions read the card's own status glyph, so no row subscribes to agent state. */
+[data-worktree-item-row]:has([data-session-highlight='working']) {
+  background-color: color-mix(
+    in srgb,
+    var(--host-color, var(--agent-working)) var(--host-tint-working, 8%),
+    transparent
+  );
+}
+
+[data-worktree-item-row]:has([data-session-highlight='working'])::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2px;
+  background-color: var(--host-color, var(--agent-working));
+  pointer-events: none;
+  animation: host-rail-pulse 2s ease-in-out infinite;
+}
+
+/* Needs-you comes last so it wins when one agent waits while another works. */
+[data-worktree-item-row]:has([data-session-highlight='needs-you']) {
+  background-color: color-mix(in srgb, var(--agent-question) 7%, transparent);
+}
+
+[data-worktree-item-row]:has([data-session-highlight='needs-you'])::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2px;
+  background-color: var(--agent-question);
+  pointer-events: none;
+  animation: none;
+}
+
+/* The selected wash over a tint drops muted text under AA, so lift it (host-appearance-contrast.test). */
+:is(
+    [data-host-tint='subtle'],
+    [data-host-tint='strong'],
+    [data-worktree-item-row]:has(
+      [data-session-highlight='working'],
+      [data-session-highlight='needs-you']
+    )
+  )
+  [data-worktree-card-active='primary'] {
+  --muted-foreground: color-mix(
+    in srgb,
+    var(--worktree-sidebar-foreground) 72%,
+    var(--worktree-sidebar)
+  );
+}
+
+@keyframes host-rail-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-worktree-item-row]:has([data-session-highlight='working'])::before {
+    animation: none;
+  }
+}

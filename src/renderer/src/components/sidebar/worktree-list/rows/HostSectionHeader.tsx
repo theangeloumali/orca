@@ -11,6 +11,7 @@ import { AgentActivityBadges } from './AgentActivityBadges'
 import { stopRepoHeaderMenuEvent } from './header-event-guards'
 import { getHostHeaderDetail } from './host-header-detail'
 import { getVmStateLabel, VmStateIcon } from '../../workspace-card/surface/WorktreeCardVmStateBadge'
+import { getHostHeaderPaint, hostColorStyle, type HostRowAppearance } from './host-row-appearance'
 
 function SectionMetricsBadge({ count }: { count: number }): React.JSX.Element {
   const t = useTranslate()
@@ -102,12 +103,14 @@ export function HostSectionHeader({
   row,
   onToggle,
   onDragPointerDown,
-  dragging
+  dragging,
+  appearance
 }: {
   row: HostHeaderRow
   onToggle: () => void
   onDragPointerDown?: (event: React.PointerEvent<HTMLElement>) => void
   dragging?: boolean
+  appearance?: HostRowAppearance | null
 }): React.JSX.Element {
   const t = useTranslate()
   const isBlocked = row.health === 'blocked'
@@ -115,6 +118,7 @@ export function HostSectionHeader({
   // A suspended VM is asleep on purpose: muted like disconnected, but never an error.
   const isSuspended = row.health === 'suspended'
   const detail = getHostHeaderDetail(row, t)
+  const paint = getHostHeaderPaint(appearance, row.health)
   return (
     <div className="px-2 pt-1">
       {/* Why: outlined card + server glyph marks hosts as machines, not mere groups. */}
@@ -123,6 +127,9 @@ export function HostSectionHeader({
         tabIndex={0}
         data-host-header-drag-id={row.hostId}
         aria-expanded={!row.collapsed}
+        data-host-header-color={paint.colored ? '' : undefined}
+        data-host-header-tinted={paint.tinted ? '' : undefined}
+        style={hostColorStyle(appearance)}
         className={cn(
           'group/host-header flex h-8 w-full cursor-pointer items-center gap-2 rounded-md border px-2 text-left transition-all',
           onDragPointerDown && 'cursor-grab active:cursor-grabbing',
@@ -150,6 +157,13 @@ export function HostSectionHeader({
           <Server className="size-3.5 shrink-0 text-muted-foreground" />
         )}
         {row.vmState ? null : <HostHeaderHealthIcon health={row.health} />}
+        {appearance ? (
+          <span
+            aria-hidden="true"
+            className="size-2 shrink-0 rounded-full"
+            style={{ backgroundColor: 'var(--host-color)' }}
+          />
+        ) : null}
         {/* Why: badge hugs the label (like repo headers) instead of floating by the hover controls. */}
         <div className="flex min-w-0 flex-1 items-center gap-1.5">
           <span
@@ -189,7 +203,7 @@ export function HostSectionHeader({
           onClick={stopRepoHeaderMenuEvent}
           onKeyDown={stopRepoHeaderMenuEvent}
         >
-          <HostSectionHeaderMenu row={row} />
+          <HostSectionHeaderMenu row={row} hostColor={appearance?.color} />
         </span>
       </div>
     </div>

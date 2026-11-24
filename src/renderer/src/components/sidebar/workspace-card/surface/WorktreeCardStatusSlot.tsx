@@ -14,6 +14,7 @@ import { checksLabel } from '../review/workspace-review-check-label'
 import StatusIndicator from './StatusIndicator'
 import { useWorktreeActivityStatus } from '../activity/use-worktree-activity-status'
 import { laneStatusWithLineage } from './worktree-card-lineage-lane-status'
+import { getSessionHighlight } from '../activity/session-highlight'
 import { useShallow } from 'zustand/react/shallow'
 import { useAppStore } from '@/store/index'
 import {
@@ -151,8 +152,12 @@ export function WorktreeCardStatusSlot({
   const t = useTranslate()
   const collectionChecks = reviewChecks && reviewChecks.total > 1 ? reviewChecks : undefined
   const isReviewStale = reviewStale || Boolean(collectionChecks?.stale)
-  const liveStatus = laneStatusWithLineage(useWorktreeActivityStatus(worktreeId), lineageStatus)
-  const status = statusOverride ?? liveStatus
+  const ownStatus = useWorktreeActivityStatus(worktreeId)
+  const status = statusOverride ?? laneStatusWithLineage(ownStatus, lineageStatus)
+  // Hidden, so the row lights from its own status whichever glyph (or bell) the lane draws.
+  const rowHighlight = (
+    <span hidden data-session-highlight={getSessionHighlight(statusOverride ?? ownStatus)} />
+  )
   // One subscription per card: rows mount by the hundreds, and every listener runs on each store write.
   const { isSleeping, vmRuntime, vmWaking } = useAppStore(
     useShallow((state) => ({
@@ -264,7 +269,7 @@ export function WorktreeCardStatusSlot({
   // A VM that is not running cannot have live activity; its lifecycle is the row's status.
   // The classic card's unread toggle keeps its button and shows the VM state inside it.
   if (vmState && showStatus && !unreadActionEnabled) {
-    return overlayNewCardUnreadStatus(
+    const vmBadge = overlayNewCardUnreadStatus(
       <WorktreeCardVmStateBadge
         state={vmState}
         failure={vmFailure}
@@ -273,10 +278,21 @@ export function WorktreeCardStatusSlot({
       />,
       newCardStyle && isUnread
     )
+    return (
+      <>
+        {rowHighlight}
+        {vmBadge}
+      </>
+    )
   }
 
   if (!unreadActionEnabled) {
-    return overlayNewCardUnreadStatus(passiveStatus, showNewCardUnreadAlert)
+    return (
+      <>
+        {rowHighlight}
+        {overlayNewCardUnreadStatus(passiveStatus, showNewCardUnreadAlert)}
+      </>
+    )
   }
 
   const actionLabel = isUnread
@@ -288,6 +304,7 @@ export function WorktreeCardStatusSlot({
 
   return (
     <>
+      {rowHighlight}
       <Tooltip>
         <TooltipTrigger asChild>
           <button

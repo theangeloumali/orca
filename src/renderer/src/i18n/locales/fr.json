@@ -6870,7 +6870,23 @@
           "2d3e4f5a6b": "Vérifier la connexion",
           "3c4d5e6f7a": "Gérer l'hôte…",
           "6e7f8a9b0c": "Retirer l'hôte…",
-          "repair": "Re-pair…"
+          "repair": "Re-pair…",
+          "tintOff": "Désactivé",
+          "tintSubtle": "Discret",
+          "tintStrong": "Prononcé",
+          "color": "Couleur",
+          "colorAuto": "Automatique",
+          "colorSwatch": "Utiliser {{color}} pour cet appareil",
+          "colorRed": "Rouge",
+          "colorOrange": "Orange",
+          "colorYellow": "Jaune",
+          "colorGreen": "Vert",
+          "colorTeal": "Sarcelle",
+          "colorPurple": "Violet",
+          "colorPink": "Rose",
+          "colorNone": "Aucune",
+          "colorCustom": "Personnalisée…",
+          "background": "Arrière-plan"
         },
         "LinearAgentSkillSetupPrompt": {
           "modalTitle": "Activer l'accès aux tickets Linear",
@@ -7421,6 +7437,12 @@
           "workspacesWithTerminals_other": "{{count}} avec des terminaux ouverts",
           "agentsNeedYou": "Ont besoin de vous : {{count}}",
           "agentsWorking": "En cours : {{count}}"
+        },
+        "HostColorDialog": {
+          "title": "Couleur d'appareil personnalisée",
+          "description": "Les couleurs sont enregistrées uniquement sur cet ordinateur.",
+          "pickerLabel": "Couleur de l'appareil",
+          "done": "Terminé"
         }
       },
       "shared": {

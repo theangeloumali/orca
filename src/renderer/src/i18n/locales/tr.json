@@ -7097,7 +7097,23 @@
           "2d3e4f5a6b": "Bağlantıyı kontrol et",
           "3c4d5e6f7a": "Host'u yönet…",
           "6e7f8a9b0c": "Host'u kaldır…",
-          "repair": "Yeniden eşleştir…"
+          "repair": "Yeniden eşleştir…",
+          "tintOff": "Kapalı",
+          "tintSubtle": "Hafif",
+          "tintStrong": "Güçlü",
+          "color": "Renk",
+          "colorAuto": "Otomatik",
+          "colorSwatch": "Bu cihaz için {{color}} kullan",
+          "colorRed": "Kırmızı",
+          "colorOrange": "Turuncu",
+          "colorYellow": "Sarı",
+          "colorGreen": "Yeşil",
+          "colorTeal": "Camgöbeği",
+          "colorPurple": "Mor",
+          "colorPink": "Pembe",
+          "colorNone": "Yok",
+          "colorCustom": "Özel…",
+          "background": "Arka plan"
         },
         "LinearAgentSkillSetupPrompt": {
           "modalTitle": "Linear ticket erişimini etkinleştir",
@@ -7606,6 +7622,12 @@
           "workspacesWithTerminals_other": "Açık terminalli: {{count}}",
           "agentsNeedYou": "Sizi bekleyen: {{count}}",
           "agentsWorking": "Çalışan: {{count}}"
+        },
+        "HostColorDialog": {
+          "title": "Özel cihaz rengi",
+          "description": "Renkler yalnızca bu bilgisayarda kaydedilir.",
+          "pickerLabel": "Cihaz rengi",
+          "done": "Bitti"
         }
       },
       "shared": {

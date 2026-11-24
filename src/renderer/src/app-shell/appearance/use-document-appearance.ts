@@ -21,6 +21,8 @@ import {
   tintedSidebarHostPillOutlineMix
 } from './left-sidebar-appearance'
 import { useCodeEditorThemeStore } from '../../store/appearance/code-editor-theme'
+import { useSidebarContrastPaletteStore } from '../../store/appearance/sidebar-contrast-palette'
+import { readSidebarContrastPalette } from '../../../../shared/execution-host/host-tint-contrast'
 import { useAppThemePaint } from './use-app-theme-paint'
 import {
   usePluginAppThemeSync,
@@ -113,6 +115,14 @@ export function useDocumentAppearance(): void {
     } else {
       root.style.setProperty(TINTED_HOST_PILL_OUTLINE_MIX_TOKEN, `${outlineMix}%`)
     }
+    // Host tints are sized against these painted colors, so custom themes keep muted text AA.
+    useSidebarContrastPaletteStore.setState({
+      palettes: readSidebarContrastPalette(
+        (token) => computed.getPropertyValue(token),
+        dark,
+        browserColorProbe
+      )
+    })
   }, [appTheme, ready, theme, dark, sidebarTint])
 
   // Why gated: the image only shows through translucent terminals and chats, so otherwise it would

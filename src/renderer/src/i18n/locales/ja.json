@@ -6969,7 +6969,23 @@
           "2d3e4f5a6b": "接続を確認",
           "3c4d5e6f7a": "ホストを管理…",
           "6e7f8a9b0c": "ホストを削除…",
-          "repair": "Re-pair…"
+          "repair": "Re-pair…",
+          "tintOff": "オフ",
+          "tintSubtle": "控えめ",
+          "tintStrong": "強め",
+          "color": "色",
+          "colorAuto": "自動",
+          "colorSwatch": "このデバイスに {{color}} を使用",
+          "colorRed": "赤",
+          "colorOrange": "オレンジ",
+          "colorYellow": "黄",
+          "colorGreen": "緑",
+          "colorTeal": "ティール",
+          "colorPurple": "紫",
+          "colorPink": "ピンク",
+          "colorNone": "なし",
+          "colorCustom": "カスタム…",
+          "background": "背景"
         },
         "WorkspaceKanbanDrawer": {
           "1975a4e480": "タスクステータスの同期に失敗しました",
@@ -7428,6 +7444,12 @@
           "workspacesWithTerminals_other": "ターミナルが開いている: {{count}}",
           "agentsNeedYou": "対応待ちの Agent: {{count}}",
           "agentsWorking": "作業中の Agent: {{count}}"
+        },
+        "HostColorDialog": {
+          "title": "カスタムのデバイスカラー",
+          "description": "色はこのコンピューターにのみ保存されます。",
+          "pickerLabel": "デバイスカラー",
+          "done": "完了"
         }
       },
       "shared": {

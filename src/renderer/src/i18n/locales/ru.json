@@ -7314,7 +7314,23 @@
           "2d3e4f5a6b": "Проверить соединение",
           "3c4d5e6f7a": "Управление компьютером…",
           "6e7f8a9b0c": "Удалить компьютер…",
-          "repair": "Создать сопряжение заново…"
+          "repair": "Создать сопряжение заново…",
+          "tintOff": "Выкл.",
+          "tintSubtle": "Слабый",
+          "tintStrong": "Сильный",
+          "color": "Цвет",
+          "colorAuto": "Автоматически",
+          "colorSwatch": "Использовать {{color}} для этого устройства",
+          "colorRed": "Красный",
+          "colorOrange": "Оранжевый",
+          "colorYellow": "Жёлтый",
+          "colorGreen": "Зелёный",
+          "colorTeal": "Бирюзовый",
+          "colorPurple": "Фиолетовый",
+          "colorPink": "Розовый",
+          "colorNone": "Нет",
+          "colorCustom": "Свой…",
+          "background": "Фон"
         },
         "LinearAgentSkillSetupPrompt": {
           "modalTitle": "Разрешить доступ к задачам Linear",
@@ -7871,6 +7887,12 @@
           "workspacesWithTerminals_other": "{{count}} с открытыми терминалами",
           "agentsNeedYou": "Ждут вас: {{count}}",
           "agentsWorking": "В работе: {{count}}"
+        },
+        "HostColorDialog": {
+          "title": "Свой цвет устройства",
+          "description": "Цвета сохраняются только на этом компьютере.",
+          "pickerLabel": "Цвет устройства",
+          "done": "Готово"
         }
       },
       "shared": {
