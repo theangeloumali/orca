@@ -37,8 +37,6 @@ const options = (overrides: Partial<VisibleWorktreeOptions> = {}): VisibleWorktr
   terminalHostState: {
     repos: [],
     worktreesByRepo: {},
-    folderWorkspaces: [],
-    projectGroups: [],
     wslHostStatuses: {}
   },
   ...overrides

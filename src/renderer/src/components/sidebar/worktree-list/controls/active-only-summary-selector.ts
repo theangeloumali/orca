@@ -66,6 +66,8 @@ function summaryKeys(state: AppState, context: ActiveOnlySummaryContext): readon
       state.structuredChatSleptAtByPaneKey
     ),
     state.runtimeEnvironments,
+    // Live drops a stopped distro's terminals (live-terminal-on-host.ts).
+    state.wslHostStatuses,
     state.worktreeLineageById,
     selectSidebarLineageParentIdentities(state, context.statuses),
     selectFolderWorkspaces(state),

@@ -18,8 +18,6 @@ function readerFor(ptyIdsByTabId: Record<string, string[]>) {
     terminalHostState: {
       repos: [],
       worktreesByRepo: {},
-      folderWorkspaces: [],
-      projectGroups: [],
       wslHostStatuses: {}
     }
   })
@@ -59,8 +57,6 @@ describe('hasRunningTerminal', () => {
       terminalHostState: {
         repos,
         worktreesByRepo: { [repo.id]: [local], [remoteRepo.id]: [remote] },
-        folderWorkspaces: [],
-        projectGroups: [],
         wslHostStatuses: {}
       }
     })
