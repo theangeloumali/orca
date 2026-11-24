@@ -7835,7 +7835,11 @@
           "groupSummaryNeedsYou_other": "{{count}} need you",
           "groupSummaryLabel": "{{projects}}, {{needsYou}}",
           "createFromReposDescription_one": "Create a group and move {{count}} project into it.",
-          "createFromReposDescription_other": "Create a group and move {{count}} projects into it."
+          "createFromReposDescription_other": "Create a group and move {{count}} projects into it.",
+          "groupColorSwatch": "Use {{color}} for this group",
+          "groupColorDialogTitle": "Custom group color",
+          "groupColorDialogDescription": "Group colors sync with the group; background strength stays on this computer.",
+          "groupColorPickerLabel": "Group color"
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "Cancel",
@@ -8700,6 +8704,9 @@
           "description": "Colors are saved only on this computer.",
           "pickerLabel": "Device color",
           "done": "Done"
+        },
+        "SidebarColors": {
+          "editAll": "Edit all sidebar colors…"
         }
       },
       "shared": {
@@ -11276,7 +11283,14 @@
             "96e32c1118": "MiniMax usage",
             "e8d2710689": "Muse usage",
             "aff6e6afdf": "IDE font",
-            "ba1f9d39a6": "Antigravity usage"
+            "ba1f9d39a6": "Antigravity usage",
+            "sidebarColors": {
+              "title": "Sidebar colors",
+              "description": "Color devices and project groups in the sidebar. Group colors sync; background strength stays on this computer.",
+              "color": "color",
+              "group": "group",
+              "device": "device"
+            }
           }
         },
         "auto": {
@@ -15038,6 +15052,12 @@
               "desktopOnly": "Connect Gitea / Forgejo from the desktop app"
             }
           }
+        },
+        "SidebarColors": {
+          "groupsHeading": "Project groups",
+          "swatch": "Use {{color}} for {{name}}",
+          "custom": "Custom color for {{name}}",
+          "background": "Background for {{name}}"
         }
       },
       "right": {

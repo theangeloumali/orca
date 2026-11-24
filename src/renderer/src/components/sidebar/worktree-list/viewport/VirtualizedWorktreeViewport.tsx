@@ -34,7 +34,7 @@ import { useWorktreeSidebarScrollSuppression } from './use-scroll-suppression'
 import { EMPTY_PROJECT_GROUPS, type VirtualizedWorktreeViewportProps } from './viewport-props'
 import { useWorktreeDropCommitContext } from '../drag/use-drop-commit-context'
 import { buildWorktreeVirtualRowContext } from './virtual-row-context'
-import { useHostRowAppearance } from '../rows/use-host-row-appearance'
+import { useRowAppearance } from '../rows/use-row-appearance'
 import type { RepoHeaderProjectActions } from '../rows/repo-header-project-actions'
 import { getRepoOwnerWorktreeVisibilityDefaults } from '../../../../store/slices/worktrees/listing/worktree-visibility-defaults-by-host'
 import { renderWorktreeVirtualRow } from '../rows/virtual-row-dispatch'
@@ -336,7 +336,7 @@ export const VirtualizedWorktreeViewport = React.memo(function VirtualizedWorktr
     [markDirectScrollInput]
   )
 
-  const hostAppearanceByRow = useHostRowAppearance(renderRows, props.hostOptions)
+  const rowAppearance = useRowAppearance(renderRows, props.hostOptions)
   const draggingIdentity = runtime.worktreeDragState.draggingWorktreeId
   const hiddenDragRanges = useDraggedSubtreeRanges(projection, draggingIdentity)
   const rowContext = buildWorktreeVirtualRowContext({
@@ -346,7 +346,7 @@ export const VirtualizedWorktreeViewport = React.memo(function VirtualizedWorktr
     projection,
     activeFamilyRoots,
     renderRows,
-    hostAppearanceByRow,
+    rowAppearance,
     firstHeaderIndex,
     virtualization,
     measureVirtualRowElement,

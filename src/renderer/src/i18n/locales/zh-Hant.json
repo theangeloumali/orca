@@ -6542,7 +6542,11 @@
           "groupSummaryNeedsYou_other": "{{count}} 個需要你",
           "groupSummaryLabel": "{{projects}}, {{needsYou}}",
           "createFromReposDescription": "建立群組並將 {{count}} 個專案移入。",
-          "createFromReposDescription_other": "建立群組並將 {{count}} 個專案移入。"
+          "createFromReposDescription_other": "建立群組並將 {{count}} 個專案移入。",
+          "groupColorSwatch": "此群組使用{{color}}",
+          "groupColorDialogTitle": "自訂群組顏色",
+          "groupColorDialogDescription": "群組顏色會隨群組同步；背景強度僅儲存在這台電腦上。",
+          "groupColorPickerLabel": "群組顏色"
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "取消",
@@ -7362,6 +7366,9 @@
           "description": "顏色只會儲存在這台電腦上。",
           "pickerLabel": "裝置顏色",
           "done": "完成"
+        },
+        "SidebarColors": {
+          "editAll": "編輯所有側邊欄顏色…"
         }
       },
       "shared": {
@@ -9875,7 +9882,14 @@
             "c29089716e": "Kimi 用量",
             "96e32c1118": "MiniMax 用量",
             "aff6e6afdf": "IDE 字型",
-            "ba1f9d39a6": "Antigravity 用量"
+            "ba1f9d39a6": "Antigravity 用量",
+            "sidebarColors": {
+              "title": "側邊欄顏色",
+              "description": "為側邊欄中的裝置和專案群組設定顏色。群組顏色會同步；背景強度僅儲存在這台電腦上。",
+              "color": "顏色",
+              "group": "群組",
+              "device": "裝置"
+            }
           }
         },
         "auto": {
@@ -13480,6 +13494,12 @@
               "desktopOnly": "請在桌面應用程式中連接 Gitea / Forgejo"
             }
           }
+        },
+        "SidebarColors": {
+          "groupsHeading": "專案群組",
+          "swatch": "{{name}}使用{{color}}",
+          "custom": "{{name}}的自訂顏色",
+          "background": "{{name}}的背景"
         }
       },
       "right": {

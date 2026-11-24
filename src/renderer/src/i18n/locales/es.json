@@ -6274,7 +6274,11 @@
           "createFromReposDescription": "Crear un grupo y mover {{count}} proyectos a él.",
           "createFromReposDescription_one": "Crear un grupo y mover {{count}} proyecto a él.",
           "createFromReposDescription_other": "Crear un grupo y mover {{count}} proyectos a él.",
-          "createFromReposDescription_many": "Crear un grupo y mover {{count}} proyectos a él."
+          "createFromReposDescription_many": "Crear un grupo y mover {{count}} proyectos a él.",
+          "groupColorSwatch": "Usar {{color}} para este grupo",
+          "groupColorDialogTitle": "Color de grupo personalizado",
+          "groupColorDialogDescription": "Los colores de grupo se sincronizan con el grupo; la intensidad del fondo se queda en este equipo.",
+          "groupColorPickerLabel": "Color del grupo"
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "Cancelar",
@@ -7165,6 +7169,9 @@
           "description": "Los colores solo se guardan en este equipo.",
           "pickerLabel": "Color del dispositivo",
           "done": "Listo"
+        },
+        "SidebarColors": {
+          "editAll": "Editar todos los colores de la barra lateral…"
         }
       },
       "shared": {
@@ -9633,7 +9640,14 @@
             "c29089716e": "Uso de Kimi",
             "96e32c1118": "Uso de MiniMax",
             "aff6e6afdf": "Fuente IDE",
-            "ba1f9d39a6": "Uso de Antigravity"
+            "ba1f9d39a6": "Uso de Antigravity",
+            "sidebarColors": {
+              "title": "Colores de la barra lateral",
+              "description": "Colorea dispositivos y grupos de proyectos en la barra lateral. Los colores de grupo se sincronizan; la intensidad del fondo se queda en este equipo.",
+              "color": "color",
+              "group": "grupo",
+              "device": "dispositivo"
+            }
           }
         },
         "auto": {
@@ -13302,6 +13316,12 @@
               "desktopOnly": "Conecta Gitea / Forgejo desde la aplicación de escritorio"
             }
           }
+        },
+        "SidebarColors": {
+          "groupsHeading": "Grupos de proyectos",
+          "swatch": "Usar {{color}} para {{name}}",
+          "custom": "Color personalizado para {{name}}",
+          "background": "Fondo para {{name}}"
         }
       },
       "right": {

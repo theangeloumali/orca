@@ -25,6 +25,23 @@
   background-color: color-mix(in srgb, var(--host-color) var(--host-tint-strong, 7%), transparent);
 }
 
+/* A colored project group outranks the machine wash; the host rail and session highlights still show. */
+[data-group-tint='subtle'] {
+  background-color: color-mix(
+    in srgb,
+    var(--group-color) var(--group-tint-subtle, 4%),
+    transparent
+  );
+}
+
+[data-group-tint='strong'] {
+  background-color: color-mix(
+    in srgb,
+    var(--group-color) var(--group-tint-strong, 7%),
+    transparent
+  );
+}
+
 /* Running sessions read the card's own status glyph, so no row subscribes to agent state. */
 [data-worktree-item-row]:has([data-session-highlight='working']) {
   background-color: color-mix(
@@ -63,6 +80,8 @@
 :is(
     [data-host-tint='subtle'],
     [data-host-tint='strong'],
+    [data-group-tint='subtle'],
+    [data-group-tint='strong'],
     [data-worktree-item-row]:has(
       [data-session-highlight='working'],
       [data-session-highlight='needs-you']

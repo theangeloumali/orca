@@ -6872,7 +6872,11 @@
           "groupSummaryNeedsYou_other": "{{count}}개 확인 필요",
           "groupSummaryLabel": "{{projects}}, {{needsYou}}",
           "createFromReposDescription": "그룹을 만들고 프로젝트 {{count}}개를 옮깁니다.",
-          "createFromReposDescription_other": "그룹을 만들고 프로젝트 {{count}}개를 옮깁니다."
+          "createFromReposDescription_other": "그룹을 만들고 프로젝트 {{count}}개를 옮깁니다.",
+          "groupColorSwatch": "이 그룹에 {{color}} 사용",
+          "groupColorDialogTitle": "사용자 지정 그룹 색상",
+          "groupColorDialogDescription": "그룹 색상은 그룹과 동기화되며, 배경 강도는 이 컴퓨터에만 저장됩니다.",
+          "groupColorPickerLabel": "그룹 색상"
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "취소",
@@ -7762,6 +7766,9 @@
           "description": "색상은 이 컴퓨터에만 저장됩니다.",
           "pickerLabel": "기기 색상",
           "done": "완료"
+        },
+        "SidebarColors": {
+          "editAll": "모든 사이드바 색상 편집…"
         }
       },
       "shared": {
@@ -10274,7 +10281,14 @@
             "96e32c1118": "MiniMax 사용량",
             "e8d2710689": "Muse 사용량",
             "aff6e6afdf": "IDE 글꼴",
-            "ba1f9d39a6": "Antigravity 사용량"
+            "ba1f9d39a6": "Antigravity 사용량",
+            "sidebarColors": {
+              "title": "사이드바 색상",
+              "description": "사이드바의 기기와 프로젝트 그룹에 색상을 지정합니다. 그룹 색상은 동기화되며, 배경 강도는 이 컴퓨터에만 저장됩니다.",
+              "color": "색상",
+              "group": "그룹",
+              "device": "기기"
+            }
           }
         },
         "auto": {
@@ -14100,6 +14114,12 @@
               "desktopOnly": "데스크톱 앱에서 Gitea / Forgejo를 연결하세요"
             }
           }
+        },
+        "SidebarColors": {
+          "groupsHeading": "프로젝트 그룹",
+          "swatch": "{{name}}에 {{color}} 사용",
+          "custom": "{{name}}의 사용자 지정 색상",
+          "background": "{{name}}의 배경"
         }
       },
       "right": {

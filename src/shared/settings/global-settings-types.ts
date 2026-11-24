@@ -52,6 +52,8 @@ export type GlobalSettings = GlobalSettingsBase & {
   worktreeVisibilityDefaults?: WorktreeVisibilityDefaults
   /** Per-host value is host override ?? client default, keyed by ExecutionHostId. */
   hostSettingOverrides?: Partial<Record<ExecutionHostId, HostSettingOverrides>>
+  /** Per-computer sidebar background strength by group id; group colors sync on the group. */
+  projectGroupTints?: Partial<Record<string, NonNullable<HostSettingOverrides['sectionTint']>>>
   nestWorkspaces: boolean
   workspaceDirHistory?: OrcaWorkspaceLayout[]
   refreshLocalBaseRefOnWorktreeCreate: boolean

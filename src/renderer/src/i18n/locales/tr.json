@@ -6790,7 +6790,11 @@
           "groupSummaryLabel": "{{projects}}, {{needsYou}}",
           "createFromReposDescription": "Bir grup oluştur ve {{count}} projeyi içine taşı.",
           "createFromReposDescription_one": "Bir grup oluştur ve {{count}} projeyi içine taşı.",
-          "createFromReposDescription_other": "Bir grup oluştur ve {{count}} projeyi içine taşı."
+          "createFromReposDescription_other": "Bir grup oluştur ve {{count}} projeyi içine taşı.",
+          "groupColorSwatch": "Bu grup için {{color}} kullan",
+          "groupColorDialogTitle": "Özel grup rengi",
+          "groupColorDialogDescription": "Grup renkleri grupla eşitlenir; arka plan yoğunluğu bu bilgisayarda kalır.",
+          "groupColorPickerLabel": "Grup rengi"
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "İptal",
@@ -7628,6 +7632,9 @@
           "description": "Renkler yalnızca bu bilgisayarda kaydedilir.",
           "pickerLabel": "Cihaz rengi",
           "done": "Bitti"
+        },
+        "SidebarColors": {
+          "editAll": "Tüm kenar çubuğu renklerini düzenle…"
         }
       },
       "shared": {
@@ -10146,7 +10153,14 @@
             "c29089716e": "Kimi Kullanımı",
             "96e32c1118": "MiniMax Kullanımı",
             "aff6e6afdf": "IDE Yazı Tipi",
-            "ba1f9d39a6": "Antigravity Kullanımı"
+            "ba1f9d39a6": "Antigravity Kullanımı",
+            "sidebarColors": {
+              "title": "Kenar çubuğu renkleri",
+              "description": "Kenar çubuğundaki cihazları ve proje gruplarını renklendirin. Grup renkleri eşitlenir; arka plan yoğunluğu bu bilgisayarda kalır.",
+              "color": "renk",
+              "group": "grup",
+              "device": "cihaz"
+            }
           }
         },
         "auto": {
@@ -13788,6 +13802,12 @@
               "desktopOnly": "Gitea / Forgejo'yu masaüstü uygulamasından bağlayın"
             }
           }
+        },
+        "SidebarColors": {
+          "groupsHeading": "Proje grupları",
+          "swatch": "{{name}} için {{color}} kullan",
+          "custom": "{{name}} için özel renk",
+          "background": "{{name}} için arka plan"
         }
       },
       "right": {
