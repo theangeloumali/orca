@@ -24,12 +24,18 @@ export const installedAppVersion: string | null = Constants.expoConfig?.version 
 export const isRetiredGithubAndroidApp =
   Platform.OS === 'android' && Constants.expoConfig?.android?.package === 'com.stably.orca.mobile'
 
+/** The fork's own app: TestFlight or a sideloaded APK updates it, never Stably's channels. */
+const isForkBuild = Constants.expoConfig?.extra?.orcaForkBuild === true
+
 /** Play delivers this install's updates and forbids other update channels. */
 export const isGooglePlayInstall =
   Platform.OS === 'android' && (OrcaPlayStorePresence?.isInstalledByPlayStore() ?? false)
 
 /** The channel that installed this binary. */
 function resolveAppUpdateSource(): AppUpdateSource | null {
+  if (isForkBuild) {
+    return null
+  }
   if (Platform.OS === 'android') {
     if (isGooglePlayInstall) {
       return null
