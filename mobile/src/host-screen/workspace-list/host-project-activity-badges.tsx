@@ -1,12 +1,13 @@
 import { Text, View } from 'react-native'
 import { useMobileTranslation } from '../../i18n/use-mobile-translation'
 import { colors } from '../../theme/mobile-theme'
+import { ColorDot } from '../../components/feedback/ColorDot'
 import { hostScreenStyles as styles } from '../host-screen-styles'
 
 function Badge({ color, count }: { color: string; count: number }) {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-      <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: color }} />
+      <ColorDot color={color} />
       <Text style={styles.sectionCount}>{count}</Text>
     </View>
   )

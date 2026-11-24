@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { buildGroupFolds, isSubtreeFolded } from './project-group-fold'
+import { buildGroupFolds } from './project-group-fold'
+import { buildProjectActivity } from './project-activity'
 import type { GroupTreePlacement } from './project-group-tree-sections'
 import type { Worktree } from '../workspace-list/workspace-list-types'
 import { worktreeRow } from '../../test-support/worktree-row-fixture'
@@ -7,6 +8,7 @@ import { worktreeRow } from '../../test-support/worktree-row-fixture'
 const row = (id: string, needsYou = false) =>
   worktreeRow({ worktreeId: id, status: needsYou ? 'permission' : 'inactive' })
 const waitsOnYou = (r: Worktree) => r.status === 'permission'
+const isWorking = (r: Worktree) => r.status === 'working'
 const at = (...ancestorKeys: string[]): GroupTreePlacement => ({ ancestorKeys, rowView: {} })
 
 describe('buildGroupFolds', () => {
@@ -24,7 +26,11 @@ describe('buildGroupFolds', () => {
     ['repo:2', at('group:a', 'group:b')],
     ['repo:3', at()]
   ])
-  const folds = buildGroupFolds(sections, placements, waitsOnYou)
+  const folds = buildGroupFolds(
+    sections,
+    placements,
+    buildProjectActivity(sections, isWorking, waitsOnYou)
+  )
 
   it('counts every project and needs-you row beneath a group, subgroups included', () => {
     expect(folds.get('group:a')).toMatchObject({ projects: 2, needsYou: 2 })
@@ -37,13 +43,5 @@ describe('buildGroupFolds', () => {
 
   it('gives root projects no fold', () => {
     expect(folds.has('repo:3')).toBe(false)
-  })
-})
-
-describe('isSubtreeFolded', () => {
-  it('is true only when everything beneath is already folded, as the desktop toggle reads it', () => {
-    expect(isSubtreeFolded(['x', 'y'], new Set(['x', 'y']))).toBe(true)
-    expect(isSubtreeFolded(['x', 'y'], new Set(['x']))).toBe(false)
-    expect(isSubtreeFolded([], new Set())).toBe(false)
   })
 })

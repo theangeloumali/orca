@@ -1,5 +1,5 @@
 import { useCallback, useMemo, type ReactElement } from 'react'
-import { isSubtreeFolded } from '../../worktree/project-sections/project-group-fold'
+import { areAllProjectsCollapsed } from '../../../../src/shared/sidebar-list/sections/projects-collapsed'
 import { resolveWorktreeHostId } from '../../worktree/row-presentation/worktree-host-context-labels'
 import type { Section, Worktree } from '../../worktree/workspace-list/workspace-list-types'
 import type { HostScreenController } from '../use-host-screen-controller'
@@ -36,19 +36,22 @@ export function useHostListForkParts(args: {
         .size,
     [displayWorktrees, state.repoHostIdByRepoId]
   )
-  const quickFilters = (
-    <>
-      <HostQuickFilterChips
-        filters={state.view.filters}
-        setFilter={settings.setFilter}
-        machineCount={machineCount}
-      />
-      <HostOrganizeHints hints={organize} />
-    </>
+  const quickFilters = useMemo(
+    () => (
+      <>
+        <HostQuickFilterChips
+          filters={state.view.filters}
+          setFilter={settings.setFilter}
+          machineCount={machineCount}
+        />
+        <HostOrganizeHints hints={organize} />
+      </>
+    ),
+    [state.view.filters, settings.setFilter, machineCount, organize]
   )
   const toggleSubtree = useCallback(
     (keys: readonly string[]) =>
-      settings.setGroupsCollapsed([...keys], !isSubtreeFolded(keys, collapsedGroups)),
+      settings.setGroupsCollapsed([...keys], !areAllProjectsCollapsed(keys, collapsedGroups)),
     [settings, collapsedGroups]
   )
   const machineKeys = useMemo(() => sections.flatMap((s) => (s.machine ? [s.key] : [])), [sections])

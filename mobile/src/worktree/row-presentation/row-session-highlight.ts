@@ -1,4 +1,4 @@
-import { hexToRgb } from '../../../../src/shared/color/rgba-contrast'
+import { hexToRgba } from '../../../../src/shared/color/rgba-contrast'
 import type { SessionHighlight } from '../../../../src/shared/worktree/row-display/session-highlight'
 
 export type RowHighlightStyle = {
@@ -19,9 +19,8 @@ export function rowSessionHighlightStyle(
     return null
   }
   const color = highlight === 'working' ? (machineColor ?? fallback.working) : fallback.needsYou
-  const [red, green, blue] = hexToRgb(color)
   return {
-    backgroundColor: `rgba(${red}, ${green}, ${blue}, ${TINT_ALPHA})`,
+    backgroundColor: hexToRgba(color, TINT_ALPHA),
     borderLeftColor: color,
     borderLeftWidth: 3
   }

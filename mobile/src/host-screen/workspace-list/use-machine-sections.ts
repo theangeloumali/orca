@@ -3,8 +3,10 @@ import {
   LOCAL_EXECUTION_HOST_ID,
   parseExecutionHostId
 } from '../../../../src/shared/execution-host/execution-host'
-import type { SidebarContrastPalette } from '../../../../src/shared/execution-host/host-tint-contrast'
-import { hexToRgb } from '../../../../src/shared/color/rgba-contrast'
+import {
+  builtInPalette,
+  type SidebarContrastPalette
+} from '../../../../src/shared/execution-host/host-tint-contrast'
 import { getHostContextLabel } from '../../../../src/shared/worktree/row-display/host-context-labels'
 import { paletteForScheme } from '../../theme/mobile-theme'
 import { resolveWorktreeHostId } from '../../worktree/row-presentation/worktree-host-context-labels'
@@ -20,13 +22,8 @@ import type { Worktree } from '../../worktree/workspace-list/workspace-list-type
 const PHONE_TINT_PALETTES: readonly SidebarContrastPalette[] = (['light', 'dark'] as const).map(
   (scheme) => {
     const palette = paletteForScheme(scheme)
-    const [red, green, blue] = hexToRgb(palette.textPrimary)
-    return {
-      surface: hexToRgb(palette.bgBase),
-      muted: hexToRgb(palette.textMuted),
-      foreground: hexToRgb(palette.textPrimary),
-      selected: [red, green, blue, scheme === 'dark' ? 0.1 : 0.08]
-    }
+    const washPercent = scheme === 'dark' ? 10 : 8
+    return builtInPalette(palette.bgBase, palette.textMuted, palette.textPrimary, washPercent)
   }
 )
 

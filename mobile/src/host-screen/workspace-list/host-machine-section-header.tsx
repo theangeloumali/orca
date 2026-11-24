@@ -2,8 +2,9 @@ import { memo } from 'react'
 import { ActivityIndicator, Pressable, Text, View } from 'react-native'
 import { ChevronRight } from 'lucide-react-native'
 import { DisclosureChevron } from '../../components/list/DisclosureChevron'
-import { hexToRgb } from '../../../../src/shared/color/rgba-contrast'
+import { hexToRgba } from '../../../../src/shared/color/rgba-contrast'
 import { colors } from '../../theme/mobile-theme'
+import { ColorDot } from '../../components/feedback/ColorDot'
 import { useMobileColorScheme } from '../../theme/use-mobile-color-scheme'
 import { useMobileTranslation } from '../../i18n/use-mobile-translation'
 import type { MachineSectionHeader } from '../../worktree/workspace-list/workspace-list-types'
@@ -15,8 +16,7 @@ function tintBackground(color: string | null, percent: number): string | undefin
   if (!color || percent <= 0) {
     return undefined
   }
-  const [red, green, blue] = hexToRgb(color)
-  return `rgba(${red}, ${green}, ${blue}, ${percent / 100})`
+  return hexToRgba(color, percent / 100)
 }
 
 /** One computer's header: color, name, workspace count and reachability; the first also folds them all. */
@@ -65,15 +65,7 @@ export const HostMachineSectionHeader = memo(function HostMachineSectionHeader(p
             <ChevronRight size={12} color={colors.textMuted} />
           </DisclosureChevron>
         </View>
-        <View
-          style={{
-            width: 8,
-            height: 8,
-            borderRadius: 4,
-            marginRight: 6,
-            backgroundColor: railColor
-          }}
-        />
+        <ColorDot color={railColor} size={8} style={{ marginRight: 6 }} />
         <Text style={styles.sectionTitle} numberOfLines={1}>
           {machine.label}
         </Text>

@@ -1,4 +1,7 @@
-import type { ExecutionHostId } from '../../../../src/shared/execution-host/execution-host'
+import {
+  parseExecutionHostId,
+  type ExecutionHostId
+} from '../../../../src/shared/execution-host/execution-host'
 import { isRepoHidden } from '../../../../src/shared/project/catalog/hidden-projects'
 import {
   getRepoRowIdentitiesKey,
@@ -32,15 +35,18 @@ export function buildIdleHint(
   now: number,
   dismissedKey: string | null
 ): IdleHint | null {
-  const idle = repos.filter((repo) => {
-    if (isRepoHidden(repo) || repo.addedAt === undefined) {
-      return false
-    }
-    const activity = rows
-      .filter((row) => row.repoId === repo.id)
-      .map((row) => ({ lastActivityAt: row.lastActivityAt ?? 0, lastVisitedAt: undefined }))
-    return isIdleProject(getProjectLastActiveAt(repo.addedAt, activity), now)
-  })
+  const activityByRepo = new Map<string, Parameters<typeof getProjectLastActiveAt>[1][number][]>()
+  for (const row of rows) {
+    const activity = activityByRepo.get(row.repoId) ?? []
+    activity.push({ lastActivityAt: row.lastActivityAt ?? 0, lastVisitedAt: undefined })
+    activityByRepo.set(row.repoId, activity)
+  }
+  const idle = repos.filter(
+    (repo) =>
+      !isRepoHidden(repo) &&
+      repo.addedAt !== undefined &&
+      isIdleProject(getProjectLastActiveAt(repo.addedAt, activityByRepo.get(repo.id) ?? []), now)
+  )
   const key = getRepoRowIdentitiesKey(idle)
   return idle.length === 0 || isIdleHintDismissed(key, dismissedKey) ? null : { repos: idle, key }
 }
@@ -70,5 +76,5 @@ export function buildClientHint(
 
 /** A machine whose groups the desktop files directly: this computer or one of its SSH targets. */
 export function isDirectlyFileableHost(hostId: ExecutionHostId): boolean {
-  return !hostId.startsWith('runtime:')
+  return parseExecutionHostId(hostId)?.kind !== 'runtime'
 }

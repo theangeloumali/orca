@@ -2,6 +2,7 @@ import type { GlobalSettings } from '../settings/global-settings-types'
 import type { RuntimeMobileTerminalTheme } from '../remote-runtime/session-graph/runtime-mobile-session-tab-contracts'
 import { normalizeTerminalMinimumContrastRatio } from './terminal-minimum-contrast-settings'
 import { resolveTerminalPalette, type TerminalPaletteSettings } from './terminal-theme-selection'
+import { hexToRgba } from '../color/rgba-contrast'
 
 export type MobileTerminalThemeSettings = TerminalPaletteSettings &
   Partial<
@@ -10,20 +11,6 @@ export type MobileTerminalThemeSettings = TerminalPaletteSettings &
       'terminalBackgroundOpacity' | 'terminalCursorOpacity' | 'terminalMinimumContrastRatio'
     >
   >
-
-function hexToRgba(hex: string, alpha: number): string {
-  let clean = hex.replace('#', '')
-  if (clean.length === 3) {
-    clean = clean
-      .split('')
-      .map((character) => character + character)
-      .join('')
-  }
-  const r = Number.parseInt(clean.slice(0, 2), 16)
-  const g = Number.parseInt(clean.slice(2, 4), 16)
-  const b = Number.parseInt(clean.slice(4, 6), 16)
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`
-}
 
 function isHexColor(value: string | undefined): value is string {
   return typeof value === 'string' && /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(value)

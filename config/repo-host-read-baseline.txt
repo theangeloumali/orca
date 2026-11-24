@@ -50,3 +50,4 @@
 1 src/shared/sidebar-list/feed-facts/workspace-review-facts.ts
 1 src/shared/workspace-session/workspace-session-terminal-buffers.ts
 1 src/shared/worktree/visibility/ownership.ts
+1 src/shared/repository/repo-row-identity.ts

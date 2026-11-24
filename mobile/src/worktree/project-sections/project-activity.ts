@@ -1,7 +1,8 @@
+import type { HostAgentActivityCounts } from '../../../../src/shared/sidebar-list/hosts/host-agent-activity'
 import type { Worktree } from '../workspace-list/workspace-list-types'
 
-/** What a project header's activity badges show. */
-export type ProjectActivity = { working: number; needsYou: number }
+/** What a project header's activity badges show, counted as a machine header's are. */
+export type ProjectActivity = HostAgentActivityCounts
 
 /** The section with its project's activity attached, when it has any. */
 export function withProjectActivity<S extends { key: string }>(
@@ -23,10 +24,16 @@ export function buildProjectActivity(
     if (section.isProjectGroup) {
       continue
     }
-    const working = section.data.filter(isWorking).length
-    const waiting = section.data.filter(needsYou).length
-    if (working > 0 || waiting > 0) {
-      activity.set(section.key, { working, needsYou: waiting })
+    const counts: ProjectActivity = { working: 0, needsYou: 0 }
+    for (const row of section.data) {
+      if (isWorking(row)) {
+        counts.working += 1
+      } else if (needsYou(row)) {
+        counts.needsYou += 1
+      }
+    }
+    if (counts.working > 0 || counts.needsYou > 0) {
+      activity.set(section.key, counts)
     }
   }
   return activity

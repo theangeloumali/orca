@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { applyForkAppIdentity, isForkBuildConfig } from './fork-app-identity.cjs'
+import { applyForkAppIdentity } from './fork-app-identity.cjs'
 
 const officialConfig = {
   name: 'Orca',
@@ -52,13 +52,11 @@ describe('applyForkAppIdentity', () => {
     expect(config.ios.buildNumber).toBe('1')
     expect(config.android.versionCode).toBe(32)
     expect(config.extra).toEqual({ keep: true, orcaForkBuild: true, orcaForkPush: false })
-    expect(isForkBuildConfig(config)).toBe(true)
   })
 
   it('leaves the official identity untouched when asked for it', () => {
     const config = applyForkAppIdentity(officialConfig, { ORCA_MOBILE_OFFICIAL_IDENTITY: '1' })
     expect(config).toEqual(officialConfig)
-    expect(isForkBuildConfig(config)).toBe(false)
   })
 })
 

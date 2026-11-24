@@ -31,7 +31,9 @@ function group(
     labelOf: (hostId) => LABELS.get(hostId) ?? hostId,
     statusOf: (hostId) => (hostId === 'ssh:nas' ? 'offline' : 'online'),
     overrides: new Map(options.overrides ?? []),
-    palettes: SIDEBAR_CONTRAST_THEMES
+    palettes: SIDEBAR_CONTRAST_THEMES,
+    rowCountOf: (hostId) =>
+      new Set(sections.flatMap(({ data }) => data.filter((entry) => hostOf(entry) === hostId))).size
   })
   return grouped
 }

@@ -7,6 +7,7 @@ import { DisclosureChevron } from '../../components/list/DisclosureChevron'
 import { MobileRepoIcon } from '../../components/icons/MobileRepoIcon'
 import { WORKTREE_ROW_LAYOUT } from '../../worktree/row-presentation/worktree-list-row-layout'
 import { colors } from '../../theme/mobile-theme'
+import { ColorDot } from '../../components/feedback/ColorDot'
 import { useMobileColorScheme } from '../../theme/use-mobile-color-scheme'
 import type { Section } from '../../worktree/workspace-list/workspace-list-types'
 import { hostScreenStyles as styles } from '../host-screen-styles'
@@ -41,23 +42,23 @@ export const HostSectionHeader = memo(function HostSectionHeader(props: {
   useMobileColorScheme()
   const t = useMobileTranslation()
   const { subtreeKeys, onToggleSubtree } = props
-  const foldSummary =
-    props.collapsed && props.foldProjects !== undefined
-      ? [
-          props.foldProjects === 1
-            ? t('hostScreen.groupFold.projects_one', '{{count}} project', { count: 1 })
-            : t('hostScreen.groupFold.projects_other', '{{count}} projects', {
-                count: props.foldProjects
-              }),
-          !props.foldNeedsYou
-            ? null
-            : props.foldNeedsYou === 1
-              ? t('hostScreen.groupFold.needsYou_one', '{{count}} needs you', { count: 1 })
-              : t('hostScreen.groupFold.needsYou_other', '{{count}} need you', {
-                  count: props.foldNeedsYou
-                })
-        ]
-      : null
+  const { foldProjects, foldNeedsYou } = props
+  let foldSummary: { projects: string; needsYou: string | null } | null = null
+  if (props.collapsed && foldProjects !== undefined) {
+    const projects =
+      foldProjects === 1
+        ? t('hostScreen.groupFold.projects_one', '{{count}} project', { count: 1 })
+        : t('hostScreen.groupFold.projects_other', '{{count}} projects', { count: foldProjects })
+    let needsYou: string | null = null
+    if (foldNeedsYou === 1) {
+      needsYou = t('hostScreen.groupFold.needsYou_one', '{{count}} needs you', { count: 1 })
+    } else if (foldNeedsYou) {
+      needsYou = t('hostScreen.groupFold.needsYou_other', '{{count}} need you', {
+        count: foldNeedsYou
+      })
+    }
+    foldSummary = { projects, needsYou }
+  }
   const pendingCreations = props.pendingCreations?.map((creation) => (
     <HostPendingCreationRow key={creation.key} creation={creation} />
   ))
@@ -111,32 +112,22 @@ export const HostSectionHeader = memo(function HostSectionHeader(props: {
           </View>
         ) : null}
         <Text style={styles.sectionTitle}>{props.title}</Text>
-        {foldSummary?.[1] ? (
+        {foldSummary?.needsYou ? (
           // Amber marks it; the words keep the count color so they stay AA-legible.
-          <View
-            style={{
-              width: 6,
-              height: 6,
-              borderRadius: 3,
-              marginRight: 4,
-              backgroundColor: colors.statusAmber
-            }}
-          />
+          <ColorDot color={colors.statusAmber} style={{ marginRight: 4 }} />
         ) : null}
         {foldSummary ? (
           <Text style={styles.sectionCount} numberOfLines={1}>
-            {foldSummary[0]}
-            {foldSummary[1] ? ` · ${foldSummary[1]}` : null}
+            {foldSummary.projects}
+            {foldSummary.needsYou ? ` · ${foldSummary.needsYou}` : null}
           </Text>
         ) : (
           <Text style={styles.sectionCount}>{props.count}</Text>
         )}
-        {props.activityWorking || props.activityNeedsYou ? (
-          <HostProjectActivityBadges
-            working={props.activityWorking ?? 0}
-            needsYou={props.activityNeedsYou ?? 0}
-          />
-        ) : null}
+        <HostProjectActivityBadges
+          working={props.activityWorking ?? 0}
+          needsYou={props.activityNeedsYou ?? 0}
+        />
         {props.pending && (
           <ActivityIndicator
             size="small"

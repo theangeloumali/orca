@@ -6,6 +6,11 @@ const forkBuildExtraSchema = z.looseObject({
   orcaForkPush: z.boolean().optional()
 })
 
+/** The fork's own app, which TestFlight or a sideloaded APK updates. */
+export function isForkBuildExtra(extra: unknown): boolean {
+  return forkBuildExtraSchema.safeParse(extra).success
+}
+
 /** A fork build without its own push keys: Stably's push service delivers only to the official app ids. */
 export function forkBuildLacksPush(extra: unknown): boolean {
   const fork = forkBuildExtraSchema.safeParse(extra)

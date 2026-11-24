@@ -1,4 +1,5 @@
 import type { Worktree } from '../workspace-list/workspace-list-types'
+import type { ProjectActivity } from './project-activity'
 import type { GroupTreePlacement } from './project-group-tree-sections'
 
 /** What a folded group header summarises, and the keys its whole subtree folds by. */
@@ -8,7 +9,8 @@ export type GroupFold = { projects: number; needsYou: number; subtreeKeys: strin
 export function buildGroupFolds(
   sections: readonly { key: string; isProjectGroup?: boolean; data: readonly Worktree[] }[],
   placements: ReadonlyMap<string, GroupTreePlacement>,
-  needsYou: (row: Worktree) => boolean
+  /** Each project's live agents, so a fold reuses its needs-you count. */
+  activity: ReadonlyMap<string, ProjectActivity>
 ): Map<string, GroupFold> {
   const folds = new Map<string, GroupFold>()
   for (const section of sections) {
@@ -17,7 +19,7 @@ export function buildGroupFolds(
       fold.subtreeKeys.push(section.key)
       if (!section.isProjectGroup) {
         fold.projects += 1
-        fold.needsYou += section.data.filter(needsYou).length
+        fold.needsYou += activity.get(section.key)?.needsYou ?? 0
       }
       folds.set(groupKey, fold)
     }
@@ -32,9 +34,4 @@ export function withGroupFold<S extends { key: string }>(
 ): S & { groupFold?: GroupFold } {
   const groupFold = folds.get(section.key)
   return groupFold ? { ...section, groupFold } : section
-}
-
-// Expands only when everything beneath is already folded, like the desktop's subtree toggle.
-export function isSubtreeFolded(keys: readonly string[], collapsed: ReadonlySet<string>): boolean {
-  return keys.length > 0 && keys.every((key) => collapsed.has(key))
 }

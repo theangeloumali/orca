@@ -1,6 +1,6 @@
 import * as z from 'zod'
 import { normalizeExecutionHostId } from '../../../../src/shared/execution-host/execution-host'
-import { HOST_SECTION_TINTS } from '../../../../src/shared/execution-host/host-appearance'
+import { pickHostAppearance } from '../../../../src/shared/execution-host/host-appearance'
 import type { HostAppearanceOverride } from '../../worktree/workspace-list/workspace-list-types'
 import type { ExecutionHostId } from '../../../../src/shared/execution-host/execution-host'
 
@@ -20,12 +20,7 @@ export function readHostAppearanceOverrides(
     if (!hostId || !isRecord(stored)) {
       return []
     }
-    const color = typeof stored.color === 'string' ? stored.color : undefined
-    const sectionTint = HOST_SECTION_TINTS.find((tint) => tint === stored.sectionTint)
-    const override: HostAppearanceOverride = {
-      ...(color ? { color } : {}),
-      ...(sectionTint ? { sectionTint } : {})
-    }
+    const override: HostAppearanceOverride = pickHostAppearance(stored)
     return Object.keys(override).length > 0 ? [[hostId, override] as const] : []
   })
 }

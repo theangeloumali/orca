@@ -16,6 +16,7 @@ import {
   createGithubReleaseUpdateSource,
   RETIRED_ANDROID_RELEASE_TAG_PREFIX
 } from './github-release-update-source'
+import { isForkBuildExtra } from '../notifications/delivery-policy/fork-push-availability'
 
 // expoConfig is embedded binary manifest because app does not use expo-updates; SDK 55 removed nativeAppVersion. Revisit version source if adopting OTA updates.
 export const installedAppVersion: string | null = Constants.expoConfig?.version ?? null
@@ -25,7 +26,7 @@ export const isRetiredGithubAndroidApp =
   Platform.OS === 'android' && Constants.expoConfig?.android?.package === 'com.stably.orca.mobile'
 
 /** The fork's own app: TestFlight or a sideloaded APK updates it, never Stably's channels. */
-const isForkBuild = Constants.expoConfig?.extra?.orcaForkBuild === true
+const isForkBuild = isForkBuildExtra(Constants.expoConfig?.extra)
 
 /** Play delivers this install's updates and forbids other update channels. */
 export const isGooglePlayInstall =

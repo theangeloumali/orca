@@ -45,13 +45,19 @@ export type MachineGroupingInputs = {
   statusOf: (hostId: ExecutionHostId) => MachineStatus
   overrides: ReadonlyMap<ExecutionHostId, HostAppearanceOverride>
   palettes: readonly SidebarContrastPalette[] | null
-  /** All of a machine's rows, drawn or folded away; without it the header counts drawn rows. */
-  rowCountOf?: (hostId: ExecutionHostId) => number
+  /** All of a machine's rows, drawn or folded away, so a folded group never shrinks the count. */
+  rowCountOf: (hostId: ExecutionHostId) => number
 }
 
 export type ShownSections = { rawSections: Section[]; sections: Section[] }
 
 type Slice = { hostId: ExecutionHostId; section: Section; items: WorkspaceListItem[] }
+
+type HeaderContext = {
+  orderedHostIds: readonly ExecutionHostId[]
+  settings: { hostSettingOverrides: Record<string, HostAppearanceOverride> }
+  labelById: ReadonlyMap<ExecutionHostId, string>
+}
 
 function emptyCollapsed(section: Section, sourceKey: string, collapsed: ReadonlySet<string>) {
   return collapsed.has(sourceKey) ? { ...section, data: [] } : section
@@ -72,20 +78,17 @@ function sliceByHost(section: Section, inputs: MachineGroupingInputs): Slice[] {
 function machineHeader(
   hostId: ExecutionHostId,
   slices: readonly Slice[],
-  orderedHostIds: readonly ExecutionHostId[],
+  context: HeaderContext,
   inputs: MachineGroupingInputs
 ): Section {
   const key = `host:${hostId}`
-  const settings = { hostSettingOverrides: Object.fromEntries(inputs.overrides) }
-  const color = resolveHostColor(settings, hostId, orderedHostIds)
+  const { settings } = context
+  const color = resolveHostColor(settings, hostId, context.orderedHostIds)
   const tinted = color !== null && resolveHostSectionTint(settings, hostId) !== 'off'
   // The rows' own host label first, so the header reads as each row's pill does (runtime servers by name).
   const rowLabel = slices.flatMap(({ items }) => items).find((item) => item.view.hostContextLabel)
-  const label = rowLabel?.view.hostContextLabel ?? inputs.labelOf(hostId)
-  // Pinned rows repeat in their project, so a drawn count takes each row once.
-  const count =
-    inputs.rowCountOf?.(hostId) ??
-    new Set(slices.flatMap(({ items }) => items.map((item) => item.row))).size
+  const label = rowLabel?.view.hostContextLabel ?? context.labelById.get(hostId) ?? hostId
+  const count = inputs.rowCountOf(hostId)
   const machine: MachineSectionHeader = {
     hostId,
     label,
@@ -108,8 +111,9 @@ export function groupSectionsByMachine(inputs: MachineGroupingInputs): ShownSect
   if (hostsWithRows.size < 2) {
     return null
   }
-  const byLabel = [...new Set(slices.map((slice) => slice.hostId))].sort((a, b) =>
-    inputs.labelOf(a).localeCompare(inputs.labelOf(b))
+  const labelById = new Map(slices.map(({ hostId }) => [hostId, inputs.labelOf(hostId)]))
+  const byLabel = [...labelById.keys()].sort((a, b) =>
+    (labelById.get(a) ?? a).localeCompare(labelById.get(b) ?? b)
   )
   const machines = groupByExecutionHost({
     items: slices,
@@ -117,9 +121,13 @@ export function groupSectionsByMachine(inputs: MachineGroupingInputs): ShownSect
     hostOrder: byLabel,
     anchorHostId: LOCAL_EXECUTION_HOST_ID
   })
-  const orderedHostIds = machines.map(({ hostId }) => hostId)
+  const context: HeaderContext = {
+    orderedHostIds: machines.map(({ hostId }) => hostId),
+    settings: { hostSettingOverrides: Object.fromEntries(inputs.overrides) },
+    labelById
+  }
   const shown = machines.flatMap(({ hostId, items: hostSlices }) => {
-    const header = machineHeader(hostId, hostSlices, orderedHostIds, inputs)
+    const header = machineHeader(hostId, hostSlices, context, inputs)
     if (header.machine?.collapsed) {
       return [{ raw: header, visible: header }]
     }

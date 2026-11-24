@@ -31,8 +31,4 @@ function applyForkAppIdentity(config, env) {
   }
 }
 
-function isForkBuildConfig(config) {
-  return config?.extra?.orcaForkBuild === true
-}
-
-module.exports = { applyForkAppIdentity, isForkBuildConfig }
+module.exports = { applyForkAppIdentity }

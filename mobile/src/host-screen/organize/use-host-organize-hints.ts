@@ -16,11 +16,16 @@ import {
 import { buildClientHint, buildIdleHint, isDirectlyFileableHost } from './phone-organize-hints'
 
 // A refused or failed write counts as not done; the hint stays so the user can retry.
-async function attempt<Value>(
-  send: () => Promise<Value>
+async function send<Params, Reply, Value>(
+  operation: {
+    request: (rpc: RpcClient, params: Params) => Promise<Reply>
+    interpret: (reply: Reply) => Value
+  },
+  rpc: RpcClient,
+  params: Params
 ): Promise<{ ok: true; value: Value } | { ok: false }> {
   try {
-    return { ok: true, value: await send() }
+    return { ok: true, value: operation.interpret(await operation.request(rpc, params)) }
   } catch {
     return { ok: false }
   }
@@ -47,9 +52,7 @@ export function useHostOrganizeHints(args: {
       return
     }
     let live = true
-    void attempt(async () =>
-      organizeDismissalsRead.interpret(await organizeDismissalsRead.request(client))
-    ).then((read) => {
+    void send(organizeDismissalsRead, client, undefined).then((read) => {
       if (live && read.ok && read.value.accepted) {
         setDismissed(read.value.value)
       }
@@ -87,11 +90,7 @@ export function useHostOrganizeHints(args: {
     (kind: keyof OrganizeDismissals, key: string) =>
       run(async (rpc) => {
         const field = kind === 'idle' ? 'dismissedIdleProjectsKey' : 'dismissedClientSuggestionsKey'
-        const written = await attempt(async () =>
-          organizeDismissalWrite.interpret(
-            await organizeDismissalWrite.request(rpc, { [field]: key })
-          )
-        )
+        const written = await send(organizeDismissalWrite, rpc, { [field]: key })
         if (written.ok && written.value.accepted) {
           setDismissed((current) => (current ? { ...current, [kind]: key } : current))
         }
@@ -104,12 +103,10 @@ export function useHostOrganizeHints(args: {
     }
     setActed((current) => new Set(current).add(idle.key))
     await run((rpc) =>
-      archiveProjects(idle.repos, async (params) => {
-        const archived = await attempt(async () =>
-          projectArchiveWrite.interpret(await projectArchiveWrite.request(rpc, params))
-        )
-        return archived.ok
-      })
+      archiveProjects(
+        idle.repos,
+        async (params) => (await send(projectArchiveWrite, rpc, params)).ok
+      )
     )
   }, [idle, run])
   const groupClients = useCallback(async () => {
@@ -120,19 +117,15 @@ export function useHostOrganizeHints(args: {
     await run((rpc) =>
       fileClientSuggestions(clients.suggestions, {
         createGroup: async (params) => {
-          const created = await attempt(async () =>
-            projectGroupCreateWrite.interpret(await projectGroupCreateWrite.request(rpc, params))
-          )
+          const created = await send(projectGroupCreateWrite, rpc, params)
           return created.ok ? created.value : null
         },
-        moveProject: async (params) => {
-          const moved = await attempt(async () =>
-            projectGroupMoveWrite.interpret(await projectGroupMoveWrite.request(rpc, params))
-          )
-          return moved.ok
-        }
+        moveProject: async (params) => (await send(projectGroupMoveWrite, rpc, params)).ok
       })
     )
   }, [clients, run])
-  return { idle, clients, busy, dismiss, archiveIdle, groupClients }
+  return useMemo(
+    () => ({ idle, clients, busy, dismiss, archiveIdle, groupClients }),
+    [idle, clients, busy, dismiss, archiveIdle, groupClients]
+  )
 }

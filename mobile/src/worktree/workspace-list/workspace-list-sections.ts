@@ -281,8 +281,8 @@ export function buildMobileWorkspacePlan(
       }))
     }
   })
-  const groupFolds = buildGroupFolds(occurrencePlan.sections, groupTreePlacements, rowNeedsYou)
   const activity = buildProjectActivity(occurrencePlan.sections, rowIsWorking, rowNeedsYou)
+  const groupFolds = buildGroupFolds(occurrencePlan.sections, groupTreePlacements, activity)
   return {
     occurrencePlan,
     render: (

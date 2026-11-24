@@ -15,7 +15,7 @@ export type SidebarContrastPalette = {
   selected: Rgba
 }
 
-function builtInPalette(
+export function builtInPalette(
   surface: string,
   muted: string,
   foreground: string,

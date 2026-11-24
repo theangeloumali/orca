@@ -48,7 +48,17 @@ export function resolveHostColor(
   return AUTO_HOST_COLORS[index % AUTO_HOST_COLORS.length] ?? null
 }
 
-/** A paired host owns only display labels; this browser keeps every other per-host key. */
+/** A host's stored color and known tint, the appearance a paired phone is sent; empty when neither is set. */
+export function pickHostAppearance(stored: {
+  color?: unknown
+  sectionTint?: unknown
+}): Pick<HostSettingOverrides, 'color' | 'sectionTint'> {
+  const color = typeof stored.color === 'string' && stored.color ? stored.color : undefined
+  const sectionTint = HOST_SECTION_TINTS.find((tint) => tint === stored.sectionTint)
+  return { ...(color ? { color } : {}), ...(sectionTint ? { sectionTint } : {}) }
+}
+
+/** A paired host owns only display labels toward a browser; this browser keeps every other per-host key. */
 export function mergeRuntimeHostOverrides(
   local: HostOverridesMap | undefined,
   runtime: HostOverridesMap

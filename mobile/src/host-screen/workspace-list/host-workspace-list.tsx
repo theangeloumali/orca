@@ -122,6 +122,8 @@ export function HostWorkspaceList({
   const { openWorktreeSession } = actions
   const statusLive = connState === 'connected'
 
+  const { onRefresh: refreshCatalog } = catalog
+  const onCatalogChanged = useCallback(() => void refreshCatalog(), [refreshCatalog])
   const fork = useHostListForkParts({
     sections,
     displayWorktrees,
@@ -131,12 +133,13 @@ export function HostWorkspaceList({
     state,
     client,
     connState,
-    onCatalogChanged: () => void catalog.onRefresh()
+    onCatalogChanged
   })
+  const { renderMachineHeader, toggleSubtree } = fork
   const renderSectionHeader = useCallback(
     ({ section }: { section: Section }) => {
       const collapseKey = section.collapseKey ?? section.key
-      const machineHeader = fork.renderMachineHeader(section)
+      const machineHeader = renderMachineHeader(section)
       if (machineHeader) {
         return machineHeader
       }
@@ -158,7 +161,7 @@ export function HostWorkspaceList({
             foldProjects={section.groupFold?.projects}
             foldNeedsYou={section.groupFold?.needsYou}
             subtreeKeys={section.groupFold?.subtreeKeys}
-            onToggleSubtree={fork.toggleSubtree}
+            onToggleSubtree={toggleSubtree}
             activityWorking={section.projectActivity?.working}
             activityNeedsYou={section.projectActivity?.needsYou}
           />
@@ -173,7 +176,8 @@ export function HostWorkspaceList({
       repoLookById,
       toggleCollapsed,
       bots,
-      fork
+      renderMachineHeader,
+      toggleSubtree
     ]
   )
 
