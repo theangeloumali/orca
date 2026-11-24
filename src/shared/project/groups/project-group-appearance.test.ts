@@ -67,13 +67,12 @@ describe('project group appearance', () => {
     expect(setProjectGroupTint(undefined, 'root', 'strong')).toEqual({ root: 'strong' })
   })
 
-  it('reads a group color from its first copy with a valid hex', () => {
-    const copies = [
-      { ...PLAIN, color: 'not-a-color' },
-      { ...PLAIN, color: '#22C55E' },
-      { ...PLAIN, color: '#ef4444' }
-    ]
-    expect(projectGroupOwnerColor(copies, 'plain')).toBe('#22c55e')
-    expect(projectGroupOwnerColor([PLAIN], 'plain')).toBeNull()
+  it('reads the newest copy, so a stale copy on a host that missed the save cannot mask it', () => {
+    const staleM1 = { ...PLAIN, color: '#ef4444', updatedAt: 1 }
+    const savedLocal = { ...PLAIN, color: '#22C55E', updatedAt: 2 }
+    const newerBroken = { ...PLAIN, color: 'not-a-color', updatedAt: 3 }
+    expect(projectGroupOwnerColor([staleM1, savedLocal, newerBroken], 'plain')).toBe('#22c55e')
+    const clearedLocal = { ...PLAIN, color: null, updatedAt: 2 }
+    expect(projectGroupOwnerColor([staleM1, clearedLocal], 'plain')).toBeNull()
   })
 })

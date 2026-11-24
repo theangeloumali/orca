@@ -9,6 +9,8 @@ export type ProjectGroupTint = HostSectionTint
 export type ProjectGroupTints = NonNullable<GlobalSettings['projectGroupTints']>
 export type ProjectGroupColorLink = Pick<ProjectGroup, 'id' | 'parentGroupId' | 'color'>
 export type ResolvedProjectGroupColor = { groupId: string; color: string }
+/** One host's copy of a group; updatedAt picks the latest write across hosts. */
+export type ProjectGroupColorCopy = ProjectGroupColorLink & Pick<ProjectGroup, 'updatedAt'>
 
 /** The nearest group up the parent chain with a valid color; null lets the machine tint show. */
 export function resolveProjectGroupColor(
@@ -28,17 +30,33 @@ export function resolveProjectGroupColor(
   return null
 }
 
-/** A group on several hosts has one copy per host; the first copy with a valid color owns it. */
-export function indexProjectGroupColorOwners<T extends ProjectGroupColorLink>(
+const holdsColorChoice = (copy: ProjectGroupColorLink): boolean =>
+  copy.color === null || normalizeRepoBadgeColor(copy.color) !== null
+
+function outranks(candidate: ProjectGroupColorCopy, current: ProjectGroupColorCopy): boolean {
+  if (!holdsColorChoice(candidate)) {
+    return false
+  }
+  if (!holdsColorChoice(current)) {
+    return true
+  }
+  if (candidate.updatedAt !== current.updatedAt) {
+    return candidate.updatedAt > current.updatedAt
+  }
+  return (
+    !normalizeRepoBadgeColor(current.color) && normalizeRepoBadgeColor(candidate.color) !== null
+  )
+}
+
+/** Last write wins across a group's host copies, so a copy that missed a save can't mask it.
+    An invalid hex is no choice; on a tie, the copy holding a color wins. */
+export function indexProjectGroupColorOwners<T extends ProjectGroupColorCopy>(
   groups: readonly T[]
 ): Map<string, T> {
   const ownersById = new Map<string, T>()
   for (const group of groups) {
     const current = ownersById.get(group.id)
-    if (
-      !current ||
-      (!normalizeRepoBadgeColor(current.color) && normalizeRepoBadgeColor(group.color))
-    ) {
+    if (!current || outranks(group, current)) {
       ownersById.set(group.id, group)
     }
   }
@@ -47,7 +65,7 @@ export function indexProjectGroupColorOwners<T extends ProjectGroupColorLink>(
 
 /** The color a group shows from its own copies, under the same owner rule as the sidebar. */
 export function projectGroupOwnerColor(
-  groups: readonly ProjectGroupColorLink[],
+  groups: readonly ProjectGroupColorCopy[],
   groupId: string
 ): string | null {
   return normalizeRepoBadgeColor(indexProjectGroupColorOwners(groups).get(groupId)?.color)

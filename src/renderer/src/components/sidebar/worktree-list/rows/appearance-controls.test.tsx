@@ -54,7 +54,9 @@ beforeEach(() => {
             (mutation) =>
               mutation.groupId === copy.id && mutation.hostId === getRepoExecutionHostId(copy)
           )
-          return write ? { ...copy, color: write.updates.color ?? null } : copy
+          return write
+            ? { ...copy, color: write.updates.color ?? null, updatedAt: copy.updatedAt + 1 }
+            : copy
         })
       }))
       return true
@@ -105,7 +107,7 @@ describe('useProjectGroupAppearanceControls', () => {
     expect(result.current.colorValue).toBe('#22c55e')
   })
 
-  it('keeps the copies that saved and names the machine that could not be updated', async () => {
+  it('shows the color that saved when another machine keeps a stale copy, and names that machine', async () => {
     const toastError = vi.spyOn(toast, 'error').mockImplementation(() => 'toast')
     const saveOnline = useAppStore.getState().updateProjectGroups
     useAppStore.setState((state) => ({
@@ -113,6 +115,7 @@ describe('useProjectGroupAppearanceControls', () => {
         ...state.settings,
         hostSettingOverrides: { 'runtime:a': { displayLabel: 'M1 MAX' } }
       },
+      projectGroups: [group({ executionHostId: 'runtime:a', color: '#ef4444' }), group({})],
       updateProjectGroups: async (mutations) => {
         if (mutations.some(({ hostId }) => hostId === 'runtime:a')) {
           throw new Error('offline')
@@ -123,12 +126,11 @@ describe('useProjectGroupAppearanceControls', () => {
     const { result } = renderGroupControls()
     await act(async () => result.current.selectColor('#22c55e'))
     expect(useAppStore.getState().projectGroups.map((copy) => copy.color)).toEqual([
-      null,
+      '#ef4444',
       '#22c55e'
     ])
-    expect(toastError).toHaveBeenCalledWith(
-      "Couldn't update the color on M1 MAX; it will show the old color there"
-    )
+    expect(result.current.colorValue).toBe('#22c55e')
+    expect(toastError).toHaveBeenCalledWith(expect.stringContaining('M1 MAX'))
     toastError.mockRestore()
   })
 

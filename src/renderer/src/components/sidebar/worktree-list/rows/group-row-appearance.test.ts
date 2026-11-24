@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { hostTintPercents } from '../../../../../../shared/execution-host/host-tint-contrast'
 import { buildGroupRowAppearance, groupColorStyle } from './group-row-appearance'
 
-const RED = { id: 'red', parentGroupId: null, color: '#ef4444' }
-const NESTED = { id: 'nested', parentGroupId: 'red', color: null }
-const PLAIN = { id: 'plain', parentGroupId: null, color: null }
+const RED = { id: 'red', parentGroupId: null, color: '#ef4444', updatedAt: 0 }
+const NESTED = { id: 'nested', parentGroupId: 'red', color: null, updatedAt: 0 }
+const PLAIN = { id: 'plain', parentGroupId: null, color: null, updatedAt: 0 }
 const GROUPS = [RED, NESTED, PLAIN]
 
 const groupHeader = (id: string | null) => ({ type: 'header' as const, projectGroup: { id } })

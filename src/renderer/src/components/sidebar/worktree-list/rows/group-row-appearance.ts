@@ -3,7 +3,7 @@ import {
   indexProjectGroupColorOwners,
   resolveProjectGroupColor,
   resolveProjectGroupRowTint,
-  type ProjectGroupColorLink,
+  type ProjectGroupColorCopy,
   type ProjectGroupTint,
   type ProjectGroupTints
 } from '../../../../../../shared/project/groups/project-group-appearance'
@@ -52,7 +52,7 @@ function rowProjectGroupId(row: GroupLinkedRow): string | null {
 /** One pass; rows with the same color owner and background share one appearance object. */
 export function buildGroupRowAppearance(
   rows: readonly GroupLinkedRow[],
-  groups: readonly ProjectGroupColorLink[],
+  groups: readonly ProjectGroupColorCopy[],
   tints: ProjectGroupTints | undefined,
   palettes: readonly SidebarContrastPalette[] | null = SIDEBAR_CONTRAST_THEMES
 ): (GroupRowAppearance | null)[] {

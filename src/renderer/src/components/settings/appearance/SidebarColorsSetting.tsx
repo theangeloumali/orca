@@ -20,6 +20,7 @@ import { useBoundedHostRows } from '../../host-picker/use-bounded-host-rows'
 import { HostListSearchField } from '../../host-picker/HostListSearchField'
 import { HostListOverflowNote } from '../../host-picker/HostListOverflowNote'
 import { selectEphemeralVmHostLifecycles } from '@/store/slices/ephemeral-vm/ephemeral-vm-lifecycle'
+import { useRuntimeStatusByEnvironmentId } from '@/store/slices/runtime-status/views/use-runtime-status-view'
 import { buildExecutionHostRegistry } from '../../../../../shared/execution-host/execution-host-registry'
 import { getHostDisplayLabelOverrides } from '../../../../../shared/execution-host/host-setting-overrides'
 import {
@@ -96,6 +97,8 @@ function useColorableHosts(): { id: ExecutionHostId; label: string }[] {
   const repos = useAppStore((s) => s.repos)
   const settings = useAppStore((s) => s.settings)
   const sshTargetLabels = useAppStore((s) => s.sshTargetLabels)
+  const sshConnectionStates = useAppStore((s) => s.sshConnectionStates)
+  const runtimeStatusByEnvironmentId = useRuntimeStatusByEnvironmentId()
   const runtimeEnvironments = useAppStore((s) => s.runtimeEnvironments)
   const ephemeralVmHosts = useAppStore(selectEphemeralVmHostLifecycles)
   return useMemo(() => {
@@ -103,7 +106,9 @@ function useColorableHosts(): { id: ExecutionHostId; label: string }[] {
       repos,
       settings,
       sshTargetLabels,
+      sshConnectionStates,
       runtimeEnvironments,
+      runtimeStatusByEnvironmentId,
       hostLabelOverrides: getHostDisplayLabelOverrides(settings),
       ephemeralVmHosts
     })
@@ -111,7 +116,16 @@ function useColorableHosts(): { id: ExecutionHostId; label: string }[] {
       id: host.id,
       label: translateHostDisplayLabel(host, t)
     }))
-  }, [repos, settings, sshTargetLabels, runtimeEnvironments, ephemeralVmHosts, t])
+  }, [
+    repos,
+    settings,
+    sshTargetLabels,
+    sshConnectionStates,
+    runtimeEnvironments,
+    runtimeStatusByEnvironmentId,
+    ephemeralVmHosts,
+    t
+  ])
 }
 
 function HostColorRow({
