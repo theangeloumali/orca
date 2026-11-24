@@ -1,5 +1,6 @@
 // The fork (theangeloumali/orca) ships its own app beside the official one: own name, scheme,
 // bundle id and package, and no Stably Firebase file. ORCA_MOBILE_OFFICIAL_IDENTITY=1 keeps upstream's.
+// ORCA_FORK_PUSH=1 marks a build that ships its own APNs key and Firebase project.
 const FORK_DEFAULTS = {
   name: 'Orca ZK',
   scheme: 'orcazk',
@@ -26,7 +27,7 @@ function applyForkAppIdentity(config, env) {
       package: env.ORCA_ANDROID_PACKAGE || FORK_DEFAULTS.androidPackage,
       ...(forkGoogleServices ? { googleServicesFile: forkGoogleServices } : {})
     },
-    extra: { ...config.extra, orcaForkBuild: true }
+    extra: { ...config.extra, orcaForkBuild: true, orcaForkPush: env.ORCA_FORK_PUSH === '1' }
   }
 }
 

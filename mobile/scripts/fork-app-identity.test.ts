@@ -51,7 +51,7 @@ describe('applyForkAppIdentity', () => {
     const config = applyForkAppIdentity(officialConfig, {})
     expect(config.ios.buildNumber).toBe('1')
     expect(config.android.versionCode).toBe(32)
-    expect(config.extra).toEqual({ keep: true, orcaForkBuild: true })
+    expect(config.extra).toEqual({ keep: true, orcaForkBuild: true, orcaForkPush: false })
     expect(isForkBuildConfig(config)).toBe(true)
   })
 
@@ -59,5 +59,14 @@ describe('applyForkAppIdentity', () => {
     const config = applyForkAppIdentity(officialConfig, { ORCA_MOBILE_OFFICIAL_IDENTITY: '1' })
     expect(config).toEqual(officialConfig)
     expect(isForkBuildConfig(config)).toBe(false)
+  })
+})
+
+describe('fork push flag', () => {
+  it('marks push available only when the fork brings its own push setup', () => {
+    expect(applyForkAppIdentity(officialConfig, {}).extra.orcaForkPush).toBe(false)
+    expect(applyForkAppIdentity(officialConfig, { ORCA_FORK_PUSH: '1' }).extra.orcaForkPush).toBe(
+      true
+    )
   })
 })
