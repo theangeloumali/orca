@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react'
 import { useAppStore } from '@/store'
 import { toggleCollapsedGroupSet } from '@/store/slices/ui/collapsed-group-toggle'
 import { isProjectSectionGroupKey } from '../../../../../../shared/sidebar-list/sections/group-keys'
+import { withoutProjectKeys } from './filter-scoped-collapse'
 import { selectHidesEmptyProjectGroups } from '../controls/sidebar-filter-actions'
 import { getVisibleProjectGroupSubtreeKeys } from '../rows/use-project-group-subtree-collapse'
 import { toggleProjectGroupSubtreeCollapsed } from './project-group-subtree-collapse'
@@ -9,10 +10,6 @@ import { toggleProjectGroupSubtreeCollapsed } from './project-group-subtree-coll
 type FilterSession = { filtering: boolean; folded: ReadonlySet<string> }
 
 const NOTHING_FOLDED: ReadonlySet<string> = new Set()
-
-function withoutProjectKeys(keys: Iterable<string>): string[] {
-  return [...keys].filter((key) => !isProjectSectionGroupKey(key))
-}
 
 /** Live, Needs you and find open every project; folds made meanwhile last only that filter session. */
 export function useFilterScopedCollapse() {

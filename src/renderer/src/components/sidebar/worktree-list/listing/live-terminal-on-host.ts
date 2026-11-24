@@ -1,5 +1,9 @@
-import { isExecutionHostForWorktree } from '@/lib/workspace/ownership/qualified-worktree-execution-owner'
+import {
+  isExecutionHostForWorktree,
+  resolveQualifiedWorktreeExecutionOwner
+} from '@/lib/workspace/ownership/qualified-worktree-execution-owner'
 import type { AppState } from '@/store/types'
+import { selectWorktreesByRepo } from '@/store/workspaces/catalog/workspace-record-fields'
 import { selectStoppedWslDistro } from '@/runtime/hosts/wsl/wsl-host-stopped-status'
 import {
   LOCAL_EXECUTION_HOST_ID,
@@ -17,11 +21,25 @@ import { ptyOutlivesStoppedHost } from '../../workspace-card/activity/stopped-wo
 export type TerminalHostState = Parameters<typeof isExecutionHostForWorktree>[0] &
   Pick<AppState, 'wslHostStatuses'>
 
-// Keyed by the host being checked: a twin id's stopped WSL copy must not end its local terminals.
-function stoppedWslEnvironmentOf(state: TerminalHostState, hostId: ExecutionHostId): string | null {
+// Keyed by the host being checked, so a twin's stopped WSL copy keeps its local terminals.
+// An SSH alias host reaches its distro through the owner row's runtime environment.
+function stoppedWslEnvironmentOf(
+  state: TerminalHostState,
+  worktreeId: string,
+  hostId: ExecutionHostId
+): string | null {
   const host = parseExecutionHostId(hostId)
-  return host?.kind === 'runtime' && selectStoppedWslDistro(state, host.environmentId) !== null
-    ? host.environmentId
+  const environmentId =
+    host?.kind === 'runtime'
+      ? host.environmentId
+      : resolveQualifiedWorktreeExecutionOwner(
+          selectWorktreesByRepo(state),
+          state.repos,
+          worktreeId,
+          hostId
+        )?.worktree.runtimeOwnerEnvironmentId?.trim()
+  return environmentId && selectStoppedWslDistro(state, environmentId) !== null
+    ? environmentId
     : null
 }
 
@@ -36,8 +54,12 @@ export function hasLiveTerminalOnHost(
   worktreeId: string,
   hostId: ExecutionHostId
 ): boolean {
-  const stoppedHost = stoppedWslEnvironmentOf(state, hostId)
-  return (terminalTabs[worktreeId] ?? []).some((tab) =>
+  const tabs = terminalTabs[worktreeId]
+  if (!tabs?.length) {
+    return false
+  }
+  const stoppedHost = stoppedWslEnvironmentOf(state, worktreeId, hostId)
+  return tabs.some((tab) =>
     (ptyIdsByTabId[tab.id] ?? []).some(
       (ptyId) =>
         ptyOutlivesStoppedHost(ptyId, stoppedHost) &&

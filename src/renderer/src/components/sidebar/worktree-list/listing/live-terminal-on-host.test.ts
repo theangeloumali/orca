@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
   LOCAL_EXECUTION_HOST_ID,
-  toRuntimeExecutionHostId
+  toRuntimeExecutionHostId,
+  toSshExecutionHostId
 } from '../../../../../../shared/execution-host/execution-host'
 import { toRemoteRuntimePtyId } from '../../../../../../shared/remote-runtime/remote-runtime-pty-id'
 import type { WslHostConnectionState } from '../../../../../../shared/remote-runtime/wsl-hosts/wsl-host-types'
@@ -37,5 +38,30 @@ describe('hasLiveTerminalOnHost', () => {
     expect(isLiveOn('distro-stopped', LOCAL_EXECUTION_HOST_ID)).toBe(true)
     expect(isLiveOn('distro-stopped', WSL_HOST)).toBe(false)
     expect(isLiveOn('ready', WSL_HOST)).toBe(true)
+  })
+
+  it("ends an SSH alias host's terminals when the WSL distro behind it stops", () => {
+    const aliasHost = toSshExecutionHostId('box')
+    const aliasRepo: Repo = {
+      ...repo,
+      id: 'repo-alias',
+      connectionId: 'box',
+      executionHostId: WSL_HOST
+    }
+    const state: TerminalHostState = {
+      ...stateWithDistro('distro-stopped'),
+      repos: [aliasRepo, repo],
+      worktreesByRepo: {
+        [aliasRepo.id]: [
+          { ...shared, repoId: aliasRepo.id, hostId: aliasHost, runtimeOwnerEnvironmentId: WSL_ENV }
+        ],
+        [repo.id]: [{ ...shared, repoId: repo.id, hostId: LOCAL_EXECUTION_HOST_ID }]
+      }
+    }
+    const isLive = (hostId: typeof aliasHost | 'local') =>
+      hasLiveTerminalOnHost(state, terminalTabs, ptyIdsByTabId, shared.id, hostId)
+
+    expect(isLive(aliasHost)).toBe(false)
+    expect(isLive(LOCAL_EXECUTION_HOST_ID)).toBe(true)
   })
 })

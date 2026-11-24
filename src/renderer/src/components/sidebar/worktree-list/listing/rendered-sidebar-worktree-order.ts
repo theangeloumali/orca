@@ -44,6 +44,7 @@ import {
 import { selectWorkspaceBoardStatuses } from '@/store/workspaces/status/host-workspace-status-columns'
 import { indexHiddenProjects } from '../../../../../../shared/project/catalog/hidden-projects'
 import { getSidebarProjectGrouping } from './sidebar-project-grouping'
+import { selectFilterScopedSavedCollapse } from './filter-scoped-collapse'
 
 const EMPTY_REPO_ID_SET: ReadonlySet<string> = Object.freeze(new Set<string>())
 const EMPTY_IMPORTED_BY_REPO: ReadonlyMap<string, ImportedWorktreesCardCandidate> = new Map()
@@ -82,6 +83,8 @@ export function computeRenderedSidebarRows(
   )
 
   const repoMap = getIndexedRepoMap(state.repos)
+  // The unmounted list starts with no session folds, so this matches the list it would draw.
+  const collapsedGroups = selectFilterScopedSavedCollapse(state)
   // Build the host registry only when sections may affect order; zero/one-host cases still safely no-op.
   const needsHostSections =
     state.showWorkspaceHostSections ||
@@ -123,13 +126,11 @@ export function computeRenderedSidebarRows(
     filterRepoIds: state.filterRepoIds,
     hiddenProjects: indexHiddenProjects(state.repos, defaultHostId)
     // Lanes collapse per host below, as in the drawn list, so Cmd+1–9 skips one only where it is hidden.
-  }).render(
-    needsHostSections ? deferHostSectionCollapse(state.collapsedGroups) : state.collapsedGroups
-  )
+  }).render(needsHostSections ? deferHostSectionCollapse(collapsedGroups) : collapsedGroups)
 
   return needsHostSections
     ? scopeHostSectionCollapse({
-        collapsedGroups: state.collapsedGroups,
+        collapsedGroups,
         rows: addHostSectionRows({
           rows,
           hostOptions: orderHostSectionOptions(
@@ -148,7 +149,7 @@ export function computeRenderedSidebarRows(
           visibleWorkspaceHostIds: state.visibleWorkspaceHostIds,
           defaultHostId,
           localHostLabel: getLocalExecutionHostLabel(),
-          collapsedHostKeys: state.collapsedGroups,
+          collapsedHostKeys: collapsedGroups,
           forceCollapseHosts: false,
           preferProjectGrouping: true,
           showHostSections: state.showWorkspaceHostSections
