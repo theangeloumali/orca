@@ -18,7 +18,7 @@ import {
 } from '../../agent-status/presentation/agents-view-thread-filters'
 import { isReleaseChannel } from '../../updater/release-channel'
 import type { ReleaseChannel } from '../../updater/release-channel'
-import { ClientUiWorkspaceFilterFields } from './client-ui-workspace-filter-fields-params'
+import { ClientUiForkSidebarFields } from './client-ui-fork-sidebar-fields-params'
 import { TaskResumeState } from './task-resume-state-params'
 import { WorkspaceCleanup } from '../workspace-cleanup/workspace-cleanup-ui-params'
 import { omitUndefinedValues, tolerateUnknownValues } from './ui-update-value-tolerance-params'
@@ -133,6 +133,9 @@ export const UiUpdateFields = z
     rightSidebarExplorerView: z.enum(['files', 'search']).optional(),
     rightSidebarWidth: z.number().finite().optional(),
     activityBarPosition: z.enum(['top', 'side']).optional(),
+    activityBarOrder: z.array(z.string()).optional(),
+    activityBarBotOrder: z.array(z.string()).optional(),
+    activityBarHidden: z.array(z.string()).optional(),
     markdownTocPanelWidth: z.number().finite().optional(),
     combinedDiffFileTreeWidth: z.number().finite().optional(),
     groupBy: z.enum(['none', 'workspace-status', 'repo', 'pr-status']).optional(),
@@ -174,7 +177,7 @@ export const UiUpdateFields = z
     manualRepoOrder: z
       .array(z.object({ hostId: z.string(), repoId: z.string() }).strict())
       .optional(),
-    ...ClientUiWorkspaceFilterFields,
+    ...ClientUiForkSidebarFields,
     // Part of App.tsx’s debounced writer; missing fields reject the whole paired-client payload.
     explorerDisplayRootByWorktree: z.record(z.string(), z.string()).optional(),
     gitGraphFiltersByWorktree: z
@@ -191,7 +194,6 @@ export const UiUpdateFields = z
     worktreeCardProperties: WorktreeCardProperties.optional(),
     _worktreeCardModeDefaulted: z.boolean().optional(),
     showAgentModels: z.boolean().optional(),
-    showWorkspaceHostSections: z.boolean().optional(),
     agentActivityDisplayMode: AgentActivityDisplayMode.optional(),
     workspaceStatuses: z.array(WorkspaceStatusDefinition).optional(),
     workspaceBoardOpacity: z.number().finite().optional(),
@@ -292,8 +294,6 @@ export const UiUpdateFields = z
     statusBarCompactChangeNoticeDismissed: z.boolean().optional(),
     usageEmptyStateDismissed: z.boolean().optional(),
     pluginsAlphaNoticeDismissed: z.boolean().optional(),
-    dismissedIdleProjectsKey: z.string().nullable().optional(),
-    dismissedClientSuggestionsKey: z.string().nullable().optional(),
     codexTerminalServerIsolationNoticeSeen: z.boolean().optional(),
     codexSharedSettingsNoticeSeen: z.boolean().optional(),
     worktreeCardsUpdateNoticeSeen: z.boolean().optional(),
