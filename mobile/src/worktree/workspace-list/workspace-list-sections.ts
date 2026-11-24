@@ -56,6 +56,7 @@ import {
   bindGroupFolderRows,
   type GroupTreePlacement
 } from '../project-sections/project-group-tree-sections'
+import { buildGroupFolds, rowNeedsYou, withGroupFold } from '../project-sections/project-group-fold'
 
 export type ProjectSectionCatalog = {
   /** Catalog repos of the hosts the list shows; each without rows gets an empty section. */
@@ -274,6 +275,7 @@ export function buildMobileWorkspacePlan(
       }))
     }
   })
+  const groupFolds = buildGroupFolds(occurrencePlan.sections, groupTreePlacements, rowNeedsYou)
   return {
     occurrencePlan,
     render: (
@@ -289,7 +291,7 @@ export function buildMobileWorkspacePlan(
           groupTreePlacements.get(section.key),
           collapsed
         )
-        return listed ? [listed] : []
+        return listed ? [withGroupFold(listed, groupFolds)] : []
       })
   }
 }

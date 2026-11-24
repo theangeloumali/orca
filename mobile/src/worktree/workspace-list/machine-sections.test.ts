@@ -138,3 +138,21 @@ describe('machine header label', () => {
     expect(rawSections.find((s) => s.key === 'host:local')?.machine?.label).toBe('Local Mac')
   })
 })
+
+describe('machine header count', () => {
+  it("counts a machine's rows from all its rows, so a folded group never shrinks it", () => {
+    const grouping = groupSectionsByMachine({
+      sections: [section('repo:a', [item('1', 'ssh:m1'), item('2', 'local')])],
+      collapsedGroups: new Set(),
+      hostIdOfItem: hostOf,
+      hostIdOfSection: () => 'local',
+      labelOf: (hostId) => LABELS[hostId as Host],
+      statusOf: () => null,
+      overrides: new Map(),
+      palettes: SIDEBAR_CONTRAST_THEMES,
+      rowCountOf: (hostId) => (hostId === 'local' ? 6 : 5)
+    })
+    expect(grouping?.rawSections.find((s) => s.key === 'host:local')?.machine?.count).toBe(6)
+    expect(grouping?.rawSections.find((s) => s.key === 'host:ssh:m1')?.machine?.count).toBe(5)
+  })
+})

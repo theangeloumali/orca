@@ -1,3 +1,4 @@
+import type { GroupFold } from '../project-sections/project-group-fold'
 import type { ExecutionHostId } from '../../../../src/shared/execution-host/execution-host'
 import type { HostSettingOverrides } from '../../../../src/shared/execution-host/host-setting-overrides'
 import type { RuntimeWorktreePsSummary } from '../../../../src/shared/worktree/catalog/runtime-worktree-contracts'
@@ -142,6 +143,8 @@ export type Section = {
     attention?: boolean
   }[]
   machine?: MachineSectionHeader
+  /** A project group's fold: what its folded header summarises and the keys beneath it. */
+  groupFold?: GroupFold
   /** The color of the machine a project section sits under; its rows tint by it. */
   machineColor?: string | null
   data: WorkspaceListItem[]

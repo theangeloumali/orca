@@ -35,6 +35,7 @@ import { useRepoLookById } from '../catalog/host-repo-looks'
 import { HostSectionHeader } from './host-section-header'
 import { HostMachineSectionHeader } from './host-machine-section-header'
 import { useSlowPendingKeys } from './use-slow-pending-keys'
+import { isSubtreeFolded } from '../../worktree/project-sections/project-group-fold'
 import { useHostMutationDrafts } from '../../query/host-mutation-drafts'
 import { workspaceRenameDraftKey } from '../workspace-actions/workspace-rename-sheet'
 import type { HostScreenController } from '../use-host-screen-controller'
@@ -122,6 +123,11 @@ export function HostWorkspaceList({
   const { openWorktreeSession } = actions
   const statusLive = connState === 'connected'
 
+  const toggleSubtree = useCallback(
+    (keys: readonly string[]) =>
+      settings.setGroupsCollapsed([...keys], !isSubtreeFolded(keys, collapsedGroups)),
+    [settings, collapsedGroups]
+  )
   const machineKeys = useMemo(() => sections.flatMap((s) => (s.machine ? [s.key] : [])), [sections])
   const allMachinesCollapsed = machineKeys.every((key) => collapsedGroups.has(key))
   const renderSectionHeader = useCallback(
@@ -157,6 +163,10 @@ export function HostWorkspaceList({
             groupByRepo={groupBy === 'repo'}
             repoLook={groupBy === 'repo' && section.repo ? repoLookById.get(section.repo.id) : null}
             onToggle={toggleCollapsed}
+            foldProjects={section.groupFold?.projects}
+            foldNeedsYou={section.groupFold?.needsYou}
+            subtreeKeys={section.groupFold?.subtreeKeys}
+            onToggleSubtree={toggleSubtree}
           />
         )
       )
@@ -171,7 +181,8 @@ export function HostWorkspaceList({
       bots,
       machineKeys,
       allMachinesCollapsed,
-      settings
+      settings,
+      toggleSubtree
     ]
   )
 

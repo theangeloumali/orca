@@ -288,7 +288,8 @@ export function useHostListSections(inputs: HostListSectionsInputs): HostListSec
       allHostRows: displayWorktrees,
       botListedIdentities: botSections.listedIdentities,
       lastVisited
-    })
+    }),
+    listRows
   )
   return useMemo(() => {
     if (botSections.sections.length === 0) {

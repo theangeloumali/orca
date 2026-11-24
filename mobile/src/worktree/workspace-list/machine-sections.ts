@@ -45,6 +45,8 @@ export type MachineGroupingInputs = {
   statusOf: (hostId: ExecutionHostId) => MachineStatus
   overrides: ReadonlyMap<ExecutionHostId, HostAppearanceOverride>
   palettes: readonly SidebarContrastPalette[] | null
+  /** All of a machine's rows, drawn or folded away; without it the header counts drawn rows. */
+  rowCountOf?: (hostId: ExecutionHostId) => number
 }
 
 export type ShownSections = { rawSections: Section[]; sections: Section[] }
@@ -80,8 +82,10 @@ function machineHeader(
   // The rows' own host label first, so the header reads as each row's pill does (runtime servers by name).
   const rowLabel = slices.flatMap(({ items }) => items).find((item) => item.view.hostContextLabel)
   const label = rowLabel?.view.hostContextLabel ?? inputs.labelOf(hostId)
-  // Pinned rows repeat in their project, so a machine counts each row once.
-  const count = new Set(slices.flatMap(({ items }) => items.map((item) => item.row))).size
+  // Pinned rows repeat in their project, so a drawn count takes each row once.
+  const count =
+    inputs.rowCountOf?.(hostId) ??
+    new Set(slices.flatMap(({ items }) => items.map((item) => item.row))).size
   const machine: MachineSectionHeader = {
     hostId,
     label,
