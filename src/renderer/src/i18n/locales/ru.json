@@ -7005,7 +7005,12 @@
           "createFromReposDescription_one": "Создать группу и переместить в неё {{count}} проект.",
           "createFromReposDescription_few": "Создать группу и переместить в неё {{count}} проекта.",
           "createFromReposDescription_many": "Создать группу и переместить в неё {{count}} проектов.",
-          "createFromReposDescription_other": "Создать группу и переместить в неё {{count}} проекта."
+          "createFromReposDescription_other": "Создать группу и переместить в неё {{count}} проекта.",
+          "groupColorSwatch": "Использовать {{color}} для этой группы",
+          "groupColorDialogTitle": "Свой цвет группы",
+          "groupColorHostFailed": "Не удалось обновить цвет на {{host}}; там будет показан прежний цвет",
+          "groupColorDialogDescription": "Цвета групп синхронизируются вместе с группой; яркость фона хранится только на этом компьютере.",
+          "groupColorPickerLabel": "Цвет группы"
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "Отмена",
@@ -7893,6 +7898,9 @@
           "description": "Цвета сохраняются только на этом компьютере.",
           "pickerLabel": "Цвет устройства",
           "done": "Готово"
+        },
+        "SidebarColors": {
+          "editAll": "Изменить все цвета боковой панели…"
         }
       },
       "shared": {
@@ -10418,7 +10426,14 @@
             "c29089716e": "Использование Kimi",
             "96e32c1118": "Использование MiniMax",
             "aff6e6afdf": "Шрифт IDE",
-            "ba1f9d39a6": "Использование Antigravity"
+            "ba1f9d39a6": "Использование Antigravity",
+            "sidebarColors": {
+              "title": "Цвета боковой панели",
+              "description": "Раскрашивайте устройства и группы проектов на боковой панели. Цвета групп синхронизируются; яркость фона хранится только на этом компьютере.",
+              "color": "цвет",
+              "group": "группа",
+              "device": "устройство"
+            }
           }
         },
         "auto": {
@@ -14033,6 +14048,12 @@
               "desktopOnly": "Подключите Gitea / Forgejo в настольном приложении"
             }
           }
+        },
+        "SidebarColors": {
+          "groupsHeading": "Группы проектов",
+          "swatch": "Использовать {{color}} для {{name}}",
+          "custom": "Свой цвет для {{name}}",
+          "background": "Фон для {{name}}"
         }
       },
       "right": {

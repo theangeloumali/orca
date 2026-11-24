@@ -6,6 +6,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/class-names'
@@ -15,6 +16,9 @@ import type { ProjectGroup } from '../../../../../../shared/project/groups/proje
 import type { FolderWorkspacePathStatus } from '../../../../../../shared/folder-workspaces/folder-workspace-path-status'
 import type { ExecutionHostId } from '../../../../../../shared/execution-host/execution-host'
 import { getFolderProjectGroupRefreshHandler } from './project-group-folder-refresh'
+import { useProjectGroupAppearanceControls, type ShownGroupColor } from './appearance-controls'
+import { AppearanceMenuItems } from './AppearanceMenuItems'
+import { useOpenGroupColorDialog } from './GroupColorDialogHost'
 import { ProjectGroupMoveSubmenu } from './ProjectGroupMoveSubmenu'
 import { useRuntimeEnvironmentCapability } from '@/runtime/rpc/compatibility/use-runtime-environment-capability'
 import { PROJECT_GROUP_PARENT_UPDATE_RUNTIME_CAPABILITY } from '../../../../../../shared/remote-runtime/protocol/worktree-runtime-capabilities'
@@ -37,6 +41,7 @@ import {
 
 export function ProjectGroupHeaderMenu({
   groupId,
+  shownColor,
   hostId,
   label,
   projectGroup,
@@ -50,6 +55,8 @@ export function ProjectGroupHeaderMenu({
   onToggleSubtree
 }: {
   groupId: string
+  /** The color this header shows, from the row-appearance map. */
+  shownColor: ShownGroupColor
   /** The list's displayed fold, so collapse-all follows the filter session. */
   collapsedGroups: ReadonlySet<string>
   onToggleSubtree: (groupId: string) => boolean
@@ -76,6 +83,8 @@ export function ProjectGroupHeaderMenu({
     PROJECT_GROUP_PARENT_UPDATE_RUNTIME_CAPABILITY
   )
   const nestingSupported = runtimeEnvironmentId === null || remoteSupportsNesting
+  const appearance = useProjectGroupAppearanceControls(groupId, shownColor)
+  const openColorDialog = useOpenGroupColorDialog()
   return (
     <>
       <ProjectGroupCollapseAllButton
@@ -137,6 +146,21 @@ export function ProjectGroupHeaderMenu({
               onMove={onMoveGroup}
             />
           ) : null}
+          <DropdownMenuSeparator />
+          <AppearanceMenuItems
+            controls={appearance}
+            swatchLabel={(color) =>
+              t(
+                'auto.components.sidebar.WorktreeList.groupColorSwatch',
+                'Use {{color}} for this group',
+                {
+                  color
+                }
+              )
+            }
+            onCustomColor={() => openColorDialog({ groupId, ...shownColor })}
+          />
+          <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={() => onRename(groupId, label, hostId)}>
             {t('auto.components.sidebar.WorktreeList.4d7b73658c', 'Rename group')}
           </DropdownMenuItem>

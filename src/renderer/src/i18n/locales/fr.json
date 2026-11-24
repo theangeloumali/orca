@@ -6574,7 +6574,12 @@
           "createFromReposDescription": "Créer un groupe et y déplacer {{count}} projets.",
           "createFromReposDescription_one": "Créer un groupe et y déplacer {{count}} projet.",
           "createFromReposDescription_other": "Créer un groupe et y déplacer {{count}} projets.",
-          "createFromReposDescription_many": "Créer un groupe et y déplacer {{count}} projets."
+          "createFromReposDescription_many": "Créer un groupe et y déplacer {{count}} projets.",
+          "groupColorSwatch": "Utiliser {{color}} pour ce groupe",
+          "groupColorDialogTitle": "Couleur de groupe personnalisée",
+          "groupColorHostFailed": "Impossible de mettre à jour la couleur sur {{host}} ; l’ancienne couleur y restera affichée",
+          "groupColorDialogDescription": "Les couleurs de groupe se synchronisent avec le groupe ; l’intensité du fond reste sur cet ordinateur.",
+          "groupColorPickerLabel": "Couleur du groupe"
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "Annuler",
@@ -7443,6 +7448,9 @@
           "description": "Les couleurs sont enregistrées uniquement sur cet ordinateur.",
           "pickerLabel": "Couleur de l'appareil",
           "done": "Terminé"
+        },
+        "SidebarColors": {
+          "editAll": "Modifier toutes les couleurs de la barre latérale…"
         }
       },
       "shared": {
@@ -9957,7 +9965,14 @@
             "c29089716e": "Utilisation Kimi",
             "96e32c1118": "Utilisation MiniMax",
             "aff6e6afdf": "Police de l'IDE",
-            "ba1f9d39a6": "Utilisation Antigravity"
+            "ba1f9d39a6": "Utilisation Antigravity",
+            "sidebarColors": {
+              "title": "Couleurs de la barre latérale",
+              "description": "Colorez les appareils et les groupes de projets dans la barre latérale. Les couleurs de groupe se synchronisent ; l’intensité du fond reste sur cet ordinateur.",
+              "color": "couleur",
+              "group": "groupe",
+              "device": "appareil"
+            }
           }
         },
         "auto": {
@@ -13580,6 +13595,12 @@
               "desktopOnly": "Connectez Gitea / Forgejo depuis l’application de bureau"
             }
           }
+        },
+        "SidebarColors": {
+          "groupsHeading": "Groupes de projets",
+          "swatch": "Utiliser {{color}} pour {{name}}",
+          "custom": "Couleur personnalisée pour {{name}}",
+          "background": "Fond pour {{name}}"
         }
       },
       "right": {

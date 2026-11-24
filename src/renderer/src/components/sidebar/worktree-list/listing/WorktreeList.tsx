@@ -25,6 +25,7 @@ import { usePublishSidebarDrawnHosts } from '../rows/sidebar-drawn-hosts'
 import { useClientGroupingHintRows } from '../client-grouping/use-client-suggestions'
 import { SidebarWorktreeListEmptyState } from './EmptyState'
 import { VirtualizedWorktreeViewport } from '../viewport/VirtualizedWorktreeViewport'
+import { GroupColorDialogHost } from '../rows/GroupColorDialogHost'
 import { markSidebarWorktreeActiveImmediately } from '../rows/option-dom'
 import { EMPTY_PROJECT_GROUPS } from '../viewport/viewport-props'
 import { NOOP_WORKSPACE_BOARD_DRAG_PREVIEW_CALLBACK } from '../drag/drop-commit-context'
@@ -256,7 +257,7 @@ const WorktreeList = React.memo(function WorktreeList({
   }
 
   return (
-    <>
+    <GroupColorDialogHost>
       {projectsCollapseTarget && projectCollapseKeys.length > 0
         ? createPortal(
             <ProjectsCollapseAllButton
@@ -381,7 +382,7 @@ const WorktreeList = React.memo(function WorktreeList({
           scrollAnchorRef={scrollAnchorRef}
         />
       </ProjectHeaderSelectionScope>
-    </>
+    </GroupColorDialogHost>
   )
 })
 

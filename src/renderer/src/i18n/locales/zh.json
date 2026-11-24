@@ -7019,7 +7019,12 @@
           "groupSummaryNeedsYou_other": "{{count}} 个需要你",
           "groupSummaryLabel": "{{projects}}, {{needsYou}}",
           "createFromReposDescription": "创建一个分组并将 {{count}} 个项目移入其中。",
-          "createFromReposDescription_other": "创建一个分组并将 {{count}} 个项目移入其中。"
+          "createFromReposDescription_other": "创建一个分组并将 {{count}} 个项目移入其中。",
+          "groupColorSwatch": "此分组使用{{color}}",
+          "groupColorDialogTitle": "自定义分组颜色",
+          "groupColorHostFailed": "无法更新 {{host}} 上的颜色；那里仍会显示旧颜色",
+          "groupColorDialogDescription": "分组颜色会随分组同步；背景强度仅保存在这台电脑上。",
+          "groupColorPickerLabel": "分组颜色"
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "取消",
@@ -7901,6 +7906,9 @@
           "description": "颜色仅保存在这台电脑上。",
           "pickerLabel": "设备颜色",
           "done": "完成"
+        },
+        "SidebarColors": {
+          "editAll": "编辑所有侧边栏颜色…"
         }
       },
       "shared": {
@@ -10413,7 +10421,14 @@
             "museUsageDescription": "在状态栏中显示 Muse 订阅配额",
             "muse": "muse",
             "meta": "meta",
-            "e8d2710689": "Muse 使用情况"
+            "e8d2710689": "Muse 使用情况",
+            "sidebarColors": {
+              "title": "侧边栏颜色",
+              "description": "为侧边栏中的设备和项目分组设置颜色。分组颜色会同步；背景强度仅保存在这台电脑上。",
+              "color": "颜色",
+              "group": "分组",
+              "device": "设备"
+            }
           }
         },
         "auto": {
@@ -14236,6 +14251,12 @@
               "desktopOnly": "请在桌面应用中连接 Gitea / Forgejo"
             }
           }
+        },
+        "SidebarColors": {
+          "groupsHeading": "项目分组",
+          "swatch": "{{name}}使用{{color}}",
+          "custom": "{{name}}的自定义颜色",
+          "background": "{{name}}的背景"
         }
       },
       "right": {

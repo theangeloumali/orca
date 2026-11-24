@@ -4,7 +4,6 @@ import {
 } from '../drag/root-project-header-drop'
 import { canDragProjectHeader } from '../drag/project-header-drag-start'
 import React from 'react'
-import { ChevronDown } from 'lucide-react'
 import { ProjectHeaderHostLabel } from './ProjectHeaderHostLabel'
 import { SelectableProjectHeader } from './project-header-selection'
 import type { VirtualItem } from '@tanstack/react-virtual'
@@ -27,6 +26,9 @@ import { getVirtualRowTransform } from '../viewport/virtual-rows'
 import { getSidebarHeaderVisual } from './header-visuals'
 import { resolveProjectGroupHeaderColor } from './project-header-color'
 import { ProjectHeaderActions } from './ProjectHeaderActions'
+import { HeaderCollapseAffordance } from './HeaderCollapseAffordance'
+import { ColorDot } from './AppearanceMenuItems'
+import { groupColorStyle, type GroupRowAppearance } from './group-row-appearance'
 import {
   getProjectGroupHeaderPaddingLeft,
   WORKTREE_SECTION_HEADER_PADDING_LEFT
@@ -42,11 +44,7 @@ import {
   RepoHeaderCreateWorkspaceButton,
   RepoHeaderProjectActionsMenu
 } from './repo-header-project-actions'
-import {
-  handleRepoHeaderCollapseAffordancePointerDown,
-  shouldIgnoreRepoHeaderToggle,
-  toggleSectionHeaderCollapse
-} from './header-event-guards'
+import { shouldIgnoreRepoHeaderToggle, toggleSectionHeaderCollapse } from './header-event-guards'
 import { getWorktreeOptionId } from './option-dom'
 import type { SectionHeaderRowContext } from './section-header-row-context'
 import type { Translate } from '@/i18n/use-translate'
@@ -60,10 +58,11 @@ export function renderWorktreeSectionHeaderRow(
     hasStickyHost: boolean
     hasHeaderTopSpacing: boolean
     measureVirtualRowElement: (element: HTMLDivElement | null) => void
+    groupAppearance?: GroupRowAppearance | null
   },
   t?: Translate
 ): React.JSX.Element {
-  const { ctx, row, vItem, isActiveStickyHeader } = args
+  const { ctx, row, vItem, isActiveStickyHeader, groupAppearance } = args
   const { headerDrag } = ctx
   const isRepoHeader = ctx.groupBy === 'repo' && row.repo !== undefined
   const isProjectGroupHeader = ctx.groupBy === 'repo' && row.projectGroup !== undefined
@@ -159,6 +158,9 @@ export function renderWorktreeSectionHeaderRow(
         projectGroupId: folderBackedProjectGroup.id
       })
     : null
+  // Only the group that owns the color shows its dot; nested and project headers just carry the tint.
+  const groupIconColor =
+    groupAppearance?.groupId === projectGroupIdForHeader ? groupAppearance?.color : undefined
   const collapseKey = row.collapseKey ?? row.key
   const isHeaderCollapsed = ctx.collapsedGroups.has(collapseKey)
   const toggleHeader = (event: React.MouseEvent | React.KeyboardEvent): void =>
@@ -246,7 +248,9 @@ export function renderWorktreeSectionHeaderRow(
               'rounded-md bg-worktree-sidebar-accent ring-1 ring-worktree-sidebar-ring/40',
             row.repo && 'overflow-hidden'
           )}
+          data-group-tint={groupAppearance?.tint}
           style={{
+            ...groupColorStyle(groupAppearance),
             // Why: non-project headers like "All" are flat-list labels; don't reserve project hierarchy indent.
             paddingLeft:
               isRepoHeader || isProjectGroupHeader
@@ -327,6 +331,7 @@ export function renderWorktreeSectionHeaderRow(
 
             <div className="min-w-0 flex-1">
               <div className="flex min-w-0 items-center gap-1.5">
+                {groupIconColor ? <ColorDot color={groupIconColor} /> : null}
                 <div className="min-w-0 truncate text-[13px] font-semibold leading-4">{label}</div>
                 {hostContext ? <ProjectHeaderHostLabel context={hostContext} /> : null}
                 <RepoForkIndicator upstream={row.repo?.upstream} />
@@ -342,26 +347,16 @@ export function renderWorktreeSectionHeaderRow(
 
           <ProjectHeaderActions>
             {showHeaderCollapseAffordance ? (
-              <div
-                className="flex size-5 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent/70 hover:text-foreground"
-                data-repo-header-collapse-affordance=""
-                aria-hidden
-                onPointerDown={handleRepoHeaderCollapseAffordancePointerDown}
-                onClick={(event) => {
-                  event.preventDefault()
-                  event.stopPropagation()
-                  toggleHeader(event)
-                }}
-              >
-                <ChevronDown
-                  className={cn('size-3.5 transition-transform', isHeaderCollapsed && '-rotate-90')}
-                />
-              </div>
+              <HeaderCollapseAffordance collapsed={isHeaderCollapsed} onToggle={toggleHeader} />
             ) : null}
 
             {isProjectGroupHeader && !row.repo && projectGroupIdForHeader ? (
               <ProjectGroupHeaderMenu
                 groupId={projectGroupIdForHeader}
+                shownColor={{
+                  color: groupIconColor ?? null,
+                  ownerGroupId: groupAppearance?.groupId ?? projectGroupIdForHeader
+                }}
                 hostId={projectGroupHostIdForHeader}
                 label={label}
                 projectGroup={folderBackedProjectGroup}

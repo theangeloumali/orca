@@ -22,8 +22,8 @@ const hostCss = readFileSync(new URL('./host-appearance.css', import.meta.url), 
 const ruleBody = (selector: string): string => cssRuleBody(hostCss, selector)
 
 // The percent a host-colored rule falls back to when its row sets no per-color tint.
-function fallbackPercent(selector: string, level: HostTintLevel): number {
-  const pattern = new RegExp(`var\\(--host-tint-${level}, (\\d+)%\\)`)
+function fallbackPercent(selector: string, level: HostTintLevel, prefix = 'host'): number {
+  const pattern = new RegExp(`var\\(--${prefix}-tint-${level}, (\\d+)%\\)`)
   return Number(pattern.exec(ruleBody(selector))?.[1])
 }
 
@@ -63,6 +63,14 @@ describe('device color tints keep muted text at WCAG AA', () => {
       expect(fallbackPercent(SELECTORS[level], level)).toBe(HOST_TINT_TARGETS[level])
     }
     expect(selectedMutedLift()).toBe(SELECTED_MUTED_LIFT)
+  })
+
+  it('group tints fall back to the same AA targets as device tints', () => {
+    for (const level of ['subtle', 'strong'] as const) {
+      expect(fallbackPercent(`[data-group-tint='${level}']`, level, 'group')).toBe(
+        HOST_TINT_TARGETS[level]
+      )
+    }
   })
 
   for (const dark of [false, true]) {

@@ -6706,7 +6706,12 @@
           "groupSummaryLabel": "{{projects}}, {{needsYou}}",
           "createFromReposDescription": "Eine Gruppe erstellen und {{count}} Projekte hineinverschieben.",
           "createFromReposDescription_one": "Eine Gruppe erstellen und {{count}} Projekt hineinverschieben.",
-          "createFromReposDescription_other": "Eine Gruppe erstellen und {{count}} Projekte hineinverschieben."
+          "createFromReposDescription_other": "Eine Gruppe erstellen und {{count}} Projekte hineinverschieben.",
+          "groupColorSwatch": "Für diese Gruppe {{color}} verwenden",
+          "groupColorDialogTitle": "Eigene Gruppenfarbe",
+          "groupColorHostFailed": "Die Farbe auf {{host}} konnte nicht aktualisiert werden; dort wird die alte Farbe angezeigt",
+          "groupColorDialogDescription": "Gruppenfarben werden mit der Gruppe synchronisiert; die Hintergrundstärke bleibt auf diesem Computer.",
+          "groupColorPickerLabel": "Gruppenfarbe"
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "Abbrechen",
@@ -7544,6 +7549,9 @@
           "description": "Farben werden nur auf diesem Computer gespeichert.",
           "pickerLabel": "Gerätefarbe",
           "done": "Fertig"
+        },
+        "SidebarColors": {
+          "editAll": "Alle Seitenleistenfarben bearbeiten…"
         }
       },
       "shared": {
@@ -10057,7 +10065,14 @@
             "c29089716e": "Kimi-Nutzung",
             "96e32c1118": "MiniMax-Nutzung",
             "aff6e6afdf": "IDE-Schriftart",
-            "ba1f9d39a6": "Antigravity-Nutzung"
+            "ba1f9d39a6": "Antigravity-Nutzung",
+            "sidebarColors": {
+              "title": "Seitenleistenfarben",
+              "description": "Geräte und Projektgruppen in der Seitenleiste einfärben. Gruppenfarben werden synchronisiert; die Hintergrundstärke bleibt auf diesem Computer.",
+              "color": "farbe",
+              "group": "gruppe",
+              "device": "gerät"
+            }
           }
         },
         "auto": {
@@ -13662,6 +13677,12 @@
               "desktopOnly": "Verbinde Gitea / Forgejo über die Desktop-App"
             }
           }
+        },
+        "SidebarColors": {
+          "groupsHeading": "Projektgruppen",
+          "swatch": "{{color}} für {{name}} verwenden",
+          "custom": "Eigene Farbe für {{name}}",
+          "background": "Hintergrund für {{name}}"
         }
       },
       "right": {
