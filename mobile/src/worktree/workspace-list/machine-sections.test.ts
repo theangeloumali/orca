@@ -2,13 +2,19 @@ import { describe, expect, it } from 'vitest'
 import { SIDEBAR_CONTRAST_THEMES } from '../../../../src/shared/execution-host/host-tint-contrast'
 import { groupSectionsByMachine, machineStatusFromHealth } from './machine-sections'
 import type { Section, WorkspaceListItem } from './workspace-list-types'
+import type { ExecutionHostId } from '../../../../src/shared/execution-host/execution-host'
+import { listItem, worktreeRow } from '../../test-support/worktree-row-fixture'
 
 type Host = 'local' | 'ssh:m1' | 'ssh:nas'
 const item = (id: string, hostId: Host): WorkspaceListItem =>
-  ({ row: { id, hostId }, view: {} }) as unknown as WorkspaceListItem
+  listItem(worktreeRow({ worktreeId: id, hostId }))
 const section = (key: string, data: WorkspaceListItem[]): Section => ({ key, title: key, data })
-const hostOf = (entry: WorkspaceListItem): Host => (entry.row as unknown as { hostId: Host }).hostId
-const LABELS: Record<Host, string> = { local: 'This Mac', 'ssh:m1': 'M1', 'ssh:nas': 'Alpha NAS' }
+const hostOf = (entry: WorkspaceListItem): ExecutionHostId => entry.row.hostId ?? 'local'
+const LABELS = new Map<string, string>([
+  ['local', 'This Mac'],
+  ['ssh:m1', 'M1'],
+  ['ssh:nas', 'Alpha NAS']
+])
 
 function group(
   sections: Section[],
@@ -22,7 +28,7 @@ function group(
     collapsedGroups: new Set(options.collapsed ?? []),
     hostIdOfItem: hostOf,
     hostIdOfSection: () => 'local',
-    labelOf: (hostId) => LABELS[hostId as Host],
+    labelOf: (hostId) => LABELS.get(hostId) ?? hostId,
     statusOf: (hostId) => (hostId === 'ssh:nas' ? 'offline' : 'online'),
     overrides: new Map(options.overrides ?? []),
     palettes: SIDEBAR_CONTRAST_THEMES
@@ -130,7 +136,7 @@ describe('machine color on child sections', () => {
 describe('machine header label', () => {
   it('names a machine by the label its rows carry, as the desktop does', () => {
     const labelled = (id: string, hostId: Host, label: string): WorkspaceListItem =>
-      ({ row: { id, hostId }, view: { hostContextLabel: label } }) as unknown as WorkspaceListItem
+      listItem(worktreeRow({ worktreeId: id, hostId }), { hostContextLabel: label })
     const { rawSections } = grouped([
       section('repo:a', [labelled('1', 'ssh:m1', 'M1 Max'), labelled('2', 'local', 'Local Mac')])
     ])
@@ -146,7 +152,7 @@ describe('machine header count', () => {
       collapsedGroups: new Set(),
       hostIdOfItem: hostOf,
       hostIdOfSection: () => 'local',
-      labelOf: (hostId) => LABELS[hostId as Host],
+      labelOf: (hostId) => LABELS.get(hostId) ?? hostId,
       statusOf: () => null,
       overrides: new Map(),
       palettes: SIDEBAR_CONTRAST_THEMES,

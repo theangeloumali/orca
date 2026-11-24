@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { buildProjectActivity } from './project-activity'
 import type { Worktree } from '../workspace-list/workspace-list-types'
+import { worktreeRow } from '../../test-support/worktree-row-fixture'
 
-const row = (state: 'working' | 'waiting' | 'idle') => ({ state }) as unknown as Worktree
-const isWorking = (r: Worktree) => (r as unknown as { state: string }).state === 'working'
-const needsYou = (r: Worktree) => (r as unknown as { state: string }).state === 'waiting'
+const STATUS = { working: 'working', waiting: 'permission', idle: 'inactive' } as const
+const row = (state: keyof typeof STATUS) => worktreeRow({ status: STATUS[state] })
+const isWorking = (r: Worktree) => r.status === 'working'
+const needsYou = (r: Worktree) => r.status === 'permission'
 
 describe('buildProjectActivity', () => {
   it("counts each project's working and needs-you workspaces", () => {

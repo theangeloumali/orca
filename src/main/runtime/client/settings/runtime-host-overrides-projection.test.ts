@@ -25,7 +25,11 @@ describe('projectRuntimeHostOverrides', () => {
   })
 
   it('drops an unknown tint and handles no overrides', () => {
-    expect(projectRuntimeHostOverrides({ local: { sectionTint: 'loud' as 'off' } })).toEqual({})
+    // Stored settings can hold a tint this build no longer knows.
+    const unknownTint: Parameters<typeof projectRuntimeHostOverrides>[0] = JSON.parse(
+      '{"local":{"sectionTint":"loud"}}'
+    )
+    expect(projectRuntimeHostOverrides(unknownTint)).toEqual({})
     expect(projectRuntimeHostOverrides(undefined)).toEqual({})
   })
 })

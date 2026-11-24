@@ -2,8 +2,11 @@ import { describe, expect, it } from 'vitest'
 import { buildGroupFolds, isSubtreeFolded } from './project-group-fold'
 import type { GroupTreePlacement } from './project-group-tree-sections'
 import type { Worktree } from '../workspace-list/workspace-list-types'
+import { worktreeRow } from '../../test-support/worktree-row-fixture'
 
-const row = (id: string, needsYou = false) => ({ id, needsYou }) as unknown as Worktree
+const row = (id: string, needsYou = false) =>
+  worktreeRow({ worktreeId: id, status: needsYou ? 'permission' : 'inactive' })
+const waitsOnYou = (r: Worktree) => r.status === 'permission'
 const at = (...ancestorKeys: string[]): GroupTreePlacement => ({ ancestorKeys, rowView: {} })
 
 describe('buildGroupFolds', () => {
@@ -21,11 +24,7 @@ describe('buildGroupFolds', () => {
     ['repo:2', at('group:a', 'group:b')],
     ['repo:3', at()]
   ])
-  const folds = buildGroupFolds(
-    sections,
-    placements,
-    (r) => (r as unknown as { needsYou: boolean }).needsYou
-  )
+  const folds = buildGroupFolds(sections, placements, waitsOnYou)
 
   it('counts every project and needs-you row beneath a group, subgroups included', () => {
     expect(folds.get('group:a')).toMatchObject({ projects: 2, needsYou: 2 })
