@@ -15,7 +15,7 @@ describe('session highlight', () => {
 
   it('does not light a parent whose own session is idle while a child works', () => {
     const parentGlyph = getSessionHighlight('active')
-    const childSummaryChip = getSessionHighlight('working', { highlightsRow: false })
+    const childSummaryChip = getSessionHighlight(null)
     expect([parentGlyph, childSummaryChip].filter(Boolean)).toEqual([])
   })
 })

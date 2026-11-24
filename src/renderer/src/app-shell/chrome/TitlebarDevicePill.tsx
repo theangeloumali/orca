@@ -1,4 +1,6 @@
 import { useAppStore } from '@/store'
+import { useActiveWorktree } from '@/store/workspaces/selection/use-selected-worktree'
+import { useRepoById } from '@/store/repos/use-repository-catalog'
 import { useSidebarDrawnHosts } from '@/components/sidebar/worktree-list/rows/sidebar-drawn-hosts'
 import { translateHostDisplayLabel } from '@/runtime/hosts/display/execution-host-label'
 import { resolveTitlebarDevice } from './titlebar-device-host'
@@ -7,10 +9,9 @@ import { resolveTitlebarDevice } from './titlebar-device-host'
 export function TitlebarDevicePill(): React.JSX.Element | null {
   const drawn = useSidebarDrawnHosts()
   const hostSettingOverrides = useAppStore((s) => s.settings?.hostSettingOverrides)
-  const worktree = useAppStore((s) =>
-    s.activeWorktreeId ? s.getKnownWorktreeById(s.activeWorktreeId) : undefined
-  )
-  const repo = useAppStore((s) => s.repos.find((candidate) => candidate.id === worktree?.repoId))
+  // Host-qualified: workspace ids repeat across twin machines.
+  const worktree = useActiveWorktree()
+  const repo = useRepoById(worktree?.repoId ?? null) ?? undefined
   const device = resolveTitlebarDevice(worktree ? { worktree, repo } : null, drawn, {
     hostSettingOverrides
   })

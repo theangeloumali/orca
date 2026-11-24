@@ -5,6 +5,7 @@ import {
   resolveHostColor,
   resolveHostSectionTint
 } from '../../../../../../shared/execution-host/host-appearance'
+import { hostTintPercents } from '../../../../../../shared/execution-host/host-tint-contrast'
 import type { GlobalSettings } from '../../../../../../shared/settings/global-settings-types'
 import type { RenderRow } from '../listing/render-row'
 import type { HostHeaderRow } from '../../../../../../shared/sidebar-list/hosts/host-section-rows'
@@ -15,7 +16,13 @@ export type HostRowAppearance = {
   tint: HostSectionTint
 }
 
-type HostColorStyle = CSSProperties & { '--host-color': string }
+type HostColorStyle = CSSProperties & {
+  '--host-color': string
+  '--host-tint-header': string
+  '--host-tint-subtle': string
+  '--host-tint-strong': string
+  '--host-tint-working': string
+}
 
 type AppearanceRow =
   | { type: 'host-header'; hostId: ExecutionHostId }
@@ -53,5 +60,15 @@ export function getHostHeaderPaint(
 export function hostColorStyle(
   appearance: HostRowAppearance | null | undefined
 ): HostColorStyle | undefined {
-  return appearance ? { '--host-color': appearance.color } : undefined
+  if (!appearance) {
+    return undefined
+  }
+  const tint = hostTintPercents(appearance.color)
+  return {
+    '--host-color': appearance.color,
+    '--host-tint-header': `${tint.header}%`,
+    '--host-tint-subtle': `${tint.subtle}%`,
+    '--host-tint-strong': `${tint.strong}%`,
+    '--host-tint-working': `${tint.working}%`
+  }
 }

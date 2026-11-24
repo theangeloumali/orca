@@ -151,8 +151,10 @@ export function WorktreeCardStatusSlot({
   const t = useTranslate()
   const collectionChecks = reviewChecks && reviewChecks.total > 1 ? reviewChecks : undefined
   const isReviewStale = reviewStale || Boolean(collectionChecks?.stale)
-  const liveStatus = laneStatusWithLineage(useWorktreeActivityStatus(worktreeId), lineageStatus)
-  const status = statusOverride ?? liveStatus
+  const ownStatus = useWorktreeActivityStatus(worktreeId)
+  const status = statusOverride ?? laneStatusWithLineage(ownStatus, lineageStatus)
+  // A collapsed child's state may take the lane, but only the workspace's own lights its row.
+  const rowStatus = statusOverride ?? ownStatus
   // One subscription per card: rows mount by the hundreds, and every listener runs on each store write.
   const { isSleeping, vmRuntime, vmWaking } = useAppStore(
     useShallow((state) => ({
@@ -239,7 +241,12 @@ export function WorktreeCardStatusSlot({
   ) : newCardStyle && showStatus ? (
     <>
       <span className={cn('inline-flex size-5 items-center justify-center', className)}>
-        <StatusIndicator status={status} aria-hidden="true" tooltipSide="right" />
+        <StatusIndicator
+          status={status}
+          rowStatus={rowStatus}
+          aria-hidden="true"
+          tooltipSide="right"
+        />
       </span>
       <span className="sr-only">{passiveStatusAnnouncement}</span>
     </>
@@ -247,6 +254,7 @@ export function WorktreeCardStatusSlot({
     <>
       <StatusIndicator
         status={status}
+        rowStatus={rowStatus}
         aria-hidden="true"
         className={className}
         tooltipSide="right"
@@ -321,7 +329,12 @@ export function WorktreeCardStatusSlot({
                   {branchStatusIcon}
                 </span>
               ) : showStatus ? (
-                <StatusIndicator status={status} aria-hidden="true" showTooltip={false} />
+                <StatusIndicator
+                  status={status}
+                  rowStatus={rowStatus}
+                  aria-hidden="true"
+                  showTooltip={false}
+                />
               ) : (
                 <span className="sr-only">{actionLabel}</span>
               )
@@ -336,6 +349,7 @@ export function WorktreeCardStatusSlot({
                 ) : (
                   <StatusIndicator
                     status={status}
+                    rowStatus={rowStatus}
                     aria-hidden="true"
                     showTooltip={false}
                     className="transition-opacity group-hover/unread:opacity-0 group-focus-within/unread:opacity-0"

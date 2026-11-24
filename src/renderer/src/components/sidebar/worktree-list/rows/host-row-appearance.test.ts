@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { buildHostRowAppearance, getHostHeaderPaint } from './host-row-appearance'
+import { hostTintPercents } from '../../../../../../shared/execution-host/host-tint-contrast'
+import { buildHostRowAppearance, getHostHeaderPaint, hostColorStyle } from './host-row-appearance'
 
 const header = (hostId: 'local' | 'ssh:m1') => ({ type: 'host-header' as const, hostId })
 const item = { type: 'item' as const }
@@ -37,5 +38,12 @@ describe('host row appearance', () => {
       tinted: false
     })
     expect(getHostHeaderPaint(null, 'available')).toEqual({ colored: false, tinted: false })
+  })
+
+  it('sets each tint share beside the color so CSS reads the AA-safe value', () => {
+    const style = hostColorStyle({ hostId: 'ssh:m1', color: '#000000', tint: 'strong' })
+    expect(style?.['--host-color']).toBe('#000000')
+    expect(style?.['--host-tint-strong']).toBe(`${hostTintPercents('#000000').strong}%`)
+    expect(hostColorStyle(null)).toBeUndefined()
   })
 })

@@ -3,14 +3,7 @@ import type { WorktreeStatus } from '../../../../../../shared/worktree/row-displ
 export type SessionHighlight = 'working' | 'needs-you'
 
 /** Only live agents light up their row; idle, done and failed stay quiet. */
-export function getSessionHighlight(
-  status: WorktreeStatus,
-  { highlightsRow = true }: { highlightsRow?: boolean } = {}
-): SessionHighlight | undefined {
-  // Child-summary glyphs sit on the parent's row, so they must not tint it.
-  if (!highlightsRow) {
-    return undefined
-  }
+export function getSessionHighlight(status: WorktreeStatus | null): SessionHighlight | undefined {
   if (status === 'working') {
     return 'working'
   }

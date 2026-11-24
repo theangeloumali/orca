@@ -1,14 +1,27 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { REPO_COLORS } from '../../../../../../shared/repository/appearance/repo-badge-color'
+import {
+  contrastRatio,
+  hexToRgb,
+  mix,
+  type Rgba
+} from '../../../../../../shared/color/rgba-contrast'
+import {
+  HOST_TINT_LEVELS,
+  HOST_TINT_TARGETS,
+  SELECTED_MUTED_LIFT,
+  SIDEBAR_CONTRAST_THEMES,
+  hostTintPercents,
+  type HostTintLevel
+} from '../../../../../../shared/execution-host/host-tint-contrast'
 
-type Rgb = readonly [number, number, number]
 type Tokens = ReadonlyMap<string, string>
 
 const AA_BODY_TEXT = 4.5
 const readCss = (path: string): string => readFileSync(new URL(path, import.meta.url), 'utf8')
 const mainCss = readCss('../../../../assets/main.css')
-const hostCss = readCss('./host-appearance.css')
+const hostCss = readCss('./host-appearance.css').replace(/\/\*[\s\S]*?\*\//g, '')
 const tailwindTheme = readCss('../../../../../../../node_modules/tailwindcss/theme.css')
 
 function blockTokens(css: string, opener: string): Tokens {
@@ -26,9 +39,7 @@ const themeTokens: Tokens = new Map(
   ])
 )
 
-const rgb = (channel: (index: number) => number): Rgb => [channel(0), channel(1), channel(2)]
-
-function oklchToRgb(l: number, c: number, h: number): Rgb {
+function oklchToRgb(l: number, c: number, h: number): Rgba {
   const a = c * Math.cos((h * Math.PI) / 180)
   const b = c * Math.sin((h * Math.PI) / 180)
   const lms = [
@@ -42,10 +53,11 @@ function oklchToRgb(l: number, c: number, h: number): Rgb {
     -0.0041960863 * lms[0] - 0.7034186147 * lms[1] + 1.707614701 * lms[2]
   ]
   const gamma = (v: number): number => (v <= 0.0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - 0.055)
-  return rgb((i) => Math.min(1, Math.max(0, gamma(linear[i]))) * 255)
+  const channel = (i: number): number => Math.min(1, Math.max(0, gamma(linear[i]))) * 255
+  return [channel(0), channel(1), channel(2), 1]
 }
 
-function parseColor(value: string, tokens: Tokens): Rgb {
+function parseColor(value: string, tokens: Tokens): Rgba {
   const reference = /^var\((--[\w-]+)\)$/.exec(value.trim())
   if (reference) {
     return parseColor(tokens.get(reference[1]) ?? themeTokens.get(reference[1]) ?? '', tokens)
@@ -54,39 +66,31 @@ function parseColor(value: string, tokens: Tokens): Rgb {
   if (oklch) {
     return oklchToRgb(Number(oklch[1]) / 100, Number(oklch[2]), Number(oklch[3]))
   }
-  const hex = /^#([\da-f]{6})$/i.exec(value.trim())
-  if (!hex) {
+  if (!/^#[\da-f]{6}$/i.test(value.trim())) {
     throw new Error(`unparsed color: ${value}`)
   }
-  return rgb((i) => Number.parseInt(hex[1].slice(i * 2, i * 2 + 2), 16))
+  return hexToRgb(value.trim())
 }
 
-const mix = (top: Rgb, bottom: Rgb, percent: number): Rgb =>
-  rgb((i) => top[i] * (percent / 100) + bottom[i] * (1 - percent / 100))
-
-function luminance(rgb: Rgb): number {
-  const [r, g, b] = rgb.map((v) => {
-    const s = v / 255
-    return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4
-  })
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b
-}
-
-function contrast(a: Rgb, b: Rgb): number {
-  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x)
-  return (hi + 0.05) / (lo + 0.05)
-}
-
-// Each tinted rule's percentage, keyed by selector, read from the stylesheet itself.
-function tintPercent(selector: string): number {
-  const uncommented = hostCss.replace(/\/\*[\s\S]*?\*\//g, '')
-  for (const [, ruleSelector, body] of uncommented.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
-    const percent = /color-mix\(in srgb, .+? (\d+)%, transparent\)/.exec(body)
-    if (ruleSelector.trim() === selector && percent) {
-      return Number(percent[1])
+function ruleBody(selector: string): string {
+  for (const [, ruleSelector, body] of hostCss.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    if (ruleSelector.trim() === selector) {
+      return body
     }
   }
-  throw new Error(`no tint for ${selector}`)
+  throw new Error(`no rule for ${selector}`)
+}
+
+// The percent a host-colored rule falls back to when its row sets no per-color tint.
+function fallbackPercent(selector: string, level: HostTintLevel): number {
+  const pattern = new RegExp(`var\\(--host-tint-${level}, (\\d+)%\\)`)
+  return Number(pattern.exec(ruleBody(selector))?.[1])
+}
+
+function fixedPercent(selector: string): number {
+  return Number(
+    /color-mix\(in srgb, var\([\w-]+\) (\d+)%, transparent\)/.exec(ruleBody(selector))?.[1]
+  )
 }
 
 function selectedWashPercent(dark: boolean): number {
@@ -95,7 +99,6 @@ function selectedWashPercent(dark: boolean): number {
   return Number(/--worktree-sidebar-foreground\) (\d+)%, transparent/.exec(body)?.[1])
 }
 
-// Muted text on a tinted, selected card is lifted toward the foreground by this share.
 function selectedMutedLift(): number {
   const lift =
     /--muted-foreground: color-mix\(\s*in srgb,\s*var\(--worktree-sidebar-foreground\) (\d+)%,\s*var\(--worktree-sidebar\)\s*\)/.exec(
@@ -104,9 +107,24 @@ function selectedMutedLift(): number {
   return Number(lift?.[1])
 }
 
-const HOST_COLORS = REPO_COLORS.map((color) => parseColor(color, new Map()))
+const SELECTORS: Record<HostTintLevel, string> = {
+  header: '[data-host-header-color][data-host-header-tinted]',
+  subtle: "[data-host-tint='subtle']",
+  strong: "[data-host-tint='strong']",
+  working: "[data-worktree-item-row]:has([data-session-highlight='working'])"
+}
+const NEEDS_YOU = "[data-worktree-item-row]:has([data-session-highlight='needs-you'])"
+const WORST_CASE_CUSTOM = ['#ff0000', '#000000', '#ffffff', '#00ff00']
+const HOST_COLORS = [...REPO_COLORS, ...WORST_CASE_CUSTOM]
 
 describe('device color tints keep muted text at WCAG AA', () => {
+  it('rules fall back to each level target and lift muted text by the shared share', () => {
+    for (const level of HOST_TINT_LEVELS) {
+      expect(fallbackPercent(SELECTORS[level], level)).toBe(HOST_TINT_TARGETS[level])
+    }
+    expect(selectedMutedLift()).toBe(SELECTED_MUTED_LIFT)
+  })
+
   for (const dark of [false, true]) {
     // .dark only overrides; anything it leaves out cascades from :root.
     const root = blockTokens(mainCss, ':root')
@@ -114,32 +132,44 @@ describe('device color tints keep muted text at WCAG AA', () => {
     const surface = parseColor(tokens.get('--worktree-sidebar') ?? '', tokens)
     const muted = parseColor(tokens.get('--muted-foreground') ?? '', tokens)
     const foreground = parseColor(tokens.get('--worktree-sidebar-foreground') ?? '', tokens)
-    const working = [...HOST_COLORS, parseColor('var(--agent-working)', tokens)]
     const liftedMuted = mix(foreground, surface, selectedMutedLift())
-    const question = [parseColor('var(--agent-question)', tokens)]
-    const levels: [string, readonly Rgb[], string][] = [
-      ['subtle', HOST_COLORS, "[data-host-tint='subtle']"],
-      ['strong', HOST_COLORS, "[data-host-tint='strong']"],
-      ['working', working, "[data-worktree-item-row]:has([data-session-highlight='working'])"],
-      ['needs-you', question, "[data-worktree-item-row]:has([data-session-highlight='needs-you'])"]
-    ]
+    const wash = selectedWashPercent(dark)
+    const readable = (color: Rgba, percent: number, selectable: boolean): number[] => {
+      const tinted = mix(color, surface, percent)
+      const plain = contrastRatio(muted, tinted)
+      return selectable
+        ? [plain, contrastRatio(liftedMuted, mix(foreground, tinted, wash))]
+        : [plain]
+    }
     const theme = dark ? 'dark' : 'light'
-    it(`${theme} section header`, () => {
-      const selector = '[data-host-header-color][data-host-header-tinted]'
-      const ratios = HOST_COLORS.map((color) =>
-        contrast(muted, mix(color, surface, tintPercent(selector)))
-      )
-      expect(Math.min(...ratios)).toBeGreaterThanOrEqual(AA_BODY_TEXT)
+
+    it(`${theme} shared sidebar tokens match main.css`, () => {
+      const shared = SIDEBAR_CONTRAST_THEMES[dark ? 1 : 0]
+      expect([shared.surface, shared.muted, shared.foreground]).toEqual([
+        surface,
+        muted,
+        foreground
+      ])
+      expect(shared.selectedWash).toBe(wash)
     })
-    for (const [level, colors, selector] of levels) {
-      it(`${theme} ${level}, plain and selected`, () => {
-        const ratios = colors.flatMap((color) => {
-          const tinted = mix(color, surface, tintPercent(selector))
-          const selected = mix(foreground, tinted, selectedWashPercent(dark))
-          return [contrast(muted, tinted), contrast(liftedMuted, selected)]
-        })
+
+    for (const level of HOST_TINT_LEVELS) {
+      it(`${theme} ${level} stays AA for presets and worst-case custom colors`, () => {
+        const ratios = HOST_COLORS.flatMap((color) =>
+          readable(parseColor(color, tokens), hostTintPercents(color)[level], level !== 'header')
+        )
         expect(Math.min(...ratios)).toBeGreaterThanOrEqual(AA_BODY_TEXT)
       })
     }
+
+    it(`${theme} uncolored working and needs-you rows stay AA`, () => {
+      const working = parseColor('var(--agent-working)', tokens)
+      const question = parseColor('var(--agent-question)', tokens)
+      const ratios = [
+        ...readable(working, fallbackPercent(SELECTORS.working, 'working'), true),
+        ...readable(question, fixedPercent(NEEDS_YOU), true)
+      ]
+      expect(Math.min(...ratios)).toBeGreaterThanOrEqual(AA_BODY_TEXT)
+    })
   }
 })
