@@ -12,6 +12,7 @@ import { getFolderWorkspaceHostIdentity } from '../../../../../../shared/folder-
 import { getWorktreeHostIdentity } from '../../../../../../shared/worktree/host-qualified-identity'
 import { folderWorkspaceKey } from '../../../../../../shared/workspace/identity/workspace-scope'
 import type { Worktree } from '../../../../../../shared/worktree/types'
+import { toAppSshPtyId } from '../../../../../../shared/remote-runtime/ssh/ssh-pty-id'
 
 const runningFolder = folder('fw-running', 'pg-1')
 const idleFolder = folder('fw-idle', 'pg-1')
@@ -74,6 +75,11 @@ describe('useSidebarHostVisibleScope folder workspaces under Active only', () =>
   it('matches find against the folder name', () => {
     useAppStore.setState({ showOnlyRunningTerminals: false, sidebarFindQuery: idleFolder.name })
     expect(visibleFolderIds()).toEqual(['fw-idle'])
+  })
+
+  it('drops a folder whose only PTY runs on another machine', () => {
+    useAppStore.setState({ ptyIdsByTabId: { 'tab-1': [toAppSshPtyId('gpu-vm', 'pty-1')] } })
+    expect(visibleFolderIds()).toEqual([])
   })
 
   it('keeps every folder while Active only is off', () => {

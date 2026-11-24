@@ -11,11 +11,7 @@ import { getAgentPaneExecutionHost } from '@/store/slices/agent-status/pane-auth
 import type { AgentStatusEntry } from '../../../../../../shared/agent-status/contracts/agent-status-types'
 import { isFreshNonDoneAgentStatus } from '../../../../../../shared/agent-status/contracts/agent-status-freshness'
 import { resolveAgentStatusWorktreeId } from '../../../../../../shared/agent-status/identity/agent-status-worktree-attribution'
-import {
-  LOCAL_EXECUTION_HOST_ID,
-  type ExecutionHostId
-} from '../../../../../../shared/execution-host/execution-host'
-import { getPtyExecutionHost } from '../../../../../../shared/terminal/pty/lifecycle/terminal-execution-host'
+import type { ExecutionHostId } from '../../../../../../shared/execution-host/execution-host'
 import type { GroupHeaderRow } from '../../../../../../shared/sidebar-list/row-types'
 import {
   countHostAgentActivity,
@@ -25,18 +21,13 @@ import {
   getVisibleWorktreeTerminalActivityTabs,
   type TerminalActivityTab
 } from '../listing/visible-worktree-activity-inputs'
-import {
-  ptyOutlivesStoppedHost,
-  selectStoppedWorkspaceHost
-} from '../../workspace-card/activity/use-worktree-activity-status'
+import { hasLiveTerminalOnHost, type TerminalHostState } from '../listing/live-terminal-on-host'
 import { createPaneOwnershipProjection } from './project-activity-ownership'
 
 export type ProjectActivityCounts = HostAgentActivityCounts & { terminals: number }
 /** The workspace ids a header draws, per machine. */
 export type HeaderWorkspaceScope = ReadonlyMap<ExecutionHostId, readonly string[]>
-type PaneHostState = Parameters<typeof getAgentPaneExecutionHost>[0] &
-  Parameters<typeof isExecutionHostForWorktree>[0] &
-  Parameters<typeof selectStoppedWorkspaceHost>[0]
+type PaneHostState = Parameters<typeof getAgentPaneExecutionHost>[0] & TerminalHostState
 type TerminalTabs = Record<string, TerminalActivityTab[]>
 
 const EMPTY_SCOPE: HeaderWorkspaceScope = new Map()
@@ -73,32 +64,6 @@ function liveAgentsOnHost(
     )
   })
   return getLiveAgentStatusByWorktreeId(new Map(onHost), terminalTabs, now)
-}
-
-/**
- * Hostless PTY ids are local; a malformed prefixed id ('foreign') matches no machine.
- * A stopped distro's retained PTYs end with it, as on the workspace card.
- */
-function hasLiveTerminalOnHost(
-  state: PaneHostState,
-  terminalTabs: TerminalTabs,
-  ptyIdsByTabId: Record<string, string[]>,
-  worktreeId: string,
-  hostId: ExecutionHostId
-): boolean {
-  const stoppedHost = selectStoppedWorkspaceHost(state, worktreeId)
-  return (terminalTabs[worktreeId] ?? []).some((tab) =>
-    (ptyIdsByTabId[tab.id] ?? []).some(
-      (ptyId) =>
-        ptyOutlivesStoppedHost(ptyId, stoppedHost) &&
-        isExecutionHostForWorktree(
-          state,
-          worktreeId,
-          hostId,
-          getPtyExecutionHost(ptyId) ?? LOCAL_EXECUTION_HOST_ID
-        )
-    )
-  )
 }
 
 /** Agents by state, plus workspaces that still hold a live terminal, summed over the header's machines. */

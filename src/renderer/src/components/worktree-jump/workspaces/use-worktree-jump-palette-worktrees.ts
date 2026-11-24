@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { getStructuredChatWorktreeIds } from '@/components/sidebar/worktree-list/listing/visible-worktree-activity-inputs'
 import { filterWorkspaceRows } from '../../../../../shared/workspace-view/workspace-row-filters'
 import { buildDesktopWorkspaceRowFactReader } from '@/components/sidebar/worktree-list/listing/desktop-workspace-row-facts'
+import { useTerminalHostState } from '@/components/sidebar/worktree-list/listing/use-terminal-host-state'
 import { sortWorktreesSmart } from '../../../../../shared/sidebar-list/sorting/smart-sort'
 import { buildWorktreeChecksReviewIndex } from '@/components/cmd-j/worktree-checks-review-index'
 import { getLiveAgentStatusByWorktreeId } from '@/lib/workspace/activity/worktree-activity-state'
@@ -92,6 +93,7 @@ export function useWorktreeJumpPaletteWorktrees({
     unifiedTabsByWorktree,
     structuredChatSleptAtByPaneKey
   )
+  const terminalHostState = useTerminalHostState()
   const hiddenProjects = useMemo(
     () => indexHiddenProjects(repos, defaultHostId),
     [repos, defaultHostId]
@@ -120,7 +122,8 @@ export function useWorktreeJumpPaletteWorktrees({
         ptyIdsByTabId,
         browserTabsByWorktree,
         worktreeIdsWithLiveAgent,
-        worktreeIdsWithStructuredChat
+        worktreeIdsWithStructuredChat,
+        terminalHostState
       })
     )
     return filterPredicate ? visible.filter(filterPredicate.matchesWorktree) : visible
@@ -142,7 +145,8 @@ export function useWorktreeJumpPaletteWorktrees({
     showSleepingWorkspaces,
     tabsByWorktree,
     worktreeIdsWithLiveAgent,
-    worktreeIdsWithStructuredChat
+    worktreeIdsWithStructuredChat,
+    terminalHostState
   ])
   const { visibleWorktreesForState, switchableWorktreesForRows } = useMemo(
     () =>

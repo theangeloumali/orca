@@ -172,15 +172,14 @@ export default function SortableTab({
     return () => window.removeEventListener('blur', dismiss)
   }, [menuOpen, setMenuOpen])
 
-  // Why: while editing, drop drag listeners so typing can't start a drag; attributes stay spread to keep dnd-kit a11y.
+  // Why: while editing, drop the keyboard drag listener so typing can't start a drag; attributes stay spread for dnd-kit a11y.
   const dragListeners = isEditing ? undefined : listeners
   const handleActivate = useCallback(() => {
     onActivate(tab.id)
   }, [onActivate, tab.id])
   // Why: defer activation to pointer-up so a drag doesn't switch tabs or steal focus mid-gesture (tab-strip-pointer-activation).
   const { onPointerDown, retirePendingActivation } = useTabStripPointerActivation({
-    onActivate: handleActivate,
-    disabled: isEditing
+    onActivate: handleActivate
   })
   const handleMenuOpenChange = useTabContextMenuOpening(setMenuOpen, retirePendingActivation)
   const slotProps = useTabStripSlotProps(tab.id, isActive, sizing)
@@ -210,10 +209,11 @@ export default function SortableTab({
         handleRenameOpen()
       }}
       onPointerDown={(e) => {
-        onPointerDown(
-          e,
-          dragListeners?.onPointerDown as ((event: React.PointerEvent<Element>) => void) | undefined
-        )
+        // A press outside the open rename commits it, then drags or activates like any press.
+        if (isEditing) {
+          commitRename()
+        }
+        onPointerDown(e, (event) => listeners?.onPointerDown?.(event))
       }}
       // Why: block middle-click auto-scroll; don't close here — removing the element pre-mouseup triggers a Linux X11 paste.
       onMouseDown={preventMiddleButtonDefault}

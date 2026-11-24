@@ -19,6 +19,7 @@ import { getWorktreeHostIdentity } from '../../../../../../shared/worktree/host-
 import { selectWorktreesByRepo } from '@/store/workspaces/catalog/workspace-record-fields'
 import { indexHiddenProjects } from '../../../../../../shared/project/catalog/hidden-projects'
 import { useWorktreeNeedsYouReader } from '../../worktree-list/listing/use-worktree-needs-you-reader'
+import { useTerminalHostState } from '../../worktree-list/listing/use-terminal-host-state'
 
 type UseVisibleWorkspaceKanbanWorktreeIdsParams = {
   allWorktrees: readonly Worktree[]
@@ -58,6 +59,7 @@ export function useVisibleWorkspaceKanbanWorktreeIds({
   const needsTerminalMaps = !showSleepingWorkspaces || showOnlyRunningTerminals
   const tabsByWorktree = useAppStore((s) => (needsTerminalMaps ? s.tabsByWorktree : null))
   const ptyIdsByTabId = useAppStore((s) => (needsTerminalMaps ? s.ptyIdsByTabId : null))
+  const terminalHostState = useTerminalHostState()
   const browserTabsByWorktree = useAppStore((s) =>
     !showSleepingWorkspaces ? s.browserTabsByWorktree : null
   )
@@ -89,6 +91,7 @@ export function useVisibleWorkspaceKanbanWorktreeIds({
         showSleepingWorkspaces,
         tabsByWorktree,
         ptyIdsByTabId,
+        terminalHostState,
         browserTabsByWorktree,
         worktreeIdsWithLiveAgent,
         worktreeIdsWithStructuredChat,
@@ -128,6 +131,7 @@ export function useVisibleWorkspaceKanbanWorktreeIds({
     visibleWorkspaceHostIds,
     settings,
     ptyIdsByTabId,
+    terminalHostState,
     repoMap,
     repos,
     runtimeEnvironments,

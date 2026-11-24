@@ -9,6 +9,9 @@ import type * as VisibleWorktreesModule from '../listing/compute-visible-worktre
 import { getDefaultSettings } from '../../../../../../shared/orca-profiles/constants'
 import { getWorktreeHostIdentity } from '../../../../../../shared/worktree/host-qualified-identity'
 import { folderWorkspaceKey } from '../../../../../../shared/workspace/identity/workspace-scope'
+import { toRuntimeExecutionHostId } from '../../../../../../shared/execution-host/execution-host'
+import { toRemoteRuntimePtyId } from '../../../../../../shared/remote-runtime/remote-runtime-pty-id'
+import type { WslHostConnectionState } from '../../../../../../shared/remote-runtime/wsl-hosts/wsl-host-types'
 import {
   createActiveOnlySummarySelector,
   type ActiveOnlySummaryContext
@@ -148,6 +151,29 @@ describe('createActiveOnlySummarySelector', () => {
     })
     const summary = createActiveOnlySummarySelector()(useAppStore.getState(), context())
     expect(summary.totalWorkspaces).toBe(1)
+  })
+
+  it('recounts Live when a WSL distro stops', () => {
+    const wslEnv = 'wsl-ubuntu'
+    const wslRepo = { ...repo, id: 'repo-wsl', executionHostId: toRuntimeExecutionHostId(wslEnv) }
+    const wslRow = { ...worktree, id: 'wt-wsl', repoId: wslRepo.id }
+    const wslStatus = (state: WslHostConnectionState) => ({
+      [wslEnv]: { environmentId: wslEnv, distro: 'Ubuntu', state, detail: null }
+    })
+    useAppStore.setState({
+      repos: [repo, wslRepo],
+      worktreesByRepo: { [repo.id]: [running, idle], [wslRepo.id]: [wslRow] },
+      tabsByWorktree: {
+        ...useAppStore.getState().tabsByWorktree,
+        [wslRow.id]: [makeTab({ id: 'tab-wsl', worktreeId: wslRow.id })]
+      },
+      ptyIdsByTabId: { 'tab-1': ['pty-1'], 'tab-wsl': [toRemoteRuntimePtyId('pty-7', wslEnv)] },
+      wslHostStatuses: wslStatus('ready')
+    })
+    const select = createActiveOnlySummarySelector()
+    expect(select(useAppStore.getState(), context()).shownWorkspaces).toBe(2)
+    useAppStore.setState({ wslHostStatuses: wslStatus('distro-stopped') })
+    expect(select(useAppStore.getState(), context()).shownWorkspaces).toBe(1)
   })
 
   it('leaves out folders Needs you hides, as the list does', () => {

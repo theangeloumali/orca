@@ -332,6 +332,12 @@
   cursor: grabbing;
 }
 
+/* A multi-pane title drags from anywhere on the bar; a click on the text still renames. */
+.pane-title-bar:has(.pane-title-drag-handle),
+.pane-title-bar:has(.pane-title-drag-handle) .pane-title-text {
+  cursor: grab;
+}
+
 .session-restored-banner {
   position: absolute;
   top: 0;

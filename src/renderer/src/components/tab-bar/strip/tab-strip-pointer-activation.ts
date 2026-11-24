@@ -8,13 +8,7 @@ function isGuestHoldingKeyboard(): boolean {
   return typeof document !== 'undefined' && document.activeElement?.tagName === 'WEBVIEW'
 }
 
-export function useTabStripPointerActivation({
-  onActivate,
-  disabled = false
-}: {
-  onActivate: () => void
-  disabled?: boolean
-}): {
+export function useTabStripPointerActivation({ onActivate }: { onActivate: () => void }): {
   retirePendingActivation: () => void
   onPointerDown: (
     event: React.PointerEvent,
@@ -32,7 +26,7 @@ export function useTabStripPointerActivation({
 
   const onPointerDown = useCallback(
     (event: React.PointerEvent, dragListener?: (event: React.PointerEvent<Element>) => void) => {
-      if (disabled || event.button !== 0) {
+      if (event.button !== 0) {
         return
       }
       // Start dnd-kit immediately; defer only the tab activation decision.
@@ -95,7 +89,7 @@ export function useTabStripPointerActivation({
       window.addEventListener('focus', onWindowFocus)
       cleanupRef.current = cleanup
     },
-    [disabled]
+    []
   )
 
   return { onPointerDown, retirePendingActivation }
