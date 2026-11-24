@@ -12062,6 +12062,7 @@
           "createFromReposDescription_many": "Criar um grupo e mover {{count}} projetos para ele.",
           "groupColorSwatch": "Usar {{color}} para este grupo",
           "groupColorDialogTitle": "Cor de grupo personalizada",
+          "groupColorHostFailed": "Não foi possível atualizar a cor em {{host}}; lá será exibida a cor antiga",
           "groupColorDialogDescription": "As cores de grupo sincronizam com o grupo; a intensidade do fundo fica neste computador.",
           "groupColorPickerLabel": "Cor do grupo"
         },

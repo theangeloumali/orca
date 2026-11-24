@@ -5,12 +5,20 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useAppStore } from '@/store'
 import { getDefaultSettings } from '../../../../../shared/orca-profiles/constants'
 import type { ProjectGroup } from '../../../../../shared/project/groups/project-group-types'
+import type { PublicKnownRuntimeEnvironment } from '../../../../../shared/remote-runtime/host-catalog/runtime-environments'
 import { SidebarColorsSetting } from './SidebarColorsSetting'
 
-const configuredDevices = vi.hoisted(() => ({ hosts: [{ id: 'local', label: 'This Mac' }] }))
-vi.mock('../notifications/use-notification-source-options', () => ({
-  useNotificationSourceOptions: () => configuredDevices.hosts
-}))
+const buildVm: PublicKnownRuntimeEnvironment = {
+  id: 'vm-1',
+  name: 'Build VM',
+  source: 'ephemeral-vm',
+  createdAt: 0,
+  updatedAt: 0,
+  lastUsedAt: null,
+  runtimeId: null,
+  endpoints: [],
+  preferredEndpointId: 'vm-1-endpoint'
+}
 
 const group = (overrides: Partial<ProjectGroup>): ProjectGroup => ({
   id: 'clients',
@@ -30,8 +38,9 @@ const updateProjectGroups = vi.fn(async () => true)
 
 beforeEach(() => {
   updateProjectGroups.mockClear()
-  configuredDevices.hosts = [{ id: 'local', label: 'This Mac' }]
   useAppStore.setState({
+    sshTargetLabels: new Map(),
+    runtimeEnvironments: [],
     settingsSearchQuery: '',
     settings: { ...getDefaultSettings('/home/test'), hostSettingOverrides: {} },
     projectGroups: [
@@ -78,10 +87,11 @@ describe('SidebarColorsSetting', () => {
   })
 
   it('lists configured devices with Automatic, saves a device swatch to hostSettingOverrides, and bounds the list with search and an overflow note', () => {
-    configuredDevices.hosts = Array.from({ length: 55 }, (_, index) => ({
-      id: `ssh:box-${index}`,
-      label: `Box ${index}`
-    }))
+    useAppStore.setState({
+      sshTargetLabels: new Map(
+        Array.from({ length: 54 }, (_, index) => [`box-${index}`, `Box ${index}`])
+      )
+    })
     render(<SidebarColorsSetting />)
     expect(screen.getAllByRole('button', { name: 'Automatic' })).toHaveLength(50)
     fireEvent.click(screen.getByRole('button', { name: 'Use Green for Box 3' }))
@@ -90,5 +100,15 @@ describe('SidebarColorsSetting', () => {
     )
     expect(screen.getByRole('textbox', { name: 'Search hosts…' })).toBeTruthy()
     expect(screen.getByText('5 more hosts. Search by name to find one.')).toBeTruthy()
+  })
+
+  it('lists a VM host the sidebar draws a section for, with its color controls', () => {
+    useAppStore.setState({ runtimeEnvironments: [buildVm] })
+    render(<SidebarColorsSetting />)
+    fireEvent.click(screen.getByRole('button', { name: 'Use Green for Build VM' }))
+    expect(useAppStore.getState().settings?.hostSettingOverrides?.['runtime:vm-1']?.color).toBe(
+      '#22c55e'
+    )
+    expect(screen.getByRole('radiogroup', { name: 'Background for Build VM' })).toBeTruthy()
   })
 })

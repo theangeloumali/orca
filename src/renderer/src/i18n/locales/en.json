@@ -7839,7 +7839,8 @@
           "groupColorSwatch": "Use {{color}} for this group",
           "groupColorDialogTitle": "Custom group color",
           "groupColorDialogDescription": "Group colors sync with the group; background strength stays on this computer.",
-          "groupColorPickerLabel": "Group color"
+          "groupColorPickerLabel": "Group color",
+          "groupColorHostFailed": "Couldn't update the color on {{host}}; it will show the old color there"
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "Cancel",

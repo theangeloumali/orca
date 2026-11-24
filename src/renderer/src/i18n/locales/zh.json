@@ -7022,6 +7022,7 @@
           "createFromReposDescription_other": "创建一个分组并将 {{count}} 个项目移入其中。",
           "groupColorSwatch": "此分组使用{{color}}",
           "groupColorDialogTitle": "自定义分组颜色",
+          "groupColorHostFailed": "无法更新 {{host}} 上的颜色；那里仍会显示旧颜色",
           "groupColorDialogDescription": "分组颜色会随分组同步；背景强度仅保存在这台电脑上。",
           "groupColorPickerLabel": "分组颜色"
         },

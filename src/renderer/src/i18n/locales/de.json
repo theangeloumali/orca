@@ -6709,6 +6709,7 @@
           "createFromReposDescription_other": "Eine Gruppe erstellen und {{count}} Projekte hineinverschieben.",
           "groupColorSwatch": "Für diese Gruppe {{color}} verwenden",
           "groupColorDialogTitle": "Eigene Gruppenfarbe",
+          "groupColorHostFailed": "Die Farbe auf {{host}} konnte nicht aktualisiert werden; dort wird die alte Farbe angezeigt",
           "groupColorDialogDescription": "Gruppenfarben werden mit der Gruppe synchronisiert; die Hintergrundstärke bleibt auf diesem Computer.",
           "groupColorPickerLabel": "Gruppenfarbe"
         },

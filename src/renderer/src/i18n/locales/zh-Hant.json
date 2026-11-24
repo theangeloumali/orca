@@ -6545,6 +6545,7 @@
           "createFromReposDescription_other": "建立群組並將 {{count}} 個專案移入。",
           "groupColorSwatch": "此群組使用{{color}}",
           "groupColorDialogTitle": "自訂群組顏色",
+          "groupColorHostFailed": "無法更新 {{host}} 上的顏色；那裡仍會顯示舊顏色",
           "groupColorDialogDescription": "群組顏色會隨群組同步；背景強度僅儲存在這台電腦上。",
           "groupColorPickerLabel": "群組顏色"
         },

@@ -7008,6 +7008,7 @@
           "createFromReposDescription_other": "Создать группу и переместить в неё {{count}} проекта.",
           "groupColorSwatch": "Использовать {{color}} для этой группы",
           "groupColorDialogTitle": "Свой цвет группы",
+          "groupColorHostFailed": "Не удалось обновить цвет на {{host}}; там будет показан прежний цвет",
           "groupColorDialogDescription": "Цвета групп синхронизируются вместе с группой; яркость фона хранится только на этом компьютере.",
           "groupColorPickerLabel": "Цвет группы"
         },

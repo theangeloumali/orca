@@ -6577,6 +6577,7 @@
           "createFromReposDescription_other": "グループを作成し、{{count}} 件のプロジェクトを移動します。",
           "groupColorSwatch": "このグループに{{color}}を使用",
           "groupColorDialogTitle": "カスタムのグループの色",
+          "groupColorHostFailed": "{{host}} の色を更新できませんでした。そこでは以前の色が表示されます",
           "groupColorDialogDescription": "グループの色はグループと同期されます。背景の強さはこのコンピューターにのみ保存されます。",
           "groupColorPickerLabel": "グループの色"
         },

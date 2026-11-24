@@ -6793,6 +6793,7 @@
           "createFromReposDescription_other": "Bir grup oluştur ve {{count}} projeyi içine taşı.",
           "groupColorSwatch": "Bu grup için {{color}} kullan",
           "groupColorDialogTitle": "Özel grup rengi",
+          "groupColorHostFailed": "{{host}} üzerinde renk güncellenemedi; orada eski renk gösterilecek",
           "groupColorDialogDescription": "Grup renkleri grupla eşitlenir; arka plan yoğunluğu bu bilgisayarda kalır.",
           "groupColorPickerLabel": "Grup rengi"
         },

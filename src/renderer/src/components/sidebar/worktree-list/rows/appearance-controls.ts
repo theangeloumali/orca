@@ -1,4 +1,7 @@
+import { toast } from 'sonner'
 import { useAppStore } from '@/store/index'
+import { translate } from '@/i18n/i18n'
+import { selectExecutionHostDisplayLabel } from '@/runtime/hosts/display/execution-host-display-label'
 import {
   getRepoExecutionHostId,
   type ExecutionHostId
@@ -56,6 +59,35 @@ export function useHostAppearanceControls(hostId: ExecutionHostId): AppearanceCo
   return { colorValue: selected, customColor: custom, tint, selectColor, selectTint }
 }
 
+/** Saves each host's copy on its own, so an offline host keeps its old color and is named. */
+async function saveColorOnEveryCopy(
+  groupId: string,
+  updates: { color: string | null }
+): Promise<void> {
+  const { projectGroups, updateProjectGroups } = useAppStore.getState()
+  const hostIds = projectGroups
+    .filter((group) => group.id === groupId)
+    .map((copy) => getRepoExecutionHostId(copy))
+  const saved = await Promise.all(
+    hostIds.map((hostId) => updateProjectGroups([{ groupId, updates, hostId }]).catch(() => false))
+  )
+  const failedHostIds = hostIds.filter((_, index) => !saved[index])
+  if (failedHostIds.length === 0) {
+    return
+  }
+  const state = useAppStore.getState()
+  const host = failedHostIds
+    .map((hostId) => selectExecutionHostDisplayLabel(state, hostId))
+    .join(', ')
+  toast.error(
+    translate(
+      'auto.components.sidebar.WorktreeList.groupColorHostFailed',
+      "Couldn't update the color on {{host}}; it will show the old color there",
+      { host }
+    )
+  )
+}
+
 /** What the row shows: its color and the group that owns it (the group itself or a parent). */
 export type ShownGroupColor = { color: string | null; ownerGroupId: string }
 
@@ -64,22 +96,15 @@ export function useProjectGroupAppearanceControls(
   groupId: string,
   shown: ShownGroupColor
 ): AppearanceControls {
-  const updateProjectGroups = useAppStore((s) => s.updateProjectGroups)
   const updateSettings = useAppStore((s) => s.updateSettings)
   const tint = useAppStore((s) =>
     resolveProjectGroupRowTint(s.settings?.projectGroupTints, groupId, shown.ownerGroupId)
   )
   const { selected, custom } = getHostColorMenuValue(shown.color ?? HOST_COLOR_NONE)
 
-  const selectColor = (value: string): void => {
+  const selectColor = (value: string): Promise<void> => {
     const updates = projectGroupColorUpdate(value === HOST_COLOR_NONE ? null : value)
-    if (!updates) {
-      return
-    }
-    const copies = useAppStore.getState().projectGroups.filter((group) => group.id === groupId)
-    void updateProjectGroups(
-      copies.map((copy) => ({ groupId, updates, hostId: getRepoExecutionHostId(copy) }))
-    )
+    return updates ? saveColorOnEveryCopy(groupId, updates) : Promise.resolve()
   }
   const selectTint = (value: string): void => {
     const nextTint = parseTint(value)

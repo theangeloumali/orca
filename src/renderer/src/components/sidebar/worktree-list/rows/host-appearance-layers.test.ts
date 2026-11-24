@@ -22,11 +22,24 @@ function outsideComponentsLayer(css: string): string {
 }
 
 describe('sidebar color layering', () => {
-  it('keeps tints below Tailwind utilities, so drag-over, dragging and reveal backgrounds win', () => {
-    // Tailwind declares theme, base, components, utilities; an unlayered rule would beat bg-* utilities.
+  // Tailwind declares theme, base, components, utilities: unlayered CSS beats every bg-* utility,
+  // and the components layer loses to all of them.
+  it('keeps row tints under Tailwind utilities, so drag-over still beats the row tint', () => {
     expect(mainCss).toContain("@import 'tailwindcss'")
-    expect(hostCss).toContain(LAYER_OPEN)
-    expect(outsideComponentsLayer(hostCss)).not.toMatch(/background-color/)
+    const unlayered = outsideComponentsLayer(hostCss)
+    for (const rowTint of ["[data-host-tint='strong']", "[data-group-tint='strong']"]) {
+      expect(hostCss).toContain(rowTint)
+      expect(unlayered).not.toContain(rowTint)
+    }
+  })
+
+  it("keeps the host header's tint unlayered, so it beats the header's resting background utility", () => {
+    const unlayered = outsideComponentsLayer(hostCss)
+    expect(cssRuleBody(unlayered, '[data-host-header-color][data-host-header-tinted]')).toMatch(
+      /background-color/
+    )
+    expect(cssRuleBody(unlayered, '[data-host-header-color]')).toMatch(/border-left/)
+    expect(unlayered.match(/background-color/g)).toHaveLength(1)
   })
 
   it('clears a colored group set to Off, so the device wash does not show through', () => {

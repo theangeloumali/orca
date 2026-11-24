@@ -1,7 +1,8 @@
 // @vitest-environment happy-dom
 
 import { act, cleanup, renderHook } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { toast } from 'sonner'
 import { useAppStore } from '@/store'
 import { getDefaultSettings } from '../../../../../../shared/orca-profiles/constants'
 import type { ProjectGroup } from '../../../../../../shared/project/groups/project-group-types'
@@ -102,6 +103,33 @@ describe('useProjectGroupAppearanceControls', () => {
     await act(async () => result.current.selectColor('not-a-color'))
     expect(groupWrites.map(({ color }) => color)).toEqual(['#22c55e', '#22c55e'])
     expect(result.current.colorValue).toBe('#22c55e')
+  })
+
+  it('keeps the copies that saved and names the machine that could not be updated', async () => {
+    const toastError = vi.spyOn(toast, 'error').mockImplementation(() => 'toast')
+    const saveOnline = useAppStore.getState().updateProjectGroups
+    useAppStore.setState((state) => ({
+      settings: state.settings && {
+        ...state.settings,
+        hostSettingOverrides: { 'runtime:a': { displayLabel: 'M1 MAX' } }
+      },
+      updateProjectGroups: async (mutations) => {
+        if (mutations.some(({ hostId }) => hostId === 'runtime:a')) {
+          throw new Error('offline')
+        }
+        return saveOnline(mutations)
+      }
+    }))
+    const { result } = renderGroupControls()
+    await act(async () => result.current.selectColor('#22c55e'))
+    expect(useAppStore.getState().projectGroups.map((copy) => copy.color)).toEqual([
+      null,
+      '#22c55e'
+    ])
+    expect(toastError).toHaveBeenCalledWith(
+      "Couldn't update the color on M1 MAX; it will show the old color there"
+    )
+    toastError.mockRestore()
   })
 
   it('keeps the background strength in this computer settings', () => {

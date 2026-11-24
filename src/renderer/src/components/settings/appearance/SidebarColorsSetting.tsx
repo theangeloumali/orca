@@ -19,7 +19,9 @@ import { translateHostDisplayLabel } from '../../../runtime/hosts/display/execut
 import { useBoundedHostRows } from '../../host-picker/use-bounded-host-rows'
 import { HostListSearchField } from '../../host-picker/HostListSearchField'
 import { HostListOverflowNote } from '../../host-picker/HostListOverflowNote'
-import { useNotificationSourceOptions } from '../notifications/use-notification-source-options'
+import { selectEphemeralVmHostLifecycles } from '@/store/slices/ephemeral-vm/ephemeral-vm-lifecycle'
+import { buildExecutionHostRegistry } from '../../../../../shared/execution-host/execution-host-registry'
+import { getHostDisplayLabelOverrides } from '../../../../../shared/execution-host/host-setting-overrides'
 import {
   useHostAppearanceControls,
   useProjectGroupAppearanceControls,
@@ -51,16 +53,7 @@ export function SidebarColorsSetting({
 }): React.JSX.Element {
   const t = useTranslate()
   const entry = getSidebarColorsEntry()
-  // Configured hosts, not the sidebar's scope list, so no Active Server read sneaks in.
-  const hostOptions = useNotificationSourceOptions()
-  const devices = useMemo(
-    () =>
-      pickerExecutionHosts(hostOptions).map((host) => ({
-        id: host.id,
-        label: translateHostDisplayLabel(host, t)
-      })),
-    [hostOptions, t]
-  )
+  const devices = useColorableHosts()
   const deviceRows = useBoundedHostRows(devices)
   const projectGroups = useAppStore((s) => s.projectGroups)
   const groups = useMemo(() => orderSidebarColorGroups(projectGroups ?? []), [projectGroups])
@@ -95,6 +88,30 @@ export function SidebarColorsSetting({
       ))}
     </SearchableSetting>
   )
+}
+
+/** The registry the sidebar's host sections come from, VM hosts included; no Active Server read. */
+function useColorableHosts(): { id: ExecutionHostId; label: string }[] {
+  const t = useTranslate()
+  const repos = useAppStore((s) => s.repos)
+  const settings = useAppStore((s) => s.settings)
+  const sshTargetLabels = useAppStore((s) => s.sshTargetLabels)
+  const runtimeEnvironments = useAppStore((s) => s.runtimeEnvironments)
+  const ephemeralVmHosts = useAppStore(selectEphemeralVmHostLifecycles)
+  return useMemo(() => {
+    const hosts = buildExecutionHostRegistry({
+      repos,
+      settings,
+      sshTargetLabels,
+      runtimeEnvironments,
+      hostLabelOverrides: getHostDisplayLabelOverrides(settings),
+      ephemeralVmHosts
+    })
+    return pickerExecutionHosts(hosts).map((host) => ({
+      id: host.id,
+      label: translateHostDisplayLabel(host, t)
+    }))
+  }, [repos, settings, sshTargetLabels, runtimeEnvironments, ephemeralVmHosts, t])
 }
 
 function HostColorRow({

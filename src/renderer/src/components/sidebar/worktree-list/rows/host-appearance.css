@@ -1,19 +1,17 @@
 /* Device colors: rows read --host-color from their wrapper, so a color change repaints without re-rendering.
    --host-tint-* is that color's AA-safe share (host-tint-contrast.ts); fallbacks are the targets. */
-/* Layered under Tailwind utilities, so drag-over, dragging and reveal bg-* states still win. */
+/* Unlayered, so the header's color beats its resting border and bg-* utilities; blocked,
+   disconnected and suspended headers drop these attributes instead. */
+[data-host-header-color] {
+  border-left: 3px solid var(--host-color);
+}
+
+[data-host-header-color][data-host-header-tinted] {
+  background-color: color-mix(in srgb, var(--host-color) var(--host-tint-header, 7%), transparent);
+}
+
+/* Row tints sit under Tailwind utilities, so drag-over, dragging and reveal bg-* states still win. */
 @layer components {
-  [data-host-header-color] {
-    border-left: 3px solid var(--host-color);
-  }
-
-  [data-host-header-color][data-host-header-tinted] {
-    background-color: color-mix(
-      in srgb,
-      var(--host-color) var(--host-tint-header, 7%),
-      transparent
-    );
-  }
-
   [data-host-tint]:not([data-host-tint='off'])::before {
     content: '';
     position: absolute;

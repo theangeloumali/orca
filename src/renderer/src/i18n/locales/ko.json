@@ -6875,6 +6875,7 @@
           "createFromReposDescription_other": "그룹을 만들고 프로젝트 {{count}}개를 옮깁니다.",
           "groupColorSwatch": "이 그룹에 {{color}} 사용",
           "groupColorDialogTitle": "사용자 지정 그룹 색상",
+          "groupColorHostFailed": "{{host}}에서 색상을 업데이트할 수 없습니다. 그곳에는 이전 색상이 표시됩니다",
           "groupColorDialogDescription": "그룹 색상은 그룹과 동기화되며, 배경 강도는 이 컴퓨터에만 저장됩니다.",
           "groupColorPickerLabel": "그룹 색상"
         },
