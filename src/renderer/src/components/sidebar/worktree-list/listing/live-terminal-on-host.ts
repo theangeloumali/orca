@@ -4,6 +4,10 @@ import {
   type ExecutionHostId
 } from '../../../../../../shared/execution-host/execution-host'
 import { getPtyExecutionHost } from '../../../../../../shared/terminal/pty/lifecycle/terminal-execution-host'
+import type { FolderWorkspace } from '../../../../../../shared/folder-workspaces/folder-workspace-types'
+import type { ProjectGroup } from '../../../../../../shared/project/groups/project-group-types'
+import { getFolderWorkspaceExecutionHostIdForRows } from '../../../../../../shared/sidebar-list/hosts/host-filtering'
+import { folderWorkspaceKey } from '../../../../../../shared/workspace/identity/workspace-scope'
 import {
   ptyOutlivesStoppedHost,
   selectStoppedWorkspaceHost
@@ -36,5 +40,31 @@ export function hasLiveTerminalOnHost(
           getPtyExecutionHost(ptyId) ?? LOCAL_EXECUTION_HOST_ID
         )
     )
+  )
+}
+
+/** A folder's tabs sit under its folder: key, on the machine its row lists under. */
+export function hasFolderLiveTerminalOnHost(
+  state: TerminalHostState,
+  terminalTabs: Readonly<Record<string, readonly { id: string }[]>>,
+  ptyIdsByTabId: Readonly<Record<string, readonly string[]>>,
+  folderRow: {
+    folder: FolderWorkspace
+    projectGroups: readonly ProjectGroup[]
+    defaultHostId: ExecutionHostId
+  }
+): boolean {
+  const { folder, projectGroups, defaultHostId } = folderRow
+  const hostId = getFolderWorkspaceExecutionHostIdForRows({
+    folderWorkspace: folder,
+    projectGroup: projectGroups.find((group) => group.id === folder.projectGroupId),
+    defaultHostId
+  })
+  return hasLiveTerminalOnHost(
+    state,
+    terminalTabs,
+    ptyIdsByTabId,
+    folderWorkspaceKey(folder.id),
+    hostId
   )
 }

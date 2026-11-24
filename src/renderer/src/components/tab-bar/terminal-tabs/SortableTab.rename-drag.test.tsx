@@ -2,7 +2,7 @@
 import { DndContext, useDndContext, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext } from '@dnd-kit/sortable'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { TabDragPointerSensor } from '../../tab-group/drag/tab-drag-pointer-sensor'
 import { TabStripTooltipProvider } from '../strip/TabStripTooltipProvider'
 import SortableTab from './SortableTab'
@@ -74,7 +74,11 @@ function pressAndMoveTab(): string {
   fireEvent.pointerMove(document, { pointerId: 1, buttons: 1, clientX: 40, clientY: 10 })
   fireEvent.pointerMove(document, { pointerId: 1, buttons: 1, clientX: 60, clientY: 10 })
   const active = screen.getByTestId('active-drag').textContent ?? ''
+  // The sensor drops its click-swallowing listener on a 50ms timer; flush it so the next test's clicks land.
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
   fireEvent.pointerUp(document, { pointerId: 1, clientX: 60, clientY: 10 })
+  vi.runOnlyPendingTimers()
+  vi.useRealTimers()
   return active
 }
 
@@ -140,14 +144,12 @@ describe('SortableTab drag after rename', () => {
     const item = await screen.findByRole('menuitem', { name: /change title/i })
     await act(async () => {
       fireEvent.click(item)
-      await new Promise((resolve) => setTimeout(resolve, 50))
     })
-    const input = screen.queryByRole('textbox')
-    if (input) {
-      await act(async () => {
-        fireEvent.keyDown(input, { key: 'Enter' })
-      })
-    }
+    const input = screen.getByRole('textbox')
+    await act(async () => {
+      fireEvent.keyDown(input, { key: 'Enter' })
+    })
+    expect(screen.queryByRole('textbox')).toBeNull()
     expect(pressAndMoveTab()).toBe('tab-1')
   })
 
