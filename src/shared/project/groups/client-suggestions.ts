@@ -10,14 +10,29 @@ import { groupByExecutionHost } from '../../sidebar-list/hosts/device-sections'
 import { isRepoHidden } from '../catalog/hidden-projects'
 import type { ProjectGroup } from './project-group-types'
 
-export type ClientSuggestion = {
+/** The repo fields suggestions read; the desktop passes full repos, the phone its catalog rows. */
+export type ClientSuggestionRepo = Pick<
+  Repo,
+  | 'id'
+  | 'path'
+  | 'gitRemoteIdentity'
+  | 'projectGroupId'
+  | 'hiddenAt'
+  | 'connectionId'
+  | 'executionHostId'
+>
+
+export type ClientSuggestion<R extends ClientSuggestionRepo = Repo> = {
   clientName: string
   /** A same-named group already on this machine; the projects are filed into it. */
   existingGroupId: string | null
-  projects: Repo[]
+  projects: R[]
 }
 
-export type MachineClientSuggestions = { hostId: ExecutionHostId; suggestions: ClientSuggestion[] }
+export type MachineClientSuggestions<R extends ClientSuggestionRepo = Repo> = {
+  hostId: ExecutionHostId
+  suggestions: ClientSuggestion<R>[]
+}
 
 const WORK_FOLDER = 'work'
 // A user named "work" (/home/work, C:\Users\work) is a home dir, not a client container.
@@ -48,17 +63,17 @@ export function getClientName(repo: Pick<Repo, 'path' | 'gitRemoteIdentity'>): s
   return getClientSource(repo)?.name ?? null
 }
 
-function suggestForMachine(
-  repos: readonly Repo[],
+function suggestForMachine<R extends ClientSuggestionRepo>(
+  repos: readonly R[],
   groups: readonly ProjectGroup[]
-): ClientSuggestion[] {
+): ClientSuggestion<R>[] {
   // Why: only top-level groups match, so a client's projects never land inside Archive or a subgroup.
   const groupByName = new Map(
     groups
       .filter((entry) => entry.parentGroupId === null)
       .map((entry) => [entry.name.toLowerCase(), entry])
   )
-  const byClient = new Map<string, ClientSuggestion>()
+  const byClient = new Map<string, ClientSuggestion<R>>()
   const pathNamed = new Set<string>()
   for (const repo of repos) {
     const source = getClientSource(repo)
@@ -96,10 +111,10 @@ function suggestForMachine(
 }
 
 /** Client groups to propose per machine, from its ungrouped, listed projects; nothing is moved here. */
-export function suggestClientGroups(args: {
-  repos: readonly Repo[]
+export function suggestClientGroups<R extends ClientSuggestionRepo = Repo>(args: {
+  repos: readonly R[]
   projectGroups: readonly ProjectGroup[]
-}): MachineClientSuggestions[] {
+}): MachineClientSuggestions<R>[] {
   const seen = new Set<string>()
   const candidates = args.repos.filter((repo) => {
     // Why: a paired server's nested-SSH twins share a host identity; their SSH target tells them apart.

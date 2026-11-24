@@ -990,7 +990,9 @@
       "workspaceOptions": "Workspace options",
       "syncedAcrossDevices": "Synced across your devices",
       "done": "Done",
-      "reset": "Reset"
+      "reset": "Reset",
+      "machines": "Machines",
+      "machinesDetail": "Group workspaces by computer on this phone"
     },
     "hostBottomBar": {
       "workspaceOptions": "Workspace options",
@@ -1001,6 +1003,37 @@
     },
     "identity": {
       "hostNotFound": "Host not found"
+    },
+    "organize": {
+      "notNow": "Not now",
+      "idleTitle_one": "1 project idle for 30+ days",
+      "idleTitle_other": "{{count}} projects idle for 30+ days",
+      "archive": "Archive",
+      "clientsTitle": "Group {{count}} projects by client",
+      "group": "Group"
+    },
+    "machineHeader": {
+      "online": "Online",
+      "offline": "Offline",
+      "expandAll": "Expand all",
+      "collapseAll": "Collapse all"
+    },
+    "projectActivity": {
+      "label": "{{working}} working, {{needsYou}} waiting on you"
+    },
+    "quickFilters": {
+      "all": "All",
+      "live": "Live",
+      "needsYou": "Needs you",
+      "thisMachine": "This machine",
+      "label": "Quick filters"
+    },
+    "groupFold": {
+      "projects_one": "{{count}} project",
+      "projects_other": "{{count}} projects",
+      "needsYou_one": "{{count}} needs you",
+      "needsYou_other": "{{count}} need you",
+      "hint": "Long press to fold or unfold everything inside."
     }
   },
   "webShell": {

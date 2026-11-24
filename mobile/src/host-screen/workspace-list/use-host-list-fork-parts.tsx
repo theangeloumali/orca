@@ -5,6 +5,8 @@ import type { Section, Worktree } from '../../worktree/workspace-list/workspace-
 import type { HostScreenController } from '../use-host-screen-controller'
 import { HostMachineSectionHeader } from './host-machine-section-header'
 import { HostQuickFilterChips } from './host-quick-filter-chips'
+import { HostOrganizeHints } from '../organize/HostOrganizeHints'
+import { useHostOrganizeHints } from '../organize/use-host-organize-hints'
 
 // The fork's list parts (machine headers, group subtree folding, quick filters), kept beside upstream's list.
 export function useHostListForkParts(args: {
@@ -14,8 +16,20 @@ export function useHostListForkParts(args: {
   pendingCollapseKeys: ReadonlySet<string>
   settings: HostScreenController['settings']
   state: HostScreenController['state']
+  client: HostScreenController['client']
+  connState: HostScreenController['connState']
+  onCatalogChanged: () => void
 }) {
   const { sections, displayWorktrees, collapsedGroups, pendingCollapseKeys, settings, state } = args
+  const organize = useHostOrganizeHints({
+    client: args.client,
+    connState: args.connState,
+    // The served catalog carries each repo's group and archive state; older desktops fall back to repo.list.
+    repos: state.servedProjectSections?.repos ?? state.desktopRepos,
+    projectGroups: state.servedProjectSections?.projectGroups ?? state.hostProjectGroups,
+    rows: displayWorktrees,
+    onChanged: args.onCatalogChanged
+  })
   const machineCount = useMemo(
     () =>
       new Set(displayWorktrees.map((row) => resolveWorktreeHostId(row, state.repoHostIdByRepoId)))
@@ -23,11 +37,14 @@ export function useHostListForkParts(args: {
     [displayWorktrees, state.repoHostIdByRepoId]
   )
   const quickFilters = (
-    <HostQuickFilterChips
-      filters={state.view.filters}
-      setFilter={settings.setFilter}
-      machineCount={machineCount}
-    />
+    <>
+      <HostQuickFilterChips
+        filters={state.view.filters}
+        setFilter={settings.setFilter}
+        machineCount={machineCount}
+      />
+      <HostOrganizeHints hints={organize} />
+    </>
   )
   const toggleSubtree = useCallback(
     (keys: readonly string[]) =>

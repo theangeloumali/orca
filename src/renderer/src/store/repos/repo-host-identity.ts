@@ -15,9 +15,7 @@ export function worktreeBelongsToHost(worktree: { hostId?: string }, hostId: str
   return (worktree.hostId ?? LOCAL_EXECUTION_HOST_ID) === hostId
 }
 
-export function getRepoRowIdentity(repo: RepoIdentityParts): string {
-  return JSON.stringify([getRepoHostIdentity(repo), normalizeHostPart(repo.connectionId)])
-}
+export { getRepoRowIdentity } from '../../../../shared/repository/repo-row-identity'
 
 /** One exact row: a paired server's twins share its `runtime:` host and differ by nested SSH target. */
 export function isSameRepoRow(left: RepoIdentityParts, right: RepoIdentityParts): boolean {

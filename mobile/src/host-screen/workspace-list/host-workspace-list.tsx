@@ -128,7 +128,10 @@ export function HostWorkspaceList({
     collapsedGroups,
     pendingCollapseKeys,
     settings,
-    state
+    state,
+    client,
+    connState,
+    onCatalogChanged: () => void catalog.onRefresh()
   })
   const renderSectionHeader = useCallback(
     ({ section }: { section: Section }) => {

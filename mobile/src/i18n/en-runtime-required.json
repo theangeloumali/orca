@@ -1091,9 +1091,19 @@
       "changes_one": "{{count}} uncommitted change",
       "changes_other": "{{count}} uncommitted changes"
     },
+    "groupFold": {
+      "needsYou_one": "{{count}} needs you",
+      "needsYou_other": "{{count}} need you",
+      "projects_one": "{{count}} project",
+      "projects_other": "{{count}} projects"
+    },
     "hostBottomBar": {
       "activeFilters_one": "Workspace options ({{count}} filter active)",
       "activeFilters_other": "Workspace options ({{count}} filters active)"
+    },
+    "organize": {
+      "idleTitle_one": "1 project idle for 30+ days",
+      "idleTitle_other": "{{count}} projects idle for 30+ days"
     }
   },
   "pullRequest": {

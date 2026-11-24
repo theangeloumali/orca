@@ -228,6 +228,9 @@ export const EXECUTION_HOST_METHODS = [
   'orchestration.workerAutoClose',
   'orchestration.workerKeepOpen',
   'projectGroup.list',
+  // The fork phone files a client's projects into a group, as the desktop's client hint does.
+  'projectGroup.create',
+  'projectGroup.moveProject',
   'project.list',
   'projectHostSetup.list',
   'repo.baseRefDefault',
@@ -238,6 +241,8 @@ export const EXECUTION_HOST_METHODS = [
   'repo.searchRefs',
   'repo.sparsePresets',
   'repo.update',
+  // The fork phone archives idle projects (sidebar-only, like the desktop's Archive).
+  'repo.setHidden',
   'settings.getAgentLaunch',
   // The host that owns the workspace scans its skills.
   'skills.discover',
