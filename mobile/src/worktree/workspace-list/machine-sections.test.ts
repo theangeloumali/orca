@@ -52,6 +52,11 @@ describe('groupSectionsByMachine', () => {
     expect(group(sections)).toBeNull()
   })
 
+  it('stays a plain list when it is empty, or when the other machine holds only an empty project', () => {
+    expect(group([])).toBeNull()
+    expect(group([section('repo:a', [item('1', 'ssh:m1')]), section('repo:empty', [])])).toBeNull()
+  })
+
   it('puts the local machine first, then machines by label, each over its own sections', () => {
     const shared = section('repo:a', [
       item('1', 'ssh:m1'),

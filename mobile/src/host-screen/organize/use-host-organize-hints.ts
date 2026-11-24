@@ -43,7 +43,7 @@ export function useHostOrganizeHints(args: {
   const { client, connState, repos, projectGroups, rows, onChanged } = args
   const [dismissed, setDismissed] = useState<OrganizeDismissals | null>(null)
   const [busy, setBusy] = useState(false)
-  // Hints acted on hide at once; the repo list catches up on its next read.
+  // A hint whose writes all went through hides at once; the repo list catches up on its next read.
   const [acted, setActed] = useState<ReadonlySet<string>>(() => new Set())
   // Idle ages count in days, so an hourly clock keeps the offer current.
   const now = useNow(60 * 60 * 1000, true)
@@ -72,13 +72,13 @@ export function useHostOrganizeHints(args: {
     return hint && !acted.has(hint.key) ? hint : null
   }, [dismissed, repos, projectGroups, acted])
   const run = useCallback(
-    async (work: (rpc: RpcClient) => Promise<unknown>) => {
+    async <Result>(work: (rpc: RpcClient) => Promise<Result>): Promise<Result | undefined> => {
       if (!client || busy) {
-        return
+        return undefined
       }
       setBusy(true)
       try {
-        await work(client)
+        return await work(client)
       } finally {
         setBusy(false)
         onChanged()
@@ -101,20 +101,21 @@ export function useHostOrganizeHints(args: {
     if (!idle) {
       return
     }
-    setActed((current) => new Set(current).add(idle.key))
-    await run((rpc) =>
+    const archived = await run((rpc) =>
       archiveProjects(
         idle.repos,
         async (params) => (await send(projectArchiveWrite, rpc, params)).ok
       )
     )
+    if (archived === idle.repos.length) {
+      setActed((current) => new Set(current).add(idle.key))
+    }
   }, [idle, run])
   const groupClients = useCallback(async () => {
     if (!clients) {
       return
     }
-    setActed((current) => new Set(current).add(clients.key))
-    await run((rpc) =>
+    const filing = await run((rpc) =>
       fileClientSuggestions(clients.suggestions, {
         createGroup: async (params) => {
           const created = await send(projectGroupCreateWrite, rpc, params)
@@ -123,6 +124,9 @@ export function useHostOrganizeHints(args: {
         moveProject: async (params) => (await send(projectGroupMoveWrite, rpc, params)).ok
       })
     )
+    if (filing?.failedClients.length === 0) {
+      setActed((current) => new Set(current).add(clients.key))
+    }
   }, [clients, run])
   return useMemo(
     () => ({ idle, clients, busy, dismiss, archiveIdle, groupClients }),

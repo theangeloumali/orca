@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { applyForkAppIdentity } from './fork-app-identity.cjs'
 
@@ -66,5 +67,16 @@ describe('fork push flag', () => {
     expect(applyForkAppIdentity(officialConfig, { ORCA_FORK_PUSH: '1' }).extra.orcaForkPush).toBe(
       true
     )
+  })
+})
+
+describe('release lanes', () => {
+  it("default to the fork identity's native project, bundle id and package", () => {
+    const fastfile = readFileSync(new URL('../fastlane/Fastfile', import.meta.url), 'utf8')
+    const fork = applyForkAppIdentity(officialConfig, {})
+    // Prebuild names the native project after the app name without spaces.
+    expect(fastfile).toContain(`ENV.fetch("IOS_PROJECT_NAME", "${fork.name.replace(/\s+/g, '')}")`)
+    expect(fastfile).toContain(`ENV.fetch("IOS_BUNDLE_IDENTIFIER", "${fork.ios.bundleIdentifier}")`)
+    expect(fastfile).toContain(`ENV.fetch("ORCA_ANDROID_PACKAGE", "${fork.android.package}")`)
   })
 })

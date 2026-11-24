@@ -8,6 +8,9 @@ import {
   type SidebarContrastPalette
 } from '../../../../src/shared/execution-host/host-tint-contrast'
 import { getHostContextLabel } from '../../../../src/shared/worktree/row-display/host-context-labels'
+import { indexHiddenProjects } from '../../../../src/shared/project/catalog/hidden-projects'
+import { filterWorktrees } from '../../worktree/workspace-list/workspace-row-filtering'
+import { rowFiltersForView } from '../../worktree/workspace-list/workspace-view-settings'
 import { paletteForScheme } from '../../theme/mobile-theme'
 import { resolveWorktreeHostId } from '../../worktree/row-presentation/worktree-host-context-labels'
 import {
@@ -31,21 +34,31 @@ const PHONE_TINT_PALETTES: readonly SidebarContrastPalette[] = (['light', 'dark'
 export function useMachineSections(
   state: HostScreenState,
   base: HostListSections,
-  /** The host's listed rows, folded or not; each machine header counts its own. */
+  /** The host's rows before filters; each machine header counts those the filters keep. */
   rows: readonly Worktree[]
 ): HostListSections {
   // A view cached before the toggle existed has no value, which reads as on.
   const enabled = state.view.groupByMachine !== false
   const { hostAppearanceById, hostHealthById, hostLabelById, hostPlatform, repoHostIdByRepoId } =
     state
+  const { view, search } = state
+  const { repoById } = base
   const rowCountByHost = useMemo(() => {
+    // As the desktop's machine badge: what the filters list, whether or not a group is folded.
+    const listed = filterWorktrees(
+      [...rows],
+      rowFiltersForView(view),
+      search,
+      repoHostIdByRepoId,
+      indexHiddenProjects([...repoById.values()], LOCAL_EXECUTION_HOST_ID)
+    )
     const counts = new Map<string, number>()
-    for (const row of rows) {
+    for (const row of listed) {
       const hostId = resolveWorktreeHostId(row, repoHostIdByRepoId)
       counts.set(hostId, (counts.get(hostId) ?? 0) + 1)
     }
     return counts
-  }, [rows, repoHostIdByRepoId])
+  }, [rows, view, search, repoHostIdByRepoId, repoById])
   return useMemo(() => {
     if (!enabled) {
       return base

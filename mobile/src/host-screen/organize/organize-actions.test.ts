@@ -63,4 +63,12 @@ describe('fileClientSuggestions', () => {
     )
     expect(result).toEqual({ filed: 0, failedClients: ['Acme'] })
   })
+
+  it('reports a client when one of its projects fails to move, keeping the ones that did', async () => {
+    const result = await fileClientSuggestions(
+      [{ clientName: 'Acme', existingGroupId: 'g-acme', projects: [repo('a'), repo('b')] }],
+      { createGroup: async () => 'unused', moveProject: async ({ repo: id }) => id === 'id:a' }
+    )
+    expect(result).toEqual({ filed: 1, failedClients: ['Acme'] })
+  })
 })
