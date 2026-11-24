@@ -47,6 +47,7 @@ export type VirtualizedWorktreeViewportProps = {
   projectOrderBy: ProjectOrderBy
   toggleGroup: (key: string) => void
   onToggleAllProjects?: () => void
+  onToggleProjectGroupSubtree: (groupId: string) => boolean
   collapsedGroups: Set<string>
   handleCreateForRepo: (repo: Repo, options: { pinHost: boolean }) => void
   handleOpenRepoSettings: (projectId: string, sectionId?: string) => void

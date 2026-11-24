@@ -4,7 +4,6 @@ import { act, cleanup, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useAppStore } from '@/store'
 import { repo } from '../grouping/worktree-list-groups-test-fixtures'
-import { getProjectGroupHeaderKey } from '../../../../../../shared/sidebar-list/sections/group-keys'
 import type { ProjectGroup } from '../../../../../../shared/project/groups/project-group-types'
 import type * as ActivityCountsModule from './use-project-group-agent-activity-counts'
 import type * as SidebarGroupingModule from '../listing/sidebar-project-grouping'
@@ -53,8 +52,7 @@ describe('ProjectGroupFoldedSummary', () => {
         { ...repo, id: 'r-top', projectGroupId: 'client' },
         { ...repo, id: 'r-nested', projectGroupId: 'nested' },
         { ...repo, id: 'r-hidden', projectGroupId: 'nested', hiddenAt: 1 }
-      ],
-      collapsedGroups: new Set([getProjectGroupHeaderKey('client')])
+      ]
     })
   })
   afterEach(() => {
@@ -63,14 +61,14 @@ describe('ProjectGroupFoldedSummary', () => {
   })
 
   it('summarises a folded group with the needs-you count in the attention colour', () => {
-    render(<ProjectGroupFoldedSummary groupId="client" />)
+    render(<ProjectGroupFoldedSummary groupId="client" collapsed />)
     expect(screen.getByText('2 projects, 1 needs you')).toBeTruthy()
     const needsYou = screen.getByText('1 needs you')
     expect(needsYou.className.split(' ')).toContain('text-agent-question')
   })
 
   it('does not recount when unrelated store state changes', () => {
-    render(<ProjectGroupFoldedSummary groupId="client" />)
+    render(<ProjectGroupFoldedSummary groupId="client" collapsed />)
     const callsAfterMount = grouping.calls
     act(() => {
       useAppStore.setState({ runtimePaneTitlesByTabId: { 'tab-1': { 1: 'vim' } } })
@@ -80,14 +78,19 @@ describe('ProjectGroupFoldedSummary', () => {
 
   it('leaves the needs-you part out when nothing waits', () => {
     activity.needsYou = 0
-    render(<ProjectGroupFoldedSummary groupId="client" />)
+    render(<ProjectGroupFoldedSummary groupId="client" collapsed />)
     expect(screen.getByText('2 projects')).toBeTruthy()
     expect(screen.queryByText(/needs you/)).toBeNull()
   })
 
+  it('summarises a group folded while Live opens the saved layout', () => {
+    useAppStore.setState({ showOnlyRunningTerminals: true })
+    render(<ProjectGroupFoldedSummary groupId="client" collapsed />)
+    expect(screen.getByText('2 projects, 1 needs you')).toBeTruthy()
+  })
+
   it('shows nothing while the group is expanded', () => {
-    useAppStore.setState({ collapsedGroups: new Set() })
-    const { container } = render(<ProjectGroupFoldedSummary groupId="client" />)
+    const { container } = render(<ProjectGroupFoldedSummary groupId="client" collapsed={false} />)
     expect(container.textContent).toBe('')
   })
 })

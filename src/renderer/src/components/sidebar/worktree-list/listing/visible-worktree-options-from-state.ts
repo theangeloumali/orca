@@ -47,7 +47,7 @@ export function buildVisibleWorktreeOptionsFromState(
     alwaysShowDefaultBranchWorkspace: state.alwaysShowDefaultBranchWorkspace,
     showOnlyRunningTerminals: state.showOnlyRunningTerminals,
     // Live reads each PTY on its own machine, as the sidebar list does.
-    terminalHostState: state.showOnlyRunningTerminals ? state : undefined,
+    terminalHostState: state,
     showOnlyNeedsYou: state.showOnlyNeedsYou,
     worktreeNeedsYou: state.showOnlyNeedsYou
       ? createWorktreeNeedsYouReader(state.agentStatusByPaneKey.projection, Date.now())

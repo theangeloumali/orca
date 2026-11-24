@@ -27,6 +27,8 @@ export type SectionHeaderRowContext = {
   }) => FolderWorkspacePathStatus | null
   toggleGroupWithScrollAnchor: (groupKey: string) => void
   toggleAllProjects?: () => void
+  /** Filter-scoped like toggleGroup; false when nothing listed sits beneath the group. */
+  toggleProjectGroupSubtree: (groupId: string) => boolean
   projectActions: RepoHeaderProjectActions
   onRenameProjectGroup: (groupId: string, currentName: string, hostId?: ExecutionHostId) => void
   onDeleteProjectGroup: (groupId: string, groupName: string, hostId?: ExecutionHostId) => void

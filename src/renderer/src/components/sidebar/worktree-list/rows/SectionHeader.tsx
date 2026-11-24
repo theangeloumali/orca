@@ -38,7 +38,6 @@ import {
   ProjectGroupCreateWorkspaceButton,
   ProjectGroupHeaderMenu
 } from './project-group-header-actions'
-import { toggleProjectGroupSubtree } from './use-project-group-subtree-collapse'
 import {
   RepoHeaderCreateWorkspaceButton,
   RepoHeaderProjectActionsMenu
@@ -163,7 +162,7 @@ export function renderWorktreeSectionHeaderRow(
   const collapseKey = row.collapseKey ?? row.key
   const isHeaderCollapsed = ctx.collapsedGroups.has(collapseKey)
   const toggleHeader = (event: React.MouseEvent | React.KeyboardEvent): void =>
-    toggleSectionHeaderCollapse(event, collapseKey, { ...ctx, toggleProjectGroupSubtree })
+    toggleSectionHeaderCollapse(event, collapseKey, ctx)
   // Why: repo/project/status/pinned share compact section chrome; flat "All" stays a simple label.
   const showHeaderCollapseAffordance =
     row.count > 0 &&
@@ -291,10 +290,7 @@ export function renderWorktreeSectionHeaderRow(
             }
           }}
           onKeyDown={(e) => {
-            if (shouldIgnoreRepoHeaderToggle(e)) {
-              return
-            }
-            if (e.key === 'Enter' || e.key === ' ') {
+            if (!shouldIgnoreRepoHeaderToggle(e) && (e.key === 'Enter' || e.key === ' ')) {
               e.preventDefault()
               toggleHeader(e)
             }
@@ -337,6 +333,7 @@ export function renderWorktreeSectionHeaderRow(
                 <ProjectGroupTitleExtras
                   status={projectGroupPathStatus}
                   groupId={projectGroupIdForHeader}
+                  collapsed={isHeaderCollapsed}
                 />
                 {isRepoHeader ? <RepoHeaderTitleExtras row={row} /> : null}
               </div>
@@ -374,6 +371,8 @@ export function renderWorktreeSectionHeaderRow(
                 projectGroups={ctx.projectGroups}
                 onCreateSubgroup={ctx.onCreateProjectSubgroup}
                 onMoveGroup={ctx.onMoveProjectGroup}
+                collapsedGroups={ctx.collapsedGroups}
+                onToggleSubtree={ctx.toggleProjectGroupSubtree}
               />
             ) : null}
 

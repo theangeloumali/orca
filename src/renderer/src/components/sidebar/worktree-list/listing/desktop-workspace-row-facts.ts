@@ -21,7 +21,6 @@ import {
 } from '../../../../../../shared/project/catalog/hidden-projects'
 import { isInactiveWorkspace } from '@/lib/workspace/activity/worktree-activity-state'
 import { hasLiveTerminalOnHost, type TerminalHostState } from './live-terminal-on-host'
-import { tabHasLivePty } from '../../../../../../shared/workspace-layout/terminal-surfaces/tab-has-live-pty'
 
 export type DesktopWorkspaceRowFactInputs = {
   repoMap: ReadonlyMap<string, Repo>
@@ -38,8 +37,8 @@ export type DesktopWorkspaceRowFactInputs = {
   sleepingSweepExemptWorktreeIds?: ReadonlySet<string>
   /** Wired only while Needs you is on; absent keeps every row. */
   worktreeNeedsYou?: (worktree: Worktree) => boolean
-  /** Present: a twin id's PTY counts only on the machine it runs on, as on the header badge. */
-  terminalHostState?: TerminalHostState
+  /** A twin id's PTY counts only on the machine it runs on, as on the header badge. */
+  terminalHostState: TerminalHostState
 }
 
 /** The slice of the agent-status projection that ranks a workspace's attention. */
@@ -62,16 +61,6 @@ export function createWorktreeNeedsYouReader(
   return (workspace) =>
     projection.attention(workspace.id, workspace.lastActivityAt, now).cls ===
     NEEDS_YOU_ATTENTION_CLASS
-}
-
-/** Whether any of the workspace's terminal tabs still has a live PTY. */
-export function worktreeHasRunningTerminal(
-  tabsByWorktree: DesktopWorkspaceRowFactInputs['tabsByWorktree'],
-  ptyIdsByTabId: DesktopWorkspaceRowFactInputs['ptyIdsByTabId'],
-  worktreeId: string
-): boolean {
-  const livePtyIds = ptyIdsByTabId ?? {}
-  return (tabsByWorktree?.[worktreeId] ?? []).some((tab) => tabHasLivePty(livePtyIds, tab.id))
 }
 
 export function buildDesktopWorkspaceRowFactReader(
@@ -97,15 +86,13 @@ export function buildDesktopWorkspaceRowFactReader(
     isMainWorktree: (worktree) => worktree.isMainWorktree,
     needsYou: inputs.worktreeNeedsYou,
     hasRunningTerminal: (worktree) =>
-      inputs.terminalHostState
-        ? hasLiveTerminalOnHost(
-            inputs.terminalHostState,
-            inputs.tabsByWorktree ?? {},
-            inputs.ptyIdsByTabId ?? {},
-            worktree.id,
-            hostId(worktree) ?? inputs.defaultHostId
-          )
-        : worktreeHasRunningTerminal(inputs.tabsByWorktree, inputs.ptyIdsByTabId, worktree.id),
+      hasLiveTerminalOnHost(
+        inputs.terminalHostState,
+        inputs.tabsByWorktree ?? {},
+        inputs.ptyIdsByTabId ?? {},
+        worktree.id,
+        hostId(worktree) ?? inputs.defaultHostId
+      ),
     isSleeping: (worktree) =>
       inputs.sleepingSweepExemptWorktreeIds?.has(worktree.id) !== true &&
       isInactiveWorkspace(

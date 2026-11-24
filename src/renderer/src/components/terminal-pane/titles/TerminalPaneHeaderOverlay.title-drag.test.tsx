@@ -7,6 +7,7 @@ import { useRef, useState } from 'react'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import type { ManagedPane } from '@/lib/pane-manager/pane-manager-types'
+import { PANE_DRAG_THRESHOLD_PX } from '@/lib/pane-manager/pane-layout/pane-drag-pointer'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { isTerminalLeafId } from '../../../../../shared/workspace-layout/stable-pane-id'
 import TerminalPaneHeaderOverlay from './TerminalPaneHeaderOverlay'
@@ -33,7 +34,7 @@ function makePane(id: number): ManagedPane {
 
 const panes = [makePane(1), makePane(2)]
 
-// Mirrors the pane manager: a press arms a drag that starts once the pointer travels 5px.
+// Mirrors the pane manager: a press arms a drag that starts once the pointer passes the threshold.
 function Harness(): React.JSX.Element {
   const managerRef = useRef(null)
   const transportsRef = useRef(new Map())
@@ -42,7 +43,8 @@ function Harness(): React.JSX.Element {
   const [draggingPaneId, setDraggingPaneId] = useState<number | null>(null)
   const beginPaneDrag = (paneId: number, _handle: HTMLElement, event: PointerEvent): void => {
     const onMove = (move: PointerEvent): void => {
-      if (Math.hypot(move.clientX - event.clientX, move.clientY - event.clientY) >= 5) {
+      const travel = Math.hypot(move.clientX - event.clientX, move.clientY - event.clientY)
+      if (travel >= PANE_DRAG_THRESHOLD_PX) {
         setDraggingPaneId(paneId)
       }
     }
@@ -99,13 +101,17 @@ function title(): HTMLElement {
   return screen.getByRole('button', { name: /Edit pane title/ })
 }
 
-function pressTitle(releaseX: number): void {
+const PRESS_X = 10
+
+// The title holds pointer capture while armed, so moves land on it and bubble to window.
+function pressTitle(...moveXs: number[]): void {
   const target = title()
-  fireEvent.pointerDown(target, { button: 0, pointerId: 1, clientX: 10, clientY: 10 })
+  fireEvent.pointerDown(target, { button: 0, pointerId: 1, clientX: PRESS_X, clientY: 10 })
+  for (const clientX of moveXs) {
+    fireEvent.pointerMove(target, { pointerId: 1, clientX, clientY: 10 })
+  }
+  const releaseX = moveXs.at(-1) ?? PRESS_X
   act(() => {
-    window.dispatchEvent(
-      new PointerEvent('pointermove', { pointerId: 1, clientX: releaseX, clientY: 10 })
-    )
     window.dispatchEvent(
       new PointerEvent('pointerup', { pointerId: 1, clientX: releaseX, clientY: 10 })
     )
@@ -116,17 +122,24 @@ function pressTitle(releaseX: number): void {
 describe('TerminalPaneHeaderOverlay title drag', () => {
   afterEach(cleanup)
 
-  it('drags the pane when the title is pressed and moved 6px, without opening rename', () => {
+  it('drags the pane when the title moves past the threshold, without opening rename', () => {
     render(<Harness />)
-    pressTitle(16)
+    pressTitle(PRESS_X + PANE_DRAG_THRESHOLD_PX)
     expect(screen.getByTestId('dragging-pane').textContent).toBe('1')
     expect(screen.queryByRole('textbox')).toBeNull()
   })
 
   it('opens rename on a plain click of the title', () => {
     render(<Harness />)
-    pressTitle(10)
+    pressTitle()
     expect(screen.getByTestId('dragging-pane').textContent).toBe('none')
     expect(screen.getByRole('textbox')).not.toBeNull()
+  })
+
+  it('keeps rename closed after a drag that comes back to where it started', () => {
+    render(<Harness />)
+    pressTitle(PRESS_X + 40, PRESS_X)
+    expect(screen.getByTestId('dragging-pane').textContent).toBe('1')
+    expect(screen.queryByRole('textbox')).toBeNull()
   })
 })

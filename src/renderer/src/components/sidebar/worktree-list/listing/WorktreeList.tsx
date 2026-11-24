@@ -112,7 +112,8 @@ const WorktreeList = React.memo(function WorktreeList({
   const pendingRevealSidebarRow = useAppStore((s) => s.pendingRevealSidebarRow)
   const clearPendingRevealWorktreeId = useAppStore((s) => s.clearPendingRevealWorktreeId)
   const clearPendingRevealSidebarRow = useAppStore((s) => s.clearPendingRevealSidebarRow)
-  const { collapsedGroups, toggleGroup, setCollapsedGroups } = useFilterScopedCollapse()
+  const { collapsedGroups, toggleGroup, setCollapsedGroups, toggleProjectGroupSubtree } =
+    useFilterScopedCollapse()
   const projectGroups = useAppStore((s) => s.projectGroups ?? EMPTY_PROJECT_GROUPS)
   const folderWorkspaces = useAppStore((s) => selectFolderWorkspaces(s))
   const settings = useAppStore((s) => s.settings)
@@ -306,6 +307,7 @@ const WorktreeList = React.memo(function WorktreeList({
           projectOrderBy={projectOrderBy}
           toggleGroup={handleToggleGroup}
           onToggleAllProjects={projectCollapseKeys.length > 0 ? handleToggleAllProjects : undefined}
+          onToggleProjectGroupSubtree={toggleProjectGroupSubtree}
           collapsedGroups={effectiveCollapsedGroups}
           handleCreateForRepo={openHeaderCreateComposer}
           handleOpenRepoSettings={handleOpenRepoSettings}

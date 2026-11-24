@@ -3,6 +3,8 @@ import { useAppStore } from '@/store'
 import { toggleCollapsedGroupSet } from '@/store/slices/ui/collapsed-group-toggle'
 import { isProjectSectionGroupKey } from '../../../../../../shared/sidebar-list/sections/group-keys'
 import { selectHidesEmptyProjectGroups } from '../controls/sidebar-filter-actions'
+import { getVisibleProjectGroupSubtreeKeys } from '../rows/use-project-group-subtree-collapse'
+import { toggleProjectGroupSubtreeCollapsed } from './project-group-subtree-collapse'
 
 type FilterSession = { filtering: boolean; folded: ReadonlySet<string> }
 
@@ -40,19 +42,34 @@ export function useFilterScopedCollapse() {
     },
     [filtering, toggleSaved]
   )
-  // Collapse-all only moves project keys, so while filtering it stays in the session.
+  // While filtering only project keys stay in the session; machine and Pinned folds still save.
   const setCollapsedGroups = useCallback(
     (keys: Set<string>) => {
       if (!filtering) {
         setSaved(keys)
         return
       }
+      setSaved(
+        new Set([...withoutProjectKeys(keys), ...[...saved].filter(isProjectSectionGroupKey)])
+      )
       setSession((current) => ({
         ...current,
         folded: new Set([...keys].filter(isProjectSectionGroupKey))
       }))
     },
-    [filtering, setSaved]
+    [filtering, saved, setSaved]
   )
-  return { collapsedGroups, toggleGroup, setCollapsedGroups }
+  /** Alt-click and the group menu fold a subtree; false means nothing listed sits beneath it. */
+  const toggleProjectGroupSubtree = useCallback(
+    (groupId: string): boolean => {
+      const subtreeKeys = getVisibleProjectGroupSubtreeKeys(useAppStore.getState(), groupId)
+      if (subtreeKeys.length === 0) {
+        return false
+      }
+      setCollapsedGroups(toggleProjectGroupSubtreeCollapsed(collapsedGroups, subtreeKeys))
+      return true
+    },
+    [collapsedGroups, setCollapsedGroups]
+  )
+  return { collapsedGroups, toggleGroup, setCollapsedGroups, toggleProjectGroupSubtree }
 }

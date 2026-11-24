@@ -34,6 +34,13 @@ const options = (overrides: Partial<VisibleWorktreeOptions> = {}): VisibleWorktr
   workspaceHostScope: 'all',
   defaultHostId: 'local',
   worktreeLineageById: {},
+  terminalHostState: {
+    repos: [],
+    worktreesByRepo: {},
+    folderWorkspaces: [],
+    projectGroups: [],
+    wslHostStatuses: {}
+  },
   ...overrides
 })
 const sorted = [login.id, checkout.id, invoices.id]

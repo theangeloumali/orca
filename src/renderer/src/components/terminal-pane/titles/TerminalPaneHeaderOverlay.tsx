@@ -103,7 +103,7 @@ export default function TerminalPaneHeaderOverlay({
   onRenameBlur
 }: TerminalPaneHeaderOverlayProps): React.JSX.Element {
   const t = useTranslate()
-  const titlePressRef = useRef<{ x: number; y: number } | null>(null)
+  const titlePressRef = useRef<{ x: number; y: number; dragged: boolean } | null>(null)
   const recentImagesEnabled = useAppStore(
     (state) => state.settings?.terminalDroppedImagesPreview !== false
   )
@@ -188,19 +188,26 @@ export default function TerminalPaneHeaderOverlay({
                   type="button"
                   className="pane-title-text"
                   onPointerDown={(event) => {
-                    titlePressRef.current = { x: event.clientX, y: event.clientY }
+                    titlePressRef.current = { x: event.clientX, y: event.clientY, dragged: false }
                     if (paneCount > 1) {
                       onBeginPaneDrag(pane.id, event.currentTarget, event.nativeEvent)
                     }
                   }}
-                  onClick={(event) => {
-                    // The click that ends a title drag must not also open rename.
+                  onPointerMove={(event) => {
+                    // Sticky: a drag that returns to its start point still ended a drag.
                     const press = titlePressRef.current
-                    titlePressRef.current = null
-                    const dragged =
-                      press !== null &&
+                    if (
+                      press &&
                       Math.hypot(event.clientX - press.x, event.clientY - press.y) >=
                         PANE_DRAG_THRESHOLD_PX
+                    ) {
+                      press.dragged = true
+                    }
+                  }}
+                  onClick={() => {
+                    // The click that ends a title drag must not also open rename.
+                    const dragged = titlePressRef.current?.dragged === true
+                    titlePressRef.current = null
                     if (!dragged) {
                       onStartRename(pane.id)
                     }

@@ -29,9 +29,6 @@ import {
   useProjectGroupAgentActivityCounts,
   useProjectGroupSubtreeIds
 } from './use-project-group-agent-activity-counts'
-import { useAppStore } from '@/store/index'
-import { selectHidesEmptyProjectGroups } from '../controls/sidebar-filter-actions'
-import { getProjectGroupHeaderKey } from '../../../../../../shared/sidebar-list/sections/group-keys'
 import {
   handleRepoHeaderActionPointerDown,
   stopRepoHeaderKeyboardToggle,
@@ -48,9 +45,14 @@ export function ProjectGroupHeaderMenu({
   onDelete,
   projectGroups,
   onCreateSubgroup,
-  onMoveGroup
+  onMoveGroup,
+  collapsedGroups,
+  onToggleSubtree
 }: {
   groupId: string
+  /** The list's displayed fold, so collapse-all follows the filter session. */
+  collapsedGroups: ReadonlySet<string>
+  onToggleSubtree: (groupId: string) => boolean
   /** Owner host of the group row, so rename/delete route to the host that holds it. */
   hostId?: ExecutionHostId
   label: string
@@ -76,7 +78,12 @@ export function ProjectGroupHeaderMenu({
   const nestingSupported = runtimeEnvironmentId === null || remoteSupportsNesting
   return (
     <>
-      <ProjectGroupCollapseAllButton groupId={groupId} label={label} />
+      <ProjectGroupCollapseAllButton
+        groupId={groupId}
+        label={label}
+        collapsedGroups={collapsedGroups}
+        onToggleSubtree={onToggleSubtree}
+      />
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <Button
@@ -144,18 +151,15 @@ export function ProjectGroupHeaderMenu({
 
 /** "7 projects · 1 needs you" on a folded group header; gone once the group is open. */
 export function ProjectGroupFoldedSummary({
-  groupId
+  groupId,
+  collapsed
 }: {
   groupId: string
+  /** The header's displayed fold, which a filter session may differ from the saved one. */
+  collapsed: boolean
 }): React.JSX.Element | null {
-  // Why: filtering opens every group, so the saved fold must not summarize it.
-  const isCollapsed = useAppStore(
-    (state) =>
-      state.collapsedGroups.has(getProjectGroupHeaderKey(groupId)) &&
-      !selectHidesEmptyProjectGroups(state)
-  )
   // Why split: an open group mounts no counting subscriptions at all.
-  return isCollapsed ? <FoldedGroupCounts groupId={groupId} /> : null
+  return collapsed ? <FoldedGroupCounts groupId={groupId} /> : null
 }
 
 function FoldedGroupCounts({ groupId }: { groupId: string }): React.JSX.Element {
@@ -209,13 +213,17 @@ const COLLAPSE_ALL_TOGGLE_ATTRIBUTES: Record<`data-${string}`, string> = {
 
 function ProjectGroupCollapseAllButton({
   groupId,
-  label
+  label,
+  collapsedGroups,
+  onToggleSubtree
 }: {
   groupId: string
   label: string
+  collapsedGroups: ReadonlySet<string>
+  onToggleSubtree: (groupId: string) => boolean
 }): React.JSX.Element | null {
   const t = useTranslate()
-  const { hasSubtree, allCollapsed, toggle } = useProjectGroupSubtreeCollapse(groupId)
+  const { hasSubtree, allCollapsed } = useProjectGroupSubtreeCollapse(groupId, collapsedGroups)
   if (!hasSubtree) {
     return null
   }
@@ -224,7 +232,7 @@ function ProjectGroupCollapseAllButton({
     <span className="contents" onPointerDown={handleRepoHeaderActionPointerDown}>
       <SectionCollapseAllButton
         allCollapsed={allCollapsed}
-        onToggle={toggle}
+        onToggle={() => onToggleSubtree(groupId)}
         collapseLabel={t(
           'auto.components.sidebar.WorktreeList.collapseAllInGroup',
           'Collapse all in {{value0}}',

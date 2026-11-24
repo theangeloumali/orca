@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react'
+import { useMemo } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { useAppStore } from '@/store/index'
 import type { AppState } from '@/store/types'
@@ -12,10 +12,7 @@ import {
 } from '../../../../../../shared/sidebar-list/hosts/host-filtering'
 import { getSidebarProjectGrouping } from '../listing/sidebar-project-grouping'
 import { areAllProjectsCollapsed } from '../listing/project-collapse-all'
-import {
-  getProjectGroupSubtreeCollapseKeys,
-  toggleProjectGroupSubtreeCollapsed
-} from '../listing/project-group-subtree-collapse'
+import { getProjectGroupSubtreeCollapseKeys } from '../listing/project-group-subtree-collapse'
 import { getProjectGroupSubtreeProjectKeys } from '../../../../../../shared/sidebar-list/sections/project-group-tree'
 
 const EMPTY_PROJECT_GROUPS: readonly ProjectGroup[] = []
@@ -79,32 +76,18 @@ export function useVisibleProjectGroupSubtreeProjectCount(
   }, [subtreeState, subtreeGroupIds])
 }
 
-// Reads the store at call time so Alt-click needs no hook; false means nothing listed to fold.
-export function toggleProjectGroupSubtree(groupId: string): boolean {
-  const state = useAppStore.getState()
-  const subtreeKeys = getVisibleProjectGroupSubtreeKeys(state, groupId)
-  if (subtreeKeys.length === 0) {
-    return false
-  }
-  state.setCollapsedGroups(toggleProjectGroupSubtreeCollapsed(state.collapsedGroups, subtreeKeys))
-  return true
-}
-
-export function useProjectGroupSubtreeCollapse(groupId: string): {
-  hasSubtree: boolean
-  allCollapsed: boolean
-  toggle: () => void
-} {
+/** The displayed (filter-scoped) fold decides the direction; the list's own toggle writes it. */
+export function useProjectGroupSubtreeCollapse(
+  groupId: string,
+  collapsedGroups: ReadonlySet<string>
+): { hasSubtree: boolean; allCollapsed: boolean } {
   const subtreeState = useSubtreeState()
-  const collapsedGroups = useAppStore((s) => s.collapsedGroups)
   const subtreeKeys = useMemo(
     () => getVisibleProjectGroupSubtreeKeys(subtreeState, groupId),
     [groupId, subtreeState]
   )
-  const toggle = useCallback(() => toggleProjectGroupSubtree(groupId), [groupId])
   return {
     hasSubtree: subtreeKeys.length > 0,
-    allCollapsed: areAllProjectsCollapsed(subtreeKeys, collapsedGroups),
-    toggle
+    allCollapsed: areAllProjectsCollapsed(subtreeKeys, collapsedGroups)
   }
 }

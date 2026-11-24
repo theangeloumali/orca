@@ -71,7 +71,7 @@ export type VisibleWorktreeOptions = {
   sleepingSweepExemptWorktreeIds?: ReadonlySet<string>
   /** Host identities listed under their bot instead of their project; not a filter, so muting and filter counts ignore it. */
   botListedWorktreeIdentities?: ReadonlySet<string>
-  terminalHostState?: DesktopWorkspaceRowFactInputs['terminalHostState']
+  terminalHostState: DesktopWorkspaceRowFactInputs['terminalHostState']
 }
 
 export function computeVisibleWorktrees(

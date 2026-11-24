@@ -14,7 +14,14 @@ function readerFor(ptyIdsByTabId: Record<string, string[]>) {
     pairedDeviceIdsByEnvironment: new Map(),
     tabsByWorktree: { 'wt-1': [{ id: 'tab-1' }, { id: 'tab-2' }] },
     ptyIdsByTabId,
-    worktreeIdsWithLiveAgent: new Set()
+    worktreeIdsWithLiveAgent: new Set(),
+    terminalHostState: {
+      repos: [],
+      worktreesByRepo: {},
+      folderWorkspaces: [],
+      projectGroups: [],
+      wslHostStatuses: {}
+    }
   })
 }
 

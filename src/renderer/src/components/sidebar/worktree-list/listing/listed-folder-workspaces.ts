@@ -4,9 +4,7 @@ import type { ExecutionHostId } from '../../../../../../shared/execution-host/ex
 import type { ProjectGroup } from '../../../../../../shared/project/groups/project-group-types'
 import { selectVisibleFolderWorkspaces } from '../../../../../../shared/sidebar-list/folders/visible-folder-workspaces'
 import type { Worktree } from '../../../../../../shared/worktree/types'
-import { folderWorkspaceKey } from '../../../../../../shared/workspace/identity/workspace-scope'
 import type { VisibleWorktreeOptions } from './compute-visible-worktrees'
-import { worktreeHasRunningTerminal } from './desktop-workspace-row-facts'
 import { hasFolderLiveTerminalOnHost } from './live-terminal-on-host'
 
 /** The folder rows the list draws under these options, with every folder listing rule it applies. */
@@ -30,18 +28,12 @@ export function selectListedFolderWorkspaces(
     pairedDeviceIdsByEnvironment: options.pairedDeviceIdsByEnvironment,
     botListedIdentities: options.botListedWorktreeIdentities,
     hasRunningTerminal: (folder) =>
-      terminalHostState
-        ? hasFolderLiveTerminalOnHost(
-            terminalHostState,
-            options.tabsByWorktree ?? {},
-            options.ptyIdsByTabId ?? {},
-            { folder, projectGroups: args.projectGroups, defaultHostId: options.defaultHostId }
-          )
-        : worktreeHasRunningTerminal(
-            options.tabsByWorktree,
-            options.ptyIdsByTabId,
-            folderWorkspaceKey(folder.id)
-          ),
+      hasFolderLiveTerminalOnHost(
+        terminalHostState,
+        options.tabsByWorktree ?? {},
+        options.ptyIdsByTabId ?? {},
+        { folder, projectGroups: args.projectGroups, defaultHostId: options.defaultHostId }
+      ),
     needsYou: needsYou ? (folder) => needsYou(getFolderWorkspaceWorktree(folder)) : undefined,
     findQuery: options.findQuery,
     listedWorktrees: args.listedWorktrees,
