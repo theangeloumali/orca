@@ -10,7 +10,7 @@ import {
   toggleThisMachineChip,
   type QuickFilterChipSetters,
   type QuickFilterChipState
-} from './sidebar-quick-filter-chips'
+} from '../../../../../../shared/workspace-view/quick-filter-chips'
 
 type ChipId = 'all' | 'live' | 'needsYou' | 'thisMachine'
 

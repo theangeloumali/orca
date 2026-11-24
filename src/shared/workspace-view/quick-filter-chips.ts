@@ -1,13 +1,10 @@
-import type { VisibleWorkspaceHostIds } from '../../../../../../shared/ui-chrome/ui-chrome-types'
-import {
-  getRepoExecutionHostId,
-  LOCAL_EXECUTION_HOST_ID
-} from '../../../../../../shared/execution-host/execution-host'
-import type { ProjectGroup } from '../../../../../../shared/project/groups/project-group-types'
-import { getDistinctProjectGroups } from '../../../../../../shared/project/groups/project-groups'
-import { isRepoHidden } from '../../../../../../shared/project/catalog/hidden-projects'
-import type { Repo } from '../../../../../../shared/repository/repo-types'
-import { getDescendantGroupIds } from '../listing/project-group-subtree-collapse'
+import type { VisibleWorkspaceHostIds } from '../ui-chrome/ui-chrome-types'
+import { getRepoExecutionHostId, LOCAL_EXECUTION_HOST_ID } from '../execution-host/execution-host'
+import type { ProjectGroup } from '../project/groups/project-group-types'
+import { getDistinctProjectGroups } from '../project/groups/project-groups'
+import { isRepoHidden } from '../project/catalog/hidden-projects'
+import type { Repo } from '../repository/repo-types'
+import { getDescendantGroupIds } from '../project/groups/project-group-descendants'
 
 export type QuickFilterChipState = {
   showOnlyRunningTerminals: boolean

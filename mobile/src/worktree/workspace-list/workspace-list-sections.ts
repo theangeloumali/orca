@@ -46,7 +46,11 @@ import {
   isRepoHidden,
   withoutHiddenFilterRepoIds
 } from '../../../../src/shared/project/catalog/hidden-projects'
-import { filterWorktrees, isPhoneRowInHiddenProject } from './workspace-row-filtering'
+import {
+  filterWorktrees,
+  isListNarrowed,
+  isPhoneRowInHiddenProject
+} from './workspace-row-filtering'
 import { buildSectionRepoMap } from './section-repo-map'
 import { keepHiddenRowsBelowFolders } from '../../../../src/shared/sidebar-list/folders/folder-workspace-occurrences'
 import type { ProjectGroup } from '../../../../src/shared/project/groups/project-group-types'
@@ -56,7 +60,9 @@ import {
   bindGroupFolderRows,
   type GroupTreePlacement
 } from '../project-sections/project-group-tree-sections'
-import { buildGroupFolds, rowNeedsYou, withGroupFold } from '../project-sections/project-group-fold'
+import { buildGroupFolds, withGroupFold } from '../project-sections/project-group-fold'
+import { rowIsWorking, rowNeedsYou } from './row-agent-states'
+import { buildProjectActivity, withProjectActivity } from '../project-sections/project-activity'
 
 export type ProjectSectionCatalog = {
   /** Catalog repos of the hosts the list shows; each without rows gets an empty section. */
@@ -212,7 +218,7 @@ export function buildMobileWorkspacePlan(
           entries: projectSections,
           catalog: projectCatalog,
           folderRowsByGroupId: folderLane.folderRowsByGroupId,
-          narrowed: query.length > 0,
+          narrowed: isListNarrowed(search, filters),
           projectSection,
           groupSection: (key, title, rows) =>
             makeSection(key, title, withFolderWorkspacesLast(rows))
@@ -276,6 +282,7 @@ export function buildMobileWorkspacePlan(
     }
   })
   const groupFolds = buildGroupFolds(occurrencePlan.sections, groupTreePlacements, rowNeedsYou)
+  const activity = buildProjectActivity(occurrencePlan.sections, rowIsWorking, rowNeedsYou)
   return {
     occurrencePlan,
     render: (
@@ -291,7 +298,7 @@ export function buildMobileWorkspacePlan(
           groupTreePlacements.get(section.key),
           collapsed
         )
-        return listed ? [withGroupFold(listed, groupFolds)] : []
+        return listed ? [withProjectActivity(withGroupFold(listed, groupFolds), activity)] : []
       })
   }
 }

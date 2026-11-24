@@ -17,6 +17,7 @@ import { branchRefLabel } from '../../../../src/shared/git/refs/branch-ref-label
 import type { FilterState, Worktree } from './workspace-list-types'
 import { resolveWorktreeHostId } from '../row-presentation/worktree-host-context-labels'
 import { getWorktreeRowIdentity } from '../row-presentation/worktree-host-row-identity'
+import { rowNeedsYou } from './row-agent-states'
 
 // Idle prompts have no recent output; live terminals or unread output still count as active.
 export function isWorktreeActive(
@@ -73,7 +74,8 @@ function phoneRowFacts(
     isMainWorktree: (w) => w.isMainWorktree ?? guessDefaultBranchWorkspace(w),
     isSleeping: (w) => !isWorktreeActive(w),
     // Lost contact is unverifiable, never gone, as the feed reads it (activityHasRunningTerminal).
-    hasRunningTerminal: (w) => w.liveTerminalCount > 0 || (w.unverifiableTerminalCount ?? 0) > 0
+    hasRunningTerminal: (w) => w.liveTerminalCount > 0 || (w.unverifiableTerminalCount ?? 0) > 0,
+    needsYou: rowNeedsYou
   }
 }
 
@@ -103,6 +105,15 @@ function withListedFolderAncestors(
     })
   ])
   return worktrees.filter((w) => kept.has(w))
+}
+
+/** A list cut down to matches: empty groups drop out, as the desktop drops them. */
+export function isListNarrowed(search: string, filters: FilterState): boolean {
+  return (
+    normalizeFindQuery(search).length > 0 ||
+    filters.showOnlyRunningTerminals === true ||
+    filters.showOnlyNeedsYou === true
+  )
 }
 
 export function filterWorktrees(

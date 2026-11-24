@@ -18,7 +18,7 @@ import {
   countHostAgentActivity,
   type HostAgentActivityCounts
 } from '../../../../../../shared/sidebar-list/hosts/host-agent-activity'
-import { getDescendantGroupIds } from '../listing/project-group-subtree-collapse'
+import { getDescendantGroupIds } from '../../../../../../shared/project/groups/project-group-descendants'
 import { getRepoExecutionHostId } from '../../../../../../shared/execution-host/execution-host'
 import {
   createRepoRowExecutionHostLookup,

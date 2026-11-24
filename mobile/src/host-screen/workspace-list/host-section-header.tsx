@@ -1,5 +1,6 @@
 import { memo } from 'react'
 import { useMobileTranslation } from '../../i18n/use-mobile-translation'
+import { HostProjectActivityBadges } from './host-project-activity-badges'
 import { ActivityIndicator, Pressable, Text, View } from 'react-native'
 import { ChevronRight, FolderTree, Pin } from 'lucide-react-native'
 import { DisclosureChevron } from '../../components/list/DisclosureChevron'
@@ -33,6 +34,9 @@ export const HostSectionHeader = memo(function HostSectionHeader(props: {
   /** The keys beneath a group; a long press folds or unfolds them all. */
   subtreeKeys?: readonly string[]
   onToggleSubtree?: (keys: readonly string[]) => void
+  /** A project's live agents. */
+  activityWorking?: number
+  activityNeedsYou?: number
 }) {
   useMobileColorScheme()
   const t = useMobileTranslation()
@@ -127,6 +131,12 @@ export const HostSectionHeader = memo(function HostSectionHeader(props: {
         ) : (
           <Text style={styles.sectionCount}>{props.count}</Text>
         )}
+        {props.activityWorking || props.activityNeedsYou ? (
+          <HostProjectActivityBadges
+            working={props.activityWorking ?? 0}
+            needsYou={props.activityNeedsYou ?? 0}
+          />
+        ) : null}
         {props.pending && (
           <ActivityIndicator
             size="small"

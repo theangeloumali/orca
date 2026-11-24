@@ -1,8 +1,4 @@
 import type { Worktree } from '../workspace-list/workspace-list-types'
-import {
-  getWorktreeDotStatus,
-  hasWorktreeAgentState
-} from '../workspace-list/workspace-list-ordering'
 import type { GroupTreePlacement } from './project-group-tree-sections'
 
 /** What a folded group header summarises, and the keys its whole subtree folds by. */
@@ -27,11 +23,6 @@ export function buildGroupFolds(
     }
   }
   return folds
-}
-
-/** A row whose agent waits on you, the same rule the row's own highlight uses. */
-export function rowNeedsYou(row: Worktree): boolean {
-  return hasWorktreeAgentState(row) && getWorktreeDotStatus(row) === 'permission'
 }
 
 /** The section with its group's fold attached, when it heads one. */

@@ -10,7 +10,7 @@ import {
   toggleThisMachineChip,
   type QuickFilterChipState,
   type QuickFilterChipSetters
-} from './sidebar-quick-filter-chips'
+} from './quick-filter-chips'
 
 function spySetters(): QuickFilterChipSetters {
   return {

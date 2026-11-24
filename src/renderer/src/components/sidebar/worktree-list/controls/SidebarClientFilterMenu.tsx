@@ -15,7 +15,7 @@ import {
   findActiveClientGroupId,
   followClientMembership,
   listClientChoices
-} from './sidebar-quick-filter-chips'
+} from '../../../../../../shared/workspace-view/quick-filter-chips'
 
 const ANY_CLIENT = ''
 

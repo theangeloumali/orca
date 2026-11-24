@@ -33,9 +33,8 @@ import { getWorktreeCardDetails } from '../../../../src/shared/worktree/row-disp
 import { hostScreenStyles as styles } from '../host-screen-styles'
 import { useRepoLookById } from '../catalog/host-repo-looks'
 import { HostSectionHeader } from './host-section-header'
-import { HostMachineSectionHeader } from './host-machine-section-header'
 import { useSlowPendingKeys } from './use-slow-pending-keys'
-import { isSubtreeFolded } from '../../worktree/project-sections/project-group-fold'
+import { useHostListForkParts } from './use-host-list-fork-parts'
 import { useHostMutationDrafts } from '../../query/host-mutation-drafts'
 import { workspaceRenameDraftKey } from '../workspace-actions/workspace-rename-sheet'
 import type { HostScreenController } from '../use-host-screen-controller'
@@ -123,30 +122,20 @@ export function HostWorkspaceList({
   const { openWorktreeSession } = actions
   const statusLive = connState === 'connected'
 
-  const toggleSubtree = useCallback(
-    (keys: readonly string[]) =>
-      settings.setGroupsCollapsed([...keys], !isSubtreeFolded(keys, collapsedGroups)),
-    [settings, collapsedGroups]
-  )
-  const machineKeys = useMemo(() => sections.flatMap((s) => (s.machine ? [s.key] : [])), [sections])
-  const allMachinesCollapsed = machineKeys.every((key) => collapsedGroups.has(key))
+  const fork = useHostListForkParts({
+    sections,
+    displayWorktrees,
+    collapsedGroups,
+    pendingCollapseKeys,
+    settings,
+    state
+  })
   const renderSectionHeader = useCallback(
     ({ section }: { section: Section }) => {
       const collapseKey = section.collapseKey ?? section.key
-      if (section.machine) {
-        const collapseAll = () => settings.setGroupsCollapsed(machineKeys, !allMachinesCollapsed)
-        return (
-          <HostMachineSectionHeader
-            machine={section.machine}
-            pending={pendingCollapseKeys.has(collapseKey)}
-            onToggle={toggleCollapsed}
-            collapseAll={
-              machineKeys[0] === section.key
-                ? { allCollapsed: allMachinesCollapsed, onPress: collapseAll }
-                : null
-            }
-          />
-        )
+      const machineHeader = fork.renderMachineHeader(section)
+      if (machineHeader) {
+        return machineHeader
       }
       return (
         bots.header(section, collapsedGroups, pendingCollapseKeys, toggleCollapsed) ?? (
@@ -166,7 +155,9 @@ export function HostWorkspaceList({
             foldProjects={section.groupFold?.projects}
             foldNeedsYou={section.groupFold?.needsYou}
             subtreeKeys={section.groupFold?.subtreeKeys}
-            onToggleSubtree={toggleSubtree}
+            onToggleSubtree={fork.toggleSubtree}
+            activityWorking={section.projectActivity?.working}
+            activityNeedsYou={section.projectActivity?.needsYou}
           />
         )
       )
@@ -179,10 +170,7 @@ export function HostWorkspaceList({
       repoLookById,
       toggleCollapsed,
       bots,
-      machineKeys,
-      allMachinesCollapsed,
-      settings,
-      toggleSubtree
+      fork
     ]
   )
 
@@ -305,6 +293,7 @@ export function HostWorkspaceList({
       </Presence>
 
       {hasRows ? null : pageTitle?.element}
+      {hasRows ? null : fork.quickFilters}
 
       {controller.feed?.kind === 'reopen' ? (
         <HostWorkspaceListReopen aboveRows={sections.length > 0} />
@@ -318,6 +307,7 @@ export function HostWorkspaceList({
           ListHeaderComponent={
             <>
               {pageTitle?.element}
+              {fork.quickFilters}
               {offlineBanner ? (
                 <View style={styles.offlineBanner}>
                   <HostOfflineBanner
