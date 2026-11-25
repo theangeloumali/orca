@@ -125,12 +125,7 @@ export function wslMoveHostSessionSeed(
   const rows = filterWorkspaceRows(stripped, (workspaceId) => seeded.has(workspaceId))
   const next = structuredClone(existing)
   for (const [field, ownership] of Object.entries(WORKSPACE_SESSION_FIELD_OWNERSHIP)) {
-    if (
-      !isSessionField(field) ||
-      ownership === 'global' ||
-      ownership === 'hostPrivate' ||
-      UNSEEDED_FIELDS.has(field)
-    ) {
+    if (!isSessionField(field) || !isSeededSessionField(field)) {
       continue
     }
     if (ownership === 'worktreeArray') {
@@ -142,8 +137,14 @@ export function wslMoveHostSessionSeed(
   return { session: next, workspaceIds: [...seeded] }
 }
 
-function isSessionField(field: string): field is keyof WorkspaceSessionState {
+export function isSessionField(field: string): field is keyof WorkspaceSessionState {
   return Object.hasOwn(WORKSPACE_SESSION_FIELD_OWNERSHIP, field)
+}
+
+/** Workspace rows a seed carries; focus, host fences and restart hints stay with their own host. */
+export function isSeededSessionField(field: keyof WorkspaceSessionState): boolean {
+  const ownership = WORKSPACE_SESSION_FIELD_OWNERSHIP[field]
+  return ownership !== 'global' && ownership !== 'hostPrivate' && !UNSEEDED_FIELDS.has(field)
 }
 
 /** This desktop's focus, which names nothing on the host: the host keeps its own. */

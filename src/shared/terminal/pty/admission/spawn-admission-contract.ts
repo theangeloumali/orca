@@ -79,7 +79,8 @@ export function isRestoreSpawnIntent(value: unknown): value is RestoreSpawnInten
   return typeof value === 'string' && RESTORE_SPAWN_INTENTS.some((intent) => intent === value)
 }
 
-export type SpawnDeferralReason = 'paused' | 'live_cap' | 'pressure' | 'deadline'
+/** 'imported' is the renderer's own: Orca Dev holds a pane copied from prod until clicked. */
+export type SpawnDeferralReason = 'paused' | 'live_cap' | 'pressure' | 'deadline' | 'imported'
 
 /** Sent only to requests that declared an intent; the fork never started. */
 export const TERMINAL_SPAWN_DEFERRED_CODE = 'terminal_spawn_deferred'

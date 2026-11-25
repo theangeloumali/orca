@@ -19,6 +19,7 @@ import {
 } from '@/runtime/hosts/connections/resume-host-automatic-restores'
 import type { ConnectPanePtySession } from '../connect-pane-pty-session'
 import { releaseHiddenAgentResumeHold } from './hidden-agent-resume-deferral'
+import { resumesOnlyOnClick } from './imported-prod-resume-hold'
 import { startPaneThroughMainThenAttach } from './main-pane-start-request'
 import type { FreshSpawnOptions, PendingStartupCommand } from '../startup/fresh-spawn-types'
 
@@ -85,7 +86,7 @@ export function installSpawnDeferredSleep(session: ConnectPanePtySession): void 
     if (reason === 'paused') {
       // Why no background retry: a crash pause is cleared by the user, not by waiting.
       offerHostResume(session, deferral)
-    } else {
+    } else if (!resumesOnlyOnClick(reason)) {
       queueDeferredRestoreRetry(
         session.cacheKey,
         session.runtimeEnvironmentId ?? null,
@@ -158,7 +159,8 @@ export function installSpawnDeferredSleep(session: ConnectPanePtySession): void 
   }
 
   session.resumeDeferredSpawnOnReveal = (): void => {
-    if (session.deferredSpawn && session.deps.isVisibleRef.current) {
+    const deferred = session.deferredSpawn
+    if (deferred && !resumesOnlyOnClick(deferred.reason) && session.deps.isVisibleRef.current) {
       void session.resumeDeferredSpawn()
     }
   }

@@ -84,6 +84,8 @@ export type SleepingAgentSessionRecord = {
   origin?: 'worktree-sleep' | 'quit' | 'live'
   /** Explicit-sleep finished panes resume only when their own tab opens; mobile wake must not mount/respawn every slept tab (#11598). */
   restoreOnTabOpenOnly?: boolean
+  /** Copied by Orca Dev's prod sync: prod owns the conversation, so Dev resumes it only as a fork. */
+  importedFromProd?: boolean
 }
 
 /** A record of a slept pane (worktree sleep, or a legacy record); 'quit'/'live' resume a running agent. */

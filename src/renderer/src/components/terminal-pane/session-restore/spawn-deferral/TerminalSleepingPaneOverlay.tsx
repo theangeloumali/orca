@@ -26,6 +26,11 @@ function sleepingReasonDetail(reason: SpawnDeferralReason, t: Translate = transl
         'auto.components.terminal.pane.TerminalSleepingPaneOverlay.deadlineDetail',
         'The host was busy restoring other terminals. Your session is saved.'
       )
+    case 'imported':
+      return t(
+        'auto.components.terminal.pane.TerminalSleepingPaneOverlay.importedDetail',
+        "Copied from Orca. Resuming opens a fork, so Orca's own conversation is never written to."
+      )
   }
 }
 

@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { getAgentResumeArgv } from '../../../shared/agent-launch/startup/agent-resume-argv'
+import type { ResumableTuiAgent } from '../../../shared/agent-session/lifecycle/agent-session-resume'
 import { buildAgentResumeLaunchCommand } from '../../../shared/agent-launch/startup/agent-resume-launch-command'
 import {
   SETUP_AGENT_SEQUENCE_STARTUP_COMMAND_ENV,
@@ -11,7 +12,7 @@ import {
 } from '../../../shared/agent-launch/startup/setup-agent-sequencing'
 import type { ResumeSpawnAdmission } from '../../ipc/pty/host-env/saved-resume-admission'
 import { isClaudeSessionLive, listOrcaDevClaudeHomes } from './orca-dev-claude-liveness'
-import { forkResumeLiveInProd } from './orca-dev-resume-fork'
+import { forkProdOriginResume } from './orca-dev-resume-fork'
 
 const SESSION_ID = '078afcaa-5715-427b-adbc-c88930d87da3'
 const providerSession = { key: 'session_id' as const, id: SESSION_ID }
@@ -58,22 +59,39 @@ function hashTree(home: string): string {
   return hash.digest('hex')
 }
 
-const resumeCommand = buildAgentResumeLaunchCommand(
-  'claude',
-  'claude',
-  getAgentResumeArgv('claude', providerSession) ?? [],
-  'posix'
-)
+function resumeCommandFor(agent: ResumableTuiAgent, session = providerSession): string {
+  const argv = getAgentResumeArgv(agent, session) ?? []
+  return buildAgentResumeLaunchCommand(agent, argv[0] ?? agent, argv, 'posix')
+}
 
-function savedResume(command = resumeCommand) {
+const resumeCommand = resumeCommandFor('claude')
+
+function savedResume(
+  command = resumeCommand,
+  agent: ResumableTuiAgent = 'claude',
+  session = providerSession
+) {
   const admission: ResumeSpawnAdmission = {
     verdict: 'admitted',
-    refused: { agent: 'claude', providerSession }
+    refused: { agent, providerSession: session }
   }
-  const args = { command, launchAgent: 'claude' as const, resumeProviderSession: providerSession }
-  const options: { command?: string; env?: Record<string, string> } = { command, env: {} }
+  const args: {
+    command?: string
+    connectionId?: string
+    launchAgent?: ResumableTuiAgent
+    resumeProviderSession?: typeof session
+  } = { command, launchAgent: agent, resumeProviderSession: session }
+  const options: {
+    command?: string
+    env?: Record<string, string>
+    resumeProviderSession?: typeof session
+  } = { command, env: {}, resumeProviderSession: session }
   return { admission, args, options }
 }
+
+const idle = async () => false
+const imported = { importedFromProd: true, isSessionLive: idle }
+const devCreated = { importedFromProd: false, isSessionLive: idle }
 
 describe('isClaudeSessionLive', () => {
   it('finds a session whose registered pid answers', async () => {
@@ -101,49 +119,125 @@ describe('isClaudeSessionLive', () => {
   })
 })
 
-describe('forkResumeLiveInProd', () => {
+describe('forkProdOriginResume', () => {
   it('forks a session prod is running and leaves its files unchanged', async () => {
     const home = claudeHome(process.pid)
     const before = hashTree(home)
     const { admission, args, options } = savedResume()
     options.env = { [SETUP_AGENT_SEQUENCE_STARTUP_COMMAND_ENV]: resumeCommand }
-    const isLive = (sessionId: string) => isClaudeSessionLive(sessionId, [home])
+    const isSessionLive = (sessionId: string) => isClaudeSessionLive(sessionId, [home])
 
-    const next = await forkResumeLiveInProd(args, options, admission, isLive)
+    const next = await forkProdOriginResume(args, options, admission, {
+      importedFromProd: false,
+      isSessionLive
+    })
 
     expect(next).toEqual(admission)
-    expect(options.command).toBe(`${resumeCommand} --fork-session`)
+    expect(options.command).toBe(`${resumeCommand} '--fork-session'`)
     expect(options.env[SETUP_AGENT_SEQUENCE_STARTUP_COMMAND_ENV]).toBe(
-      `${resumeCommand} --fork-session`
+      `${resumeCommand} '--fork-session'`
     )
     expect(hashTree(home)).toBe(before)
   })
 
-  it('resumes in place when prod is not running the session', async () => {
+  it('resumes a Dev-created idle session in place', async () => {
     const { admission, args, options } = savedResume()
 
-    const next = await forkResumeLiveInProd(args, options, admission, async () => false)
+    const next = await forkProdOriginResume(args, options, admission, devCreated)
 
     expect(next).toEqual(admission)
     expect(options.command).toBe(resumeCommand)
+    expect(args.resumeProviderSession).toEqual(providerSession)
   })
 
-  it('refuses a live resume whose command it cannot rewrite exactly', async () => {
-    const odd = `claude --resume ${SESSION_ID} --model opus`
-    const { admission, args, options } = savedResume(odd)
+  it('forks every resume imported from prod, even one prod is not running', async () => {
+    const { admission, args, options } = savedResume()
 
-    const next = await forkResumeLiveInProd(args, options, admission, async () => true)
+    const next = await forkProdOriginResume(args, options, admission, imported)
+
+    expect(next).toEqual(admission)
+    expect(options.command).toBe(`${resumeCommand} '--fork-session'`)
+  })
+
+  it("withholds prod's session id so the pane records the fork's new one", async () => {
+    const { admission, args, options } = savedResume()
+
+    await forkProdOriginResume(args, options, admission, imported)
+
+    expect(args.resumeProviderSession).toBeUndefined()
+    expect(options.resumeProviderSession).toBeUndefined()
+  })
+
+  it('forks imported Codex, Grok and Pi resumes with their own fork command', async () => {
+    const pi = { ...providerSession, transcriptPath: '/tmp/pi/session.jsonl' }
+    const cases = [
+      { agent: 'codex' as const, session: providerSession, fork: `codex 'fork' '${SESSION_ID}'` },
+      {
+        agent: 'grok' as const,
+        session: providerSession,
+        fork: `grok '--resume' '${SESSION_ID}' '--fork-session'`
+      },
+      { agent: 'pi' as const, session: pi, fork: "pi '--fork' '/tmp/pi/session.jsonl'" }
+    ]
+    for (const { agent, session, fork } of cases) {
+      const { admission, args, options } = savedResume(
+        resumeCommandFor(agent, session),
+        agent,
+        session
+      )
+
+      await expect(forkProdOriginResume(args, options, admission, imported)).resolves.toEqual(
+        admission
+      )
+      expect(options.command).toBe(fork)
+    }
+  })
+
+  it('keeps the recorded Claude effort on the fork', async () => {
+    const session = { ...providerSession, effort: 'high' }
+    const command = resumeCommandFor('claude', session)
+    const { admission, args, options } = savedResume(command, 'claude', session)
+
+    await forkProdOriginResume(args, options, admission, imported)
+
+    expect(options.command).toBe(`${command} '--fork-session'`)
+  })
+
+  it('opens a plain shell for an imported agent that has no fork command', async () => {
+    const { admission, args, options } = savedResume(resumeCommandFor('gemini'), 'gemini')
+
+    const next = await forkProdOriginResume(args, options, admission, imported)
 
     expect(next).toEqual({ verdict: 'unverifiable', refused: admission.refused })
     expect(options.command).toBeUndefined()
     expect(args.command).toBeUndefined()
   })
 
-  it('refuses a live resume buried in a sequenced startup script', async () => {
+  it('refuses a forkable resume whose commands carry no resume argv to rewrite', async () => {
+    const { admission, args, options } = savedResume('claude')
+
+    const next = await forkProdOriginResume(args, options, admission, imported)
+
+    expect(next).toEqual({ verdict: 'unverifiable', refused: admission.refused })
+    expect(options.command).toBeUndefined()
+  })
+
+  it('refuses a live resume whose command it cannot rewrite exactly', async () => {
+    const odd = `claude --resume ${SESSION_ID} --model opus`
+    const { admission, args, options } = savedResume(odd)
+
+    const next = await forkProdOriginResume(args, options, admission, imported)
+
+    expect(next).toEqual({ verdict: 'unverifiable', refused: admission.refused })
+    expect(options.command).toBeUndefined()
+    expect(args.command).toBeUndefined()
+  })
+
+  it('refuses a resume buried in a sequenced startup script', async () => {
     const { admission, args, options } = savedResume()
     options.env = { [SETUP_AGENT_SEQUENCE_STARTUP_SCRIPT_ENV]: `wait; ${resumeCommand}` }
 
-    const next = await forkResumeLiveInProd(args, options, admission, async () => true)
+    const next = await forkProdOriginResume(args, options, admission, imported)
 
     expect(next?.verdict).toBe('unverifiable')
   })
@@ -151,29 +245,30 @@ describe('forkResumeLiveInProd', () => {
   it('forks a user-started resume of a live session too', async () => {
     const { args, options } = savedResume()
 
-    const next = await forkResumeLiveInProd(args, options, null, async () => true)
+    const next = await forkProdOriginResume(args, options, null, {
+      importedFromProd: false,
+      isSessionLive: async () => true
+    })
 
     expect(next).toBeNull()
-    expect(options.command).toBe(`${resumeCommand} --fork-session`)
+    expect(options.command).toBe(`${resumeCommand} '--fork-session'`)
   })
 
-  it('leaves other agents, remote panes and refusals alone without checking liveness', async () => {
-    const isLive = vi.fn(async () => true)
+  it('leaves remote panes, refusals and Dev-created non-Claude resumes alone', async () => {
+    const isSessionLive = vi.fn(async () => true)
     const { args, options } = savedResume()
     const codex: ResumeSpawnAdmission = {
       verdict: 'admitted',
       refused: { agent: 'codex', providerSession }
     }
     const refused: ResumeSpawnAdmission = { verdict: 'chat-home', refused: codex.refused }
+    const dev = { importedFromProd: false, isSessionLive }
 
-    await expect(forkResumeLiveInProd(args, options, codex, isLive)).resolves.toBe(codex)
-    await expect(forkResumeLiveInProd(args, options, refused, isLive)).resolves.toBe(refused)
+    await expect(forkProdOriginResume(args, options, codex, dev)).resolves.toBe(codex)
+    await expect(forkProdOriginResume(args, options, refused, imported)).resolves.toBe(refused)
     const remote = { ...args, connectionId: 'ssh-1' }
-    await expect(forkResumeLiveInProd(remote, options, null, isLive)).resolves.toBeNull()
-    await expect(
-      forkResumeLiveInProd({ ...args, launchAgent: 'codex' }, options, null, isLive)
-    ).resolves.toBeNull()
-    expect(isLive).not.toHaveBeenCalled()
+    await expect(forkProdOriginResume(remote, options, null, imported)).resolves.toBeNull()
+    expect(isSessionLive).not.toHaveBeenCalled()
     expect(options.command).toBe(resumeCommand)
   })
 })
