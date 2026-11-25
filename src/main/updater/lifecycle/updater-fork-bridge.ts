@@ -1,9 +1,33 @@
 import type { UpdateStatus } from '../../../shared/updater/update-status-types'
 import { UpdaterDownloadInstall } from './updater-download-install'
 
+type ForkRemoteUpdateRoutes = { download: () => void; install: () => void }
+
 /** Hooks the fork updater uses to reuse the official update UI and install path. */
 export class UpdaterForkBridge extends UpdaterDownloadInstall {
   private windowsInstallDirectory: string | undefined
+  private forkRemoteUpdateRoutes: ForkRemoteUpdateRoutes | undefined
+
+  /** Sends paired clients' download and install requests to the fork updater. */
+  routeRemoteUpdatesToFork(routes: ForkRemoteUpdateRoutes): void {
+    this.forkRemoteUpdateRoutes = routes
+  }
+
+  protected override startRemoteDownload(): void {
+    if (this.forkRemoteUpdateRoutes) {
+      this.forkRemoteUpdateRoutes.download()
+      return
+    }
+    super.startRemoteDownload()
+  }
+
+  protected override startRemoteInstall(): void {
+    if (this.forkRemoteUpdateRoutes) {
+      this.forkRemoteUpdateRoutes.install()
+      return
+    }
+    super.startRemoteInstall()
+  }
 
   /** Lets the fork updater drive the same status the update UI already renders. */
   publishExternalStatus(status: UpdateStatus): void {

@@ -78,6 +78,8 @@ export abstract class UpdaterScheduling extends UpdaterCheckFailure {
     }
     // Fork builds never take official updates; the fork updater owns their update status.
     if (OFFICIAL_UPDATES_DISABLED) {
+      // Clear it here too, or the team-policy retry clamp re-arms every 15s forever.
+      this.teamPolicyCheckPending = false
       return false
     }
     if (!app.isPackaged) {

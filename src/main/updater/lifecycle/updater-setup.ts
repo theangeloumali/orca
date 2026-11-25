@@ -30,6 +30,7 @@ import { sameTeamUpdateRestartScope } from './team-update-restart-record'
 import { configureMacShipItScheduling } from '../mac-install/macos-shipit-scheduling'
 import { handleElectronUpdaterProxyLogin } from './electron-updater-proxy-session'
 import { resolveWindowsUpdateInstallDirectory } from './windows-update-install-directory'
+import { OFFICIAL_UPDATES_DISABLED } from '../fork-build-updates'
 import type {
   PreQuitCleanupFailureMode,
   UpdateInstallMode,
@@ -200,7 +201,8 @@ export class UpdaterSetup extends UpdaterForkBridge {
     }
 
     // Security: never re-add a verifyUpdateCodeSignature override — a no-op disables electron-updater's built-in Authenticode check and accepts any installer.
-    if (this.activeUpdateSource === 'release') {
+    // Fork builds never point the native updater at the official feed.
+    if (this.activeUpdateSource === 'release' && !OFFICIAL_UPDATES_DISABLED) {
       autoUpdater.setFeedURL({
         provider: 'generic',
         url: 'https://github.com/stablyai/orca/releases/latest/download'
