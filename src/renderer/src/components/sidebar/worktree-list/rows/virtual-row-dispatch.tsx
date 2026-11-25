@@ -35,7 +35,9 @@ import { renderWorktreeSectionHeaderRow } from './SectionHeader'
 import type { SectionHeaderRowContext } from './section-header-row-context'
 import type { WorktreeRowDragState } from '../drag/row-state'
 import type { Translate } from '@/i18n/use-translate'
-import { hostColorStyle, type HostRowAppearance } from './host-row-appearance'
+import { hostColorStyle } from './host-row-appearance'
+import { groupColorStyle } from './group-row-appearance'
+import type { RowAppearance } from './use-row-appearance'
 import './host-appearance.css'
 
 export type WorktreeVirtualRowContext = {
@@ -53,7 +55,7 @@ export type WorktreeVirtualRowContext = {
   activeWorktreeId: string | null
   worktreeDragState: WorktreeRowDragState
   orderedHostIds: readonly string[]
-  hostAppearanceByRow: readonly (HostRowAppearance | null)[]
+  rowAppearance: RowAppearance
   hostDrag: ReturnType<typeof useHostHeaderDrag>
   toggleGroupWithScrollAnchor: (groupKey: string) => void
   header: SectionHeaderRowContext
@@ -110,7 +112,7 @@ function renderHostHeaderVirtualRow(
             : undefined
         }
         dragging={ctx.hostDrag.state.draggingHostId === row.hostId}
-        appearance={ctx.hostAppearanceByRow[vItem.index]}
+        appearance={ctx.rowAppearance.host[vItem.index]}
       />
     </div>
   )
@@ -147,7 +149,8 @@ export function renderWorktreeVirtualRow(
           index: vItem.index,
           firstHeaderIndex: ctx.firstHeaderIndex
         }),
-        measureVirtualRowElement: ctx.measureVirtualRowElement
+        measureVirtualRowElement: ctx.measureVirtualRowElement,
+        groupAppearance: ctx.rowAppearance.group[vItem.index]
       },
       t
     )
@@ -219,7 +222,8 @@ export function renderWorktreeVirtualRow(
         )
       : 0) ?? 0
   const activeFamily = ctx.activeFamilyRoots.has(frame.root)
-  const hostAppearance = ctx.hostAppearanceByRow[vItem.index]
+  const hostAppearance = ctx.rowAppearance.host[vItem.index]
+  const groupAppearance = ctx.rowAppearance.group[vItem.index]
   const rootFrame = ctx.projection.frames[frame.root]
   const rootRow = ctx.renderRows[frame.root]
   const familyHidden = ctx.hiddenDragRanges.some(
@@ -247,6 +251,7 @@ export function renderWorktreeVirtualRow(
       data-workspace-status={itemWorkspaceStatus ?? undefined}
       data-worktree-item-row=""
       data-host-tint={hostAppearance?.tint}
+      data-group-tint={groupAppearance?.tint}
       className={cn(
         'absolute left-0 right-0 top-0',
         activeFamily && frame.root === vItem.index && 'worktree-sidebar-family-root',
@@ -255,6 +260,7 @@ export function renderWorktreeVirtualRow(
       )}
       style={{
         ...hostColorStyle(hostAppearance),
+        ...groupColorStyle(groupAppearance),
         transform: getWorktreeVirtualRowTransform(vItem.start, itemPreviewOffset)
       }}
       onDragOver={

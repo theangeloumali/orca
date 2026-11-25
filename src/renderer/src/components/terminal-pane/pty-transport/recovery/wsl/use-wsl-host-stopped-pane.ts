@@ -3,7 +3,7 @@ import {
   paneShowsWslHostStoppedCard,
   selectStoppedWslDistro
 } from '@/runtime/hosts/wsl/wsl-host-stopped-status'
-import { selectWorkspaceRuntimeEnvironmentId } from '../../../../../lib/workspace/ownership/workspace-runtime-environment'
+import { selectWorkspaceRuntimeEnvironmentId } from '../../../../../lib/workspace/ownership/workspace-runtime-environment-id'
 import { selectWslHostUnavailableReason } from '../../../../../runtime/hosts/wsl/wsl-host-availability'
 
 /**

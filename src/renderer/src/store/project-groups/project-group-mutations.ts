@@ -24,6 +24,7 @@ import {
 import type { ProjectRemovalFailure, RepoSlice } from '../repos/repo-state'
 import { mergeProjectCompatibilityForHostRepoChange } from '../repos/repo-catalog-identity'
 import { applyProjectGroupDeleteCascade } from './project-group-removal-state'
+import { withoutProjectGroupTints } from '../../../../shared/project/groups/project-group-appearance'
 import { adoptFromEndpoint } from '../host-catalog/endpoint-catalog-adoption'
 import { toast } from 'sonner'
 import { translate } from '@/i18n/i18n'
@@ -133,7 +134,16 @@ export function createProjectGroupMutationActions(
         if (!deleted) {
           return false
         }
+        const groupIdsBefore = get().projectGroups.map((group) => group.id)
         set((s) => applyProjectGroupDeleteCascade(s, groupId, ownerHostId))
+        // Only ids with no copy left on any host lose their background; an offline host's groups keep theirs.
+        const { projectGroups, settings, updateSettings } = get()
+        const liveIds = new Set(projectGroups.map((group) => group.id))
+        const removedIds = new Set(groupIdsBefore.filter((id) => !liveIds.has(id)))
+        const keptTints = withoutProjectGroupTints(settings?.projectGroupTints, removedIds)
+        if (keptTints) {
+          void updateSettings({ projectGroupTints: keptTints })
+        }
         return true
       } catch (err) {
         console.error('Failed to delete project group:', err)

@@ -52,3 +52,22 @@ describe('computeRenderedSidebarWorktreeOrder with machine sections', () => {
     expect(order).toEqual(['on-m5::/on-m5'])
   })
 })
+
+describe('computeRenderedSidebarWorktreeOrder under filters', () => {
+  it('under Live, the next-workspace shortcut reaches a row inside a project whose saved state is collapsed', () => {
+    const project = repoOn('on-m5')
+    const store = createTestStore()
+    store.setState({
+      repos: [project],
+      groupBy: 'repo',
+      collapsedGroups: new Set(['project:repo:on-m5'])
+    })
+    const order = () =>
+      computeRenderedSidebarWorktreeOrder(store.getState(), new Map(), [completedWorktree(project)])
+    expect(order()).toEqual([])
+
+    store.setState({ showOnlyRunningTerminals: true })
+
+    expect(order()).toEqual(['on-m5::/on-m5'])
+  })
+})

@@ -1,10 +1,8 @@
 import { useMemo } from 'react'
 import { useAppStore } from '@/store/index'
 import { folderWorkspaceKey } from '../../../../../../shared/workspace/identity/workspace-scope'
-import {
-  worktreeHasRunningTerminal,
-  type WorkspaceNeedsYouReader
-} from './desktop-workspace-row-facts'
+import type { WorkspaceNeedsYouReader } from './desktop-workspace-row-facts'
+import { hasFolderLiveTerminalOnHost } from './live-terminal-on-host'
 import { selectHidesEmptyProjectGroups } from '../controls/sidebar-filter-actions'
 import type { FolderWorkspace } from '../../../../../../shared/folder-workspaces/folder-workspace-types'
 import type { ProjectGroup } from '../../../../../../shared/project/groups/project-group-types'
@@ -49,16 +47,16 @@ export function useSidebarHostVisibleScope(args: {
   } = filterState
   const findQuery = useAppStore((s) => s.sidebarFindQuery)
   const { workspaceNeedsYou } = args
-  // A folder's tabs live under its folder: worktree id. A joined string keeps the selection stable.
+  // A joined string keeps the selection stable.
   const runningFolderIdList = useAppStore((s) =>
     showOnlyRunningTerminals
       ? folderWorkspaces
           .filter((folder) =>
-            worktreeHasRunningTerminal(
-              s.tabsByWorktree,
-              s.ptyIdsByTabId,
-              folderWorkspaceKey(folder.id)
-            )
+            hasFolderLiveTerminalOnHost(s, s.tabsByWorktree, s.ptyIdsByTabId, {
+              folder,
+              projectGroups,
+              defaultHostId
+            })
           )
           .map((folder) => folder.id)
           .join('\n')

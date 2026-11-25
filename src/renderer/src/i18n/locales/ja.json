@@ -6567,7 +6567,12 @@
           "groupSummaryNeedsYou_other": "{{count}} 件が対応待ち",
           "groupSummaryLabel": "{{projects}}, {{needsYou}}",
           "createFromReposDescription": "グループを作成し、{{count}} 件のプロジェクトを移動します。",
-          "createFromReposDescription_other": "グループを作成し、{{count}} 件のプロジェクトを移動します。"
+          "createFromReposDescription_other": "グループを作成し、{{count}} 件のプロジェクトを移動します。",
+          "groupColorSwatch": "このグループに{{color}}を使用",
+          "groupColorDialogTitle": "カスタムのグループの色",
+          "groupColorHostFailed": "{{host}} の色を更新できませんでした。そこでは以前の色が表示されます",
+          "groupColorDialogDescription": "グループの色はグループと同期されます。背景の強さはこのコンピューターにのみ保存されます。",
+          "groupColorPickerLabel": "グループの色"
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "キャンセル",
@@ -7443,6 +7448,9 @@
           "description": "色はこのコンピューターにのみ保存されます。",
           "pickerLabel": "デバイスカラー",
           "done": "完了"
+        },
+        "SidebarColors": {
+          "editAll": "サイドバーの色をすべて編集…"
         }
       },
       "shared": {
@@ -9968,7 +9976,14 @@
             "96e32c1118": "MiniMax 使用量",
             "e8d2710689": "Muse 使用量",
             "aff6e6afdf": "IDE フォント",
-            "ba1f9d39a6": "Antigravity の使用状況"
+            "ba1f9d39a6": "Antigravity の使用状況",
+            "sidebarColors": {
+              "title": "サイドバーの色",
+              "description": "サイドバーのデバイスとプロジェクトグループに色を付けます。グループの色は同期され、背景の強さはこのコンピューターにのみ保存されます。",
+              "color": "色",
+              "group": "グループ",
+              "device": "デバイス"
+            }
           }
         },
         "auto": {
@@ -13729,6 +13744,12 @@
               "desktopOnly": "デスクトップアプリから Gitea / Forgejo に接続してください"
             }
           }
+        },
+        "SidebarColors": {
+          "groupsHeading": "プロジェクトグループ",
+          "swatch": "{{name}}に{{color}}を使用",
+          "custom": "{{name}}のカスタムの色",
+          "background": "{{name}}の背景"
         }
       },
       "right": {

@@ -7,7 +7,10 @@ import {
   showDropOverlay
 } from './pane-drag-reorder'
 
-const DRAG_THRESHOLD = 5
+export const PANE_DRAG_THRESHOLD_PX = 5
+
+// Order breaks ties: the first nearest zone wins.
+const DROP_ZONES: readonly DropZone[] = ['top', 'bottom', 'left', 'right']
 
 export function beginPaneDragFromPointerDown(
   handle: HTMLElement,
@@ -93,7 +96,7 @@ export function beginPaneDragFromPointerDown(
     }
     const dx = ev.clientX - startX
     const dy = ev.clientY - startY
-    if (!dragging && Math.hypot(dx, dy) >= DRAG_THRESHOLD) {
+    if (!dragging && Math.hypot(dx, dy) >= PANE_DRAG_THRESHOLD_PX) {
       dragging = true
       state.dragSourcePaneId = paneId
       callbacks.getRoot().classList.add('is-pane-dragging')
@@ -226,16 +229,18 @@ function findDropTargetPane(
   return null
 }
 
-function resolveDropZone(clientX: number, clientY: number, rect: DOMRect): DropZone {
+export function resolveDropZone(clientX: number, clientY: number, rect: DOMRect): DropZone {
   const relX = (clientX - rect.left) / rect.width
   const relY = (clientY - rect.top) / rect.height
-  const distances = {
+  const distances: Record<DropZone, number> = {
     top: relY,
     bottom: 1 - relY,
     left: relX,
     right: 1 - relX
-  } satisfies Record<DropZone, number>
-  return (Object.entries(distances).sort((a, b) => a[1] - b[1])[0]?.[0] ?? 'right') as DropZone
+  }
+  return DROP_ZONES.reduce((nearest, zone) =>
+    distances[zone] < distances[nearest] ? zone : nearest
+  )
 }
 
 function positionDropOverlay(overlay: HTMLElement, rect: DOMRect, zone: DropZone): void {

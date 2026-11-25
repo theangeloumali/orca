@@ -6,6 +6,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/class-names'
@@ -15,6 +16,9 @@ import type { ProjectGroup } from '../../../../../../shared/project/groups/proje
 import type { FolderWorkspacePathStatus } from '../../../../../../shared/folder-workspaces/folder-workspace-path-status'
 import type { ExecutionHostId } from '../../../../../../shared/execution-host/execution-host'
 import { getFolderProjectGroupRefreshHandler } from './project-group-folder-refresh'
+import { useProjectGroupAppearanceControls, type ShownGroupColor } from './appearance-controls'
+import { AppearanceMenuItems } from './AppearanceMenuItems'
+import { useOpenGroupColorDialog } from './GroupColorDialogHost'
 import { ProjectGroupMoveSubmenu } from './ProjectGroupMoveSubmenu'
 import { useRuntimeEnvironmentCapability } from '@/runtime/rpc/compatibility/use-runtime-environment-capability'
 import { PROJECT_GROUP_PARENT_UPDATE_RUNTIME_CAPABILITY } from '../../../../../../shared/remote-runtime/protocol/worktree-runtime-capabilities'
@@ -29,8 +33,6 @@ import {
   useProjectGroupAgentActivityCounts,
   useProjectGroupSubtreeIds
 } from './use-project-group-agent-activity-counts'
-import { useAppStore } from '@/store/index'
-import { getProjectGroupHeaderKey } from '../../../../../../shared/sidebar-list/sections/group-keys'
 import {
   handleRepoHeaderActionPointerDown,
   stopRepoHeaderKeyboardToggle,
@@ -39,6 +41,7 @@ import {
 
 export function ProjectGroupHeaderMenu({
   groupId,
+  shownColor,
   hostId,
   label,
   projectGroup,
@@ -47,9 +50,16 @@ export function ProjectGroupHeaderMenu({
   onDelete,
   projectGroups,
   onCreateSubgroup,
-  onMoveGroup
+  onMoveGroup,
+  collapsedGroups,
+  onToggleSubtree
 }: {
   groupId: string
+  /** The color this header shows, from the row-appearance map. */
+  shownColor: ShownGroupColor
+  /** The list's displayed fold, so collapse-all follows the filter session. */
+  collapsedGroups: ReadonlySet<string>
+  onToggleSubtree: (groupId: string) => boolean
   /** Owner host of the group row, so rename/delete route to the host that holds it. */
   hostId?: ExecutionHostId
   label: string
@@ -73,9 +83,16 @@ export function ProjectGroupHeaderMenu({
     PROJECT_GROUP_PARENT_UPDATE_RUNTIME_CAPABILITY
   )
   const nestingSupported = runtimeEnvironmentId === null || remoteSupportsNesting
+  const appearance = useProjectGroupAppearanceControls(groupId, shownColor)
+  const openColorDialog = useOpenGroupColorDialog()
   return (
     <>
-      <ProjectGroupCollapseAllButton groupId={groupId} label={label} />
+      <ProjectGroupCollapseAllButton
+        groupId={groupId}
+        label={label}
+        collapsedGroups={collapsedGroups}
+        onToggleSubtree={onToggleSubtree}
+      />
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <Button
@@ -129,6 +146,21 @@ export function ProjectGroupHeaderMenu({
               onMove={onMoveGroup}
             />
           ) : null}
+          <DropdownMenuSeparator />
+          <AppearanceMenuItems
+            controls={appearance}
+            swatchLabel={(color) =>
+              t(
+                'auto.components.sidebar.WorktreeList.groupColorSwatch',
+                'Use {{color}} for this group',
+                {
+                  color
+                }
+              )
+            }
+            onCustomColor={() => openColorDialog({ groupId, ...shownColor })}
+          />
+          <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={() => onRename(groupId, label, hostId)}>
             {t('auto.components.sidebar.WorktreeList.4d7b73658c', 'Rename group')}
           </DropdownMenuItem>
@@ -143,15 +175,15 @@ export function ProjectGroupHeaderMenu({
 
 /** "7 projects · 1 needs you" on a folded group header; gone once the group is open. */
 export function ProjectGroupFoldedSummary({
-  groupId
+  groupId,
+  collapsed
 }: {
   groupId: string
+  /** The header's displayed fold, which a filter session may differ from the saved one. */
+  collapsed: boolean
 }): React.JSX.Element | null {
-  const isCollapsed = useAppStore((state) =>
-    state.collapsedGroups.has(getProjectGroupHeaderKey(groupId))
-  )
   // Why split: an open group mounts no counting subscriptions at all.
-  return isCollapsed ? <FoldedGroupCounts groupId={groupId} /> : null
+  return collapsed ? <FoldedGroupCounts groupId={groupId} /> : null
 }
 
 function FoldedGroupCounts({ groupId }: { groupId: string }): React.JSX.Element {
@@ -205,13 +237,17 @@ const COLLAPSE_ALL_TOGGLE_ATTRIBUTES: Record<`data-${string}`, string> = {
 
 function ProjectGroupCollapseAllButton({
   groupId,
-  label
+  label,
+  collapsedGroups,
+  onToggleSubtree
 }: {
   groupId: string
   label: string
+  collapsedGroups: ReadonlySet<string>
+  onToggleSubtree: (groupId: string) => boolean
 }): React.JSX.Element | null {
   const t = useTranslate()
-  const { hasSubtree, allCollapsed, toggle } = useProjectGroupSubtreeCollapse(groupId)
+  const { hasSubtree, allCollapsed } = useProjectGroupSubtreeCollapse(groupId, collapsedGroups)
   if (!hasSubtree) {
     return null
   }
@@ -220,7 +256,7 @@ function ProjectGroupCollapseAllButton({
     <span className="contents" onPointerDown={handleRepoHeaderActionPointerDown}>
       <SectionCollapseAllButton
         allCollapsed={allCollapsed}
-        onToggle={toggle}
+        onToggle={() => onToggleSubtree(groupId)}
         collapseLabel={t(
           'auto.components.sidebar.WorktreeList.collapseAllInGroup',
           'Collapse all in {{value0}}',

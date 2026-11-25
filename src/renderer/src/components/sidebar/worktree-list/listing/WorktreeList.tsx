@@ -25,6 +25,7 @@ import { usePublishSidebarDrawnHosts } from '../rows/sidebar-drawn-hosts'
 import { useClientGroupingHintRows } from '../client-grouping/use-client-suggestions'
 import { SidebarWorktreeListEmptyState } from './EmptyState'
 import { VirtualizedWorktreeViewport } from '../viewport/VirtualizedWorktreeViewport'
+import { GroupColorDialogHost } from '../rows/GroupColorDialogHost'
 import { markSidebarWorktreeActiveImmediately } from '../rows/option-dom'
 import { EMPTY_PROJECT_GROUPS } from '../viewport/viewport-props'
 import { NOOP_WORKSPACE_BOARD_DRAG_PREVIEW_CALLBACK } from '../drag/drop-commit-context'
@@ -36,6 +37,7 @@ import { getSidebarProjectGrouping } from './sidebar-project-grouping'
 import { useProjectGroupNestingActions } from '../rows/use-project-group-nesting-actions'
 import { useSidebarRevealRequests } from '../navigation/use-reveal-requests'
 import { useSidebarWorktreeFilters } from './use-filters'
+import { useFilterScopedCollapse } from './use-filter-scoped-collapse'
 import { useSidebarWorktreeSelection } from '../navigation/use-selection'
 import { useWindowSidebarListModel } from './use-window-list-model'
 import { useMainSidebarListModel } from './use-main-list-model'
@@ -111,9 +113,8 @@ const WorktreeList = React.memo(function WorktreeList({
   const pendingRevealSidebarRow = useAppStore((s) => s.pendingRevealSidebarRow)
   const clearPendingRevealWorktreeId = useAppStore((s) => s.clearPendingRevealWorktreeId)
   const clearPendingRevealSidebarRow = useAppStore((s) => s.clearPendingRevealSidebarRow)
-  const collapsedGroups = useAppStore((s) => s.collapsedGroups)
-  const toggleGroup = useAppStore((s) => s.toggleCollapsedGroup)
-  const setCollapsedGroups = useAppStore((s) => s.setCollapsedGroups)
+  const { collapsedGroups, toggleGroup, setCollapsedGroups, toggleProjectGroupSubtree } =
+    useFilterScopedCollapse()
   const projectGroups = useAppStore((s) => s.projectGroups ?? EMPTY_PROJECT_GROUPS)
   const folderWorkspaces = useAppStore((s) => selectFolderWorkspaces(s))
   const settings = useAppStore((s) => s.settings)
@@ -185,13 +186,9 @@ const WorktreeList = React.memo(function WorktreeList({
     void useAppStore.getState().recordFeatureInteraction('projects-collapse-all')
     // Direction follows what is displayed, which may differ from stored state while a picker forces sections open.
     setCollapsedGroups(
-      setAllProjectsCollapsed(
-        useAppStore.getState().collapsedGroups,
-        projectCollapseKeys,
-        !allProjectsCollapsed
-      )
+      setAllProjectsCollapsed(collapsedGroups, projectCollapseKeys, !allProjectsCollapsed)
     )
-  }, [allProjectsCollapsed, projectCollapseKeys, setCollapsedGroups])
+  }, [allProjectsCollapsed, collapsedGroups, projectCollapseKeys, setCollapsedGroups])
   const selection = useSidebarWorktreeSelection({
     sectionRows: rowModel.sectionRows,
     pinnedDisplayPolicy
@@ -260,7 +257,7 @@ const WorktreeList = React.memo(function WorktreeList({
   }
 
   return (
-    <>
+    <GroupColorDialogHost>
       {projectsCollapseTarget && projectCollapseKeys.length > 0
         ? createPortal(
             <ProjectsCollapseAllButton
@@ -311,6 +308,7 @@ const WorktreeList = React.memo(function WorktreeList({
           projectOrderBy={projectOrderBy}
           toggleGroup={handleToggleGroup}
           onToggleAllProjects={projectCollapseKeys.length > 0 ? handleToggleAllProjects : undefined}
+          onToggleProjectGroupSubtree={toggleProjectGroupSubtree}
           collapsedGroups={effectiveCollapsedGroups}
           handleCreateForRepo={openHeaderCreateComposer}
           handleOpenRepoSettings={handleOpenRepoSettings}
@@ -384,7 +382,7 @@ const WorktreeList = React.memo(function WorktreeList({
           scrollAnchorRef={scrollAnchorRef}
         />
       </ProjectHeaderSelectionScope>
-    </>
+    </GroupColorDialogHost>
   )
 })
 

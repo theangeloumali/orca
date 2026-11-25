@@ -4905,6 +4905,13 @@
               "format": "formato",
               "template": "modelo",
               "placeholder": "marcador"
+            },
+            "sidebarColors": {
+              "title": "Cores da barra lateral",
+              "description": "Colora dispositivos e grupos de projetos na barra lateral. As cores de grupo sincronizam; a intensidade do fundo fica neste computador.",
+              "color": "cor",
+              "group": "grupo",
+              "device": "dispositivo"
             }
           }
         },
@@ -10320,6 +10327,12 @@
               "desktopOnly": "Conecte o Gitea / Forgejo pelo aplicativo para desktop"
             }
           }
+        },
+        "SidebarColors": {
+          "groupsHeading": "Grupos de projetos",
+          "swatch": "Usar {{color}} para {{name}}",
+          "custom": "Cor personalizada para {{name}}",
+          "background": "Fundo para {{name}}"
         }
       },
       "right": {
@@ -12117,7 +12130,12 @@
           "createFromReposDescription": "Criar um grupo e mover {{count}} projetos para ele.",
           "createFromReposDescription_one": "Criar um grupo e mover {{count}} projeto para ele.",
           "createFromReposDescription_other": "Criar um grupo e mover {{count}} projetos para ele.",
-          "createFromReposDescription_many": "Criar um grupo e mover {{count}} projetos para ele."
+          "createFromReposDescription_many": "Criar um grupo e mover {{count}} projetos para ele.",
+          "groupColorSwatch": "Usar {{color}} para este grupo",
+          "groupColorDialogTitle": "Cor de grupo personalizada",
+          "groupColorHostFailed": "Não foi possível atualizar a cor em {{host}}; lá será exibida a cor antiga",
+          "groupColorDialogDescription": "As cores de grupo sincronizam com o grupo; a intensidade do fundo fica neste computador.",
+          "groupColorPickerLabel": "Cor do grupo"
         },
         "WorktreeCardMeta": {
           "3e65e11cc6": "Metadados do espaço de trabalho",
@@ -13558,6 +13576,9 @@
           "description": "As cores são salvas apenas neste computador.",
           "pickerLabel": "Cor do dispositivo",
           "done": "Concluído"
+        },
+        "SidebarColors": {
+          "editAll": "Editar todas as cores da barra lateral…"
         }
       },
       "editor": {

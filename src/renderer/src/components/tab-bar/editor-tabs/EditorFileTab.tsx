@@ -212,11 +212,9 @@ export default function EditorFileTab({
     return () => window.removeEventListener('blur', dismiss)
   }, [menuOpen])
 
+  // Why: while renaming, drop the keyboard drag listener so typing can't start a drag; pointer drag stays.
   const dragListeners = isRenaming ? undefined : listeners
-  const { onPointerDown, retirePendingActivation } = useTabStripPointerActivation({
-    onActivate,
-    disabled: isRenaming
-  })
+  const { onPointerDown, retirePendingActivation } = useTabStripPointerActivation({ onActivate })
   const handleMenuOpenChange = useTabContextMenuOpening(setMenuOpen, retirePendingActivation)
   const slotProps = useTabStripSlotProps(file.tabId ?? file.id, isActive)
 
@@ -231,10 +229,11 @@ export default function EditorFileTab({
       className={`w-full group relative flex items-center h-full px-1.5 text-xs cursor-pointer select-none outline-none focus:outline-none focus-visible:outline-none ${getTabStripBorderClasses(hasTabsToRight, { includeTopBorder: includeTopTabBorder })} ${getDropIndicatorClasses(dropIndicator ?? null)} ${getTabRootStateClasses(isActive)}`}
       style={tabStatusVariables}
       onPointerDown={(e) => {
-        onPointerDown(
-          e,
-          dragListeners?.onPointerDown as ((event: React.PointerEvent<Element>) => void) | undefined
-        )
+        // A press outside the open rename commits it, then drags or activates like any press.
+        if (isRenaming) {
+          commitRename()
+        }
+        onPointerDown(e, (event) => listeners?.onPointerDown?.(event))
       }}
       onDoubleClick={() => {
         if (isPreviewTab && onMakePermanent) {

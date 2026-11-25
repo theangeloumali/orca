@@ -1,4 +1,4 @@
-import { selectWorkspaceRuntimeEnvironmentId } from '../../../../../lib/workspace/ownership/workspace-runtime-environment'
+import { selectWorkspaceRuntimeEnvironmentId } from '../../../../../lib/workspace/ownership/workspace-runtime-environment-id'
 import type { AppState } from '@/store/types'
 import type { RuntimeStatuses } from '@/store/slices/runtime-status/views/runtime-status-owner'
 import { useAppStoreWithHostStatuses } from '@/store/slices/runtime-status/views/use-runtime-status-view'

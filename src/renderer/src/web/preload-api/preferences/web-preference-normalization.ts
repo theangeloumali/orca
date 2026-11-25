@@ -113,19 +113,21 @@ function migrateBrowserSavedAgentPermission(stored: Partial<GlobalSettings>) {
   return permission
 }
 
-/** A paired host's settings patch, with this browser's own per-host colors kept. */
+/** A paired host's settings patch, with this browser's own per-host colors and group backgrounds kept. */
 export function withBrowserHostOverrides(
   local: GlobalSettings,
   runtime: Partial<GlobalSettings>
 ): Partial<GlobalSettings> {
-  if (!runtime.hostSettingOverrides) {
-    return runtime
+  // Group backgrounds are per-computer, so the host's own choices never replace this browser's.
+  const { projectGroupTints: _hostGroupTints, ...shared } = runtime
+  if (!shared.hostSettingOverrides) {
+    return shared
   }
   const hostSettingOverrides = mergeRuntimeHostOverrides(
     local.hostSettingOverrides,
-    runtime.hostSettingOverrides
+    shared.hostSettingOverrides
   )
-  return { ...runtime, hostSettingOverrides }
+  return { ...shared, hostSettingOverrides }
 }
 
 export function mergeSettings(

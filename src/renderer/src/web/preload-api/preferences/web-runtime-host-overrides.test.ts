@@ -34,6 +34,15 @@ describe('paired web settings merge', () => {
     })
   })
 
+  it('keeps this browser’s group backgrounds when the host sends its own', () => {
+    const browser: GlobalSettings = { ...local, projectGroupTints: { clients: 'strong' } }
+    const merged = mergeSettings(
+      browser,
+      withBrowserHostOverrides(browser, { projectGroupTints: { clients: 'off', oss: 'subtle' } })
+    )
+    expect(merged.projectGroupTints).toEqual({ clients: 'strong' })
+  })
+
   it('leaves local overrides alone when the host sends none', () => {
     expect(mergeRuntimeSettings({}).hostSettingOverrides).toEqual(local.hostSettingOverrides)
   })

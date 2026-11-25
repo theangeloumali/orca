@@ -1,7 +1,7 @@
 import { useEffect, useRef, type Dispatch, type MutableRefObject, type SetStateAction } from 'react'
 import type { OpenFile } from '@/store/slices/editor/types/open-file'
 import { useWorktreeHostConnection } from '@/lib/workspace/ownership/worktree-host-connection-phase'
-import { selectWorkspaceRuntimeEnvironmentId } from '@/lib/workspace/ownership/workspace-runtime-environment'
+import { selectWorkspaceRuntimeEnvironmentId } from '@/lib/workspace/ownership/workspace-runtime-environment-id'
 import { useAppStateValue } from '@/store/retained-views/app-state-view'
 import type { WslHostConnectionState } from '../../../../../shared/remote-runtime/wsl-hosts/wsl-host-types'
 import { displayIpcErrorMessage } from '@/runtime/errors/ipc-error'

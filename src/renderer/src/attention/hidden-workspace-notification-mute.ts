@@ -4,19 +4,15 @@ import type { RuntimeStatuses } from '@/store/slices/runtime-status/views/runtim
 import { getIndexedAllWorktrees } from '@/store/slices/worktrees/listing/worktree-catalog-index'
 import { getIndexedRepoMap } from '@/store/repos/repository-catalog-index'
 import { ALL_EXECUTION_HOSTS_SCOPE } from '../../../shared/execution-host/execution-host'
-import {
-  folderWorkspaceKey,
-  parseWorkspaceKey
-} from '../../../shared/workspace/identity/workspace-scope'
+import { parseWorkspaceKey } from '../../../shared/workspace/identity/workspace-scope'
 import { sidebarHasActiveFilters } from '@/components/sidebar/worktree-list/controls/sidebar-filter-actions'
 import {
   computeVisibleWorktrees,
   type VisibleWorktreeOptions
 } from '@/components/sidebar/worktree-list/listing/compute-visible-worktrees'
-import { worktreeHasRunningTerminal } from '@/components/sidebar/worktree-list/listing/desktop-workspace-row-facts'
+import { selectListedFolderWorkspaces } from '@/components/sidebar/worktree-list/listing/listed-folder-workspaces'
 import { buildVisibleWorktreeOptionsFromState } from '@/components/sidebar/worktree-list/listing/visible-worktree-options-from-state'
 import { NO_HIDDEN_PROJECTS } from '../../../shared/project/catalog/hidden-projects'
-import { selectVisibleFolderWorkspaces } from '../../../shared/sidebar-list/folders/visible-folder-workspaces'
 import {
   selectFolderWorkspaces,
   selectWorktreesByRepo
@@ -72,21 +68,10 @@ function isFolderListed(
   inputs: VisibleWorktreeOptions,
   folder: FolderWorkspace
 ): boolean {
-  return selectVisibleFolderWorkspaces({
-    folderWorkspaces: [folder],
+  return selectListedFolderWorkspaces(inputs, {
+    folders: [folder],
     projectGroups: state.projectGroups,
-    filters: inputs,
     visibleHostIdSet: null,
-    defaultHostId: inputs.defaultHostId,
-    pairedDeviceIdsByEnvironment: inputs.pairedDeviceIdsByEnvironment,
-    botListedIdentities: inputs.botListedWorktreeIdentities,
-    hasRunningTerminal: (candidate) =>
-      worktreeHasRunningTerminal(
-        inputs.tabsByWorktree,
-        inputs.ptyIdsByTabId,
-        folderWorkspaceKey(candidate.id)
-      ),
-    listedWorktrees: computeVisibleWorktrees(selectWorktreesByRepo(state), [], inputs),
-    lineageParentIdentities: inputs.lineageParentIdentities
+    listedWorktrees: computeVisibleWorktrees(selectWorktreesByRepo(state), [], inputs)
   }).includes(folder)
 }

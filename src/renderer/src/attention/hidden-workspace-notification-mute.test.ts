@@ -8,6 +8,7 @@ import {
 } from '@/components/sidebar/worktree-list/grouping/worktree-list-groups-test-fixtures'
 import { getDefaultSettings } from '../../../shared/orca-profiles/constants'
 import { folderWorkspaceKey } from '../../../shared/workspace/identity/workspace-scope'
+import { toAppSshPtyId } from '../../../shared/remote-runtime/ssh/ssh-pty-id'
 import { isWorkspaceNotificationMutedBySidebarFilters } from './hidden-workspace-notification-mute'
 
 const STATUSES = new Map()
@@ -47,6 +48,11 @@ describe('isWorkspaceNotificationMutedBySidebarFilters under Active only', () =>
 
   it('keeps notifying for a folder workspace with a running terminal', () => {
     expect(isMuted(runningKey)).toBe(false)
+  })
+
+  it('mutes a folder whose only PTY runs on another machine', () => {
+    useAppStore.setState({ ptyIdsByTabId: { 'tab-1': [toAppSshPtyId('gpu-vm', 'pty-1')] } })
+    expect(isMuted(runningKey)).toBe(true)
   })
 
   it('never mutes a listed workspace because of a find query', () => {

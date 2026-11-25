@@ -2,7 +2,8 @@ import { TerminalPaneRecentImages } from './TerminalRecentImages'
 import { useAppStore } from '@/store'
 import type { PaneTitleOverlayRect } from './pane-title-overlay-rects'
 import { ImeInput } from '@/lib/text-input/ime/ime-text-field'
-import type { CSSProperties, RefObject } from 'react'
+import { useRef, type CSSProperties, type RefObject } from 'react'
+import { PANE_DRAG_THRESHOLD_PX } from '@/lib/pane-manager/pane-layout/pane-drag-pointer'
 import { MessageSquarePlus, SquareSplitVertical, SquareTerminal, X } from 'lucide-react'
 import type { ManagedPane } from '@/lib/pane-manager/pane-manager-types'
 import type { PaneManager } from '@/lib/pane-manager/pane-manager'
@@ -102,6 +103,7 @@ export default function TerminalPaneHeaderOverlay({
   onRenameBlur
 }: TerminalPaneHeaderOverlayProps): React.JSX.Element {
   const t = useTranslate()
+  const titlePressRef = useRef<{ x: number; y: number; dragged: boolean } | null>(null)
   const recentImagesEnabled = useAppStore(
     (state) => state.settings?.terminalDroppedImagesPreview !== false
   )
@@ -185,7 +187,31 @@ export default function TerminalPaneHeaderOverlay({
                 <button
                   type="button"
                   className="pane-title-text"
-                  onClick={() => onStartRename(pane.id)}
+                  onPointerDown={(event) => {
+                    titlePressRef.current = { x: event.clientX, y: event.clientY, dragged: false }
+                    if (paneCount > 1) {
+                      onBeginPaneDrag(pane.id, event.currentTarget, event.nativeEvent)
+                    }
+                  }}
+                  onPointerMove={(event) => {
+                    // Sticky: a drag that returns to its start point still ended a drag.
+                    const press = titlePressRef.current
+                    if (
+                      press &&
+                      Math.hypot(event.clientX - press.x, event.clientY - press.y) >=
+                        PANE_DRAG_THRESHOLD_PX
+                    ) {
+                      press.dragged = true
+                    }
+                  }}
+                  onClick={() => {
+                    // The click that ends a title drag must not also open rename.
+                    const dragged = titlePressRef.current?.dragged === true
+                    titlePressRef.current = null
+                    if (!dragged) {
+                      onStartRename(pane.id)
+                    }
+                  }}
                   aria-label={t(
                     'auto.components.terminal.pane.TerminalPane.cc5a2dc706',
                     'Edit pane title: {{value0}}',
