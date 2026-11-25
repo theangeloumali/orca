@@ -9,6 +9,7 @@ import {
   resolvesIntoWslShare
 } from '../../../wsl/filesystem/wsl-share-path-resolution'
 import { getOrcaManagedCodexHomePath, getSystemCodexHomePath } from '../homes/codex-home-paths'
+import { IS_ORCA_DEV_APP } from '../../../../shared/fork/orca-dev-app-flag'
 import { upsertPromotedSettingsInContent } from './codex-config-settings-upsert'
 import {
   PROMOTED_STRUCTURED_KEYS,
@@ -141,8 +142,8 @@ function promoteCodexRuntimeSettingsToSystemUnsafe(
     // Throw to stall the mirror rather than overwrite unreadable runtime changes.
     throw runtimeTomlObservation.error
   }
-  // A drvfs source (a distro home under /mnt/c) is the distro's own config too.
-  if (homes.systemConfigDir !== undefined || isWslSharePath(systemTomlPath)) {
+  // Orca Dev never writes ~/.codex; a drvfs source (a distro home under /mnt/c) is the distro's own.
+  if (IS_ORCA_DEV_APP || homes.systemConfigDir !== undefined || isWslSharePath(systemTomlPath)) {
     return regenerateFromGuestPlan(observeCodexSettingsBaseline(runtimeHomePath))
   }
   // Scalars need a baseline to distinguish stale copies from new Codex edits.

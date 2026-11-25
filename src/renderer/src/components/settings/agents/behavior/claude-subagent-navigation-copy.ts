@@ -1,12 +1,19 @@
 import { translate } from '@/i18n/i18n'
 import type { Translate } from '@/i18n/use-translate'
 import { searchKeywords } from '../../search/settings-search-keywords'
+import { IS_ORCA_DEV_APP } from '../../../../../../shared/fork/orca-dev-app-flag'
 
 export function getClaudeSubagentNavigationTitle(t: Translate = translate): string {
   return t('auto.components.settings.claudeSubagentNavigation.title', 'Claude subagent navigation')
 }
 
 export function getClaudeSubagentNavigationDescription(t: Translate = translate): string {
+  if (IS_ORCA_DEV_APP) {
+    return t(
+      'auto.components.settings.claudeSubagentNavigation.orcaDevUnavailable',
+      'Unavailable in Orca Dev. Use Orca to manage Claude subagent navigation.'
+    )
+  }
   return t(
     'auto.components.settings.claudeSubagentNavigation.description',
     'Open Claude subagents from the sidebar. Adds a shortcut to Claude’s keybindings.json and loads an Orca mod in new Orca panes. Requires Claude 2.1.300+ and status hooks. Turning off removes Orca’s shortcut; shortcuts you delete stay deleted.'

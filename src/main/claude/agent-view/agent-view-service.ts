@@ -12,6 +12,7 @@ import { reconcileClaudeAgentViewConfig } from './agent-view-config'
 import { ensureClaudeAgentViewPluginAsync } from './agent-view-plugin'
 import { getManagedAgentHookTarget } from '../../../shared/agent-hook-listener/configuration/managed-agent-hook-targets'
 import { detectLocalManagedAgentCliPresence } from '../../agent-hooks/installation/local-agent-cli-presence'
+import { IS_ORCA_DEV_APP } from '../../../shared/fork/orca-dev-app-flag'
 
 type NavigationSettings = Partial<
   Pick<
@@ -66,6 +67,10 @@ export class ClaudeAgentViewService {
   ) {}
 
   reconcile(settings: NavigationSettings): Promise<void> {
+    // Orca Dev never writes the user's Claude settings.json; writesConfig stays false for prepareProfile too.
+    if (IS_ORCA_DEV_APP) {
+      return this.tail
+    }
     const enabled =
       settings.claudeSubagentNavigationEnabled !== false &&
       isAgentStatusHooksEnabledForAgent(settings, 'claude')

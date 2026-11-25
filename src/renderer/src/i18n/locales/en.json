@@ -14629,7 +14629,8 @@
             "plugin": "plugin",
             "mod": "mod",
             "shortcut": "shortcut"
-          }
+          },
+          "orcaDevUnavailable": "Unavailable in Orca Dev. Use Orca to manage Claude subagent navigation."
         },
         "AppearanceThemeControl": {
           "useTerminalTheme": "Use theme colors",

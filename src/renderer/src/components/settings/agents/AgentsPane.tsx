@@ -95,7 +95,8 @@ export function AgentsPane({
         <SettingsSwitchRow
           label={getClaudeSubagentNavigationTitle(t)}
           description={getClaudeSubagentNavigationDescription(t)}
-          checked={settings.claudeSubagentNavigationEnabled !== false}
+          checked={settings.claudeSubagentNavigationEnabled !== false && !IS_ORCA_DEV_APP}
+          disabled={IS_ORCA_DEV_APP}
           onChange={() =>
             updateSettings({
               claudeSubagentNavigationEnabled: settings.claudeSubagentNavigationEnabled === false
