@@ -13,11 +13,14 @@ import {
   getOrcaProfileDataFile,
   getOrcaProfileStateDatabaseFile
 } from '../../../shared/orca-profiles/profile-state-storage-paths'
-import {
-  SEEDED_PROFILE_STATE_DOMAINS,
-  pickSeededProfileStateDomains
-} from '../../../shared/orca-profiles/seeded-profile-state-domains'
 import { ORCA_DEV_OWNED_DOMAINS, withOrcaDevOwnedFields } from './orca-dev-owned-fields'
+import type { WorkspaceSessionState } from '../../../shared/workspace-session/workspace-session-state-types'
+import { importedTabIds, mergedOrcaDevSession } from './orca-dev-session-merge'
+import {
+  ORCA_DEV_SESSION_DOMAIN,
+  ORCA_DEV_SYNCED_DOMAINS,
+  pickOrcaDevSyncedDomains
+} from './orca-dev-session-snapshot'
 
 export type OrcaDevProfileSyncPaths = { prodUserDataPath: string; devUserDataPath: string }
 
@@ -104,14 +107,22 @@ function syncProfile(paths: OrcaDevProfileSyncPaths, profileId: string): OrcaDev
     return { profileId, kind: 'skipped', reason: 'prod-database-missing' }
   }
   // Read-only snapshot: a running prod keeps writing, and committed WAL pages are included.
-  const prod = readProfileStateDomains(prodDatabaseFile, profileId, SEEDED_PROFILE_STATE_DOMAINS)
+  const prod = readProfileStateDomains(prodDatabaseFile, profileId, ORCA_DEV_SYNCED_DOMAINS)
   if (prod.kind === 'unreadable') {
     return { profileId, kind: 'skipped', reason: 'prod-unreadable' }
   }
-  const picked = pickSeededProfileStateDomains(prod.values)
+  const { picked, replaced, session } = pickOrcaDevSyncedDomains(prod.values)
+  const ledgerPath = importedTabLedgerPath(paths.devUserDataPath, profileId)
   const devDatabaseFile = getOrcaProfileStateDatabaseFile(profileId, paths.devUserDataPath)
   if (hasProfileStateDatabaseFiles(devDatabaseFile)) {
-    return replaceDevDomains({ devDatabaseFile, profileId, prodPicked: picked })
+    return replaceDevDomains({
+      devDatabaseFile,
+      profileId,
+      prodPicked: picked,
+      replaced,
+      session,
+      ledgerPath
+    })
   }
   if (hasMissingProfileStateDatabaseWithRetainedAuthority(paths.devUserDataPath, profileId)) {
     return { profileId, kind: 'skipped', reason: 'dev-authority-retained' }
@@ -120,6 +131,7 @@ function syncProfile(paths: OrcaDevProfileSyncPaths, profileId: string): OrcaDev
   const legacyFile = getOrcaProfileDataFile(profileId, paths.devUserDataPath)
   const seeded = withOrcaDevOwnedFields(picked, new Map())
   writePrivateFileAtomically(legacyFile, JSON.stringify(Object.fromEntries(seeded)))
+  recordImportedTabs(ledgerPath, session)
   return { profileId, kind: 'seeded' }
 }
 
@@ -127,6 +139,9 @@ function replaceDevDomains(args: {
   devDatabaseFile: string
   profileId: string
   prodPicked: ReadonlyMap<string, unknown>
+  replaced: readonly string[]
+  session: WorkspaceSessionState | null
+  ledgerPath: string
 }): OrcaDevProfileSyncOutcome {
   const { profileId, prodPicked } = args
   let opened: ReturnType<typeof openWritableProfileStateDatabase> | undefined
@@ -134,6 +149,7 @@ function replaceDevDomains(args: {
     opened = openWritableProfileStateDatabase(args.devDatabaseFile, profileId)
     const dev = readProfileStateDomainsWithRevisionFromDatabase(opened.db, [
       'schemaVersion',
+      ORCA_DEV_SESSION_DOMAIN,
       ...ORCA_DEV_OWNED_DOMAINS
     ])
     if (dev.kind === 'unreadable') {
@@ -144,21 +160,58 @@ function replaceDevDomains(args: {
       return { profileId, kind: 'skipped', reason: 'schema-mismatch' }
     }
     const picked = withOrcaDevOwnedFields(prodPicked, dev.values)
+    const session =
+      args.session &&
+      mergedOrcaDevSession(
+        dev.values.get(ORCA_DEV_SESSION_DOMAIN),
+        args.session,
+        readImportedTabs(args.ledgerPath)
+      )
+    const replaced = session
+      ? args.replaced
+      : args.replaced.filter((domain) => domain !== ORCA_DEV_SESSION_DOMAIN)
     // One transaction with a revision fence: a failed copy leaves dev exactly as it was.
     writeProfileStateDomains(opened.db, {
       expectedRevision: dev.revision,
-      replacements: SEEDED_PROFILE_STATE_DOMAINS.filter((domain) => domain !== 'schemaVersion').map(
-        (domain) => ({
-          domain,
-          payload: picked.has(domain) ? JSON.stringify(picked.get(domain)) : null
-        })
-      )
+      replacements: replaced.map((domain) => {
+        const value = domain === ORCA_DEV_SESSION_DOMAIN ? session : picked.get(domain)
+        return { domain, payload: value === undefined ? null : JSON.stringify(value) }
+      })
     })
+    if (session) {
+      recordImportedTabs(args.ledgerPath, args.session)
+    }
     return { profileId, kind: 'synced' }
   } catch (error) {
     return { profileId, kind: 'failed', error: String(error) }
   } finally {
     opened?.db.close()
+  }
+}
+
+/** Tab ids the last sync imported, so the next one can tell prod's tabs from Dev's own. */
+function importedTabLedgerPath(devUserDataPath: string, profileId: string): string {
+  return join(devUserDataPath, 'orca-dev-sync', `${profileId}.imported-tabs.json`)
+}
+
+function readImportedTabs(ledgerPath: string): string[] {
+  try {
+    const parsed: unknown = JSON.parse(readFileSync(ledgerPath, 'utf8'))
+    return Array.isArray(parsed) ? parsed.filter((id) => typeof id === 'string') : []
+  } catch {
+    return []
+  }
+}
+
+/** Best effort: a lost ledger only leaves a tab prod has since closed in Dev, as Dev's own. */
+function recordImportedTabs(ledgerPath: string, session: WorkspaceSessionState | null): void {
+  if (!session) {
+    return
+  }
+  try {
+    writePrivateFileAtomically(ledgerPath, JSON.stringify(importedTabIds(session)))
+  } catch {
+    // The synced data is already committed; the next sync falls back to prod's current tabs.
   }
 }
 

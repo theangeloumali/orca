@@ -5446,6 +5446,7 @@
             "liveCapDetail": "Enough agents are already running on this host. Your session is saved.",
             "pressureDetail": "The host is under heavy load. Your session is saved.",
             "deadlineDetail": "The host was busy restoring other terminals. Your session is saved.",
+            "importedDetail": "Copied from Orca. Resuming opens a fork, so Orca's own conversation is never written to.",
             "title": "Sleeping — click to resume",
             "resume": "Resume",
             "resumeAutomaticRestores": "Resume automatic restores"

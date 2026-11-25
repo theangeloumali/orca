@@ -23,6 +23,7 @@ import { bindStartFreshSpawn } from './spawn/fresh-spawn-start'
 import { bindFreshSpawnFollowReset } from './output/fresh-spawn-follow-reset'
 import { bindReplacedProcessInputModes } from './output/replaced-process-input-modes'
 import { deferHiddenAgentResume } from './spawn/hidden-agent-resume-deferral'
+import { holdImportedProdResume } from './spawn/imported-prod-resume-hold'
 import { attachToMainResumedSleepPane, mainResumedSleepPane } from './spawn/main-resumed-sleep-pane'
 import { startPaneThroughMainThenAttach } from './spawn/main-pane-start-request'
 
@@ -133,6 +134,7 @@ export function bindDeferredColdRestoreAndSnapshot(session: ConnectPanePtySessio
     startup: ColdRestoreAgentResumeStartup | null = session.buildColdRestoreAgentResumeStartup(),
     options: FreshSpawnOptions = {}
   ): Promise<string | null> =>
+    holdImportedProdResume(startup, options, session.enterSpawnDeferredSleep) ||
     deferHiddenAgentResume(session, startup)
       ? Promise.resolve(null)
       : session.spawnColdRestoreAgentResume(startup, options)
