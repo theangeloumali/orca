@@ -221,7 +221,8 @@ jobs:
           # Mirrors upstream's release-mac-build and dev-channel-win-build, minus signing.
           # Apple Silicon only: both of this fork's Macs are arm64, and the x64 slice's
           # terminal-host check needs Rosetta, which fails on GitHub's macOS runners.
-          - os: macos-latest
+          # Pinned: macos-latest jobs sat unassigned until cancelled (4 runs, 2026-11-24).
+          - os: macos-15
             install: pnpm install --frozen-lockfile --cpu=current,arm64
             package: |
               node config/scripts/orcad-distribution/prebuilds/pinned-node-downloads.mjs darwin-arm64
