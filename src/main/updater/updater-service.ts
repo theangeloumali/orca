@@ -32,6 +32,11 @@ const forkUpdater = OFFICIAL_UPDATES_DISABLED
     })
   : null
 
+if (forkUpdater) {
+  // Hoisted declarations; both already route to the fork updater.
+  updater.routeRemoteUpdatesToFork({ download: downloadUpdate, install: quitAndInstall })
+}
+
 export function resolveUpdateInstallMode(isServeMode: boolean): UpdateInstallMode {
   return updater.resolveUpdateInstallMode(isServeMode)
 }
