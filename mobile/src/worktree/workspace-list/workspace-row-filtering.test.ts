@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { NO_WORKSPACE_ROW_FILTERS } from '../../../../src/shared/workspace-view/workspace-row-filters'
 import type { Worktree } from './workspace-list-types'
-import { filterWorktrees } from './workspace-row-filtering'
+import { filterWorktrees, isListNarrowed } from './workspace-row-filtering'
 import { getWorktreeRowIdentity } from '../row-presentation/worktree-host-row-identity'
 
 function row(worktreeId: string, overrides: Partial<Worktree> = {}): Worktree {
@@ -66,5 +66,44 @@ describe('filterWorktrees find', () => {
     expect(filterWorktrees([branchRow], NO_WORKSPACE_ROW_FILTERS, 'feature/login')).toEqual([
       branchRow
     ])
+  })
+})
+
+describe('filterWorktrees under Needs you', () => {
+  it('keeps only the workspaces whose agent waits on you', () => {
+    const waiting = row('wt-waiting', { status: 'permission' })
+    const working = row('wt-working', { status: 'working' })
+    const shown = filterWorktrees(
+      [waiting, working, row('wt-idle')],
+      { ...NO_WORKSPACE_ROW_FILTERS, showOnlyNeedsYou: true },
+      ''
+    )
+    expect(shown.map((w) => w.worktreeId)).toEqual(['wt-waiting'])
+  })
+})
+
+describe('isListNarrowed', () => {
+  it('treats a search, Live or Needs you as narrowing, so empty groups drop out', () => {
+    expect(isListNarrowed('', NO_WORKSPACE_ROW_FILTERS)).toBe(false)
+    expect(isListNarrowed('api', NO_WORKSPACE_ROW_FILTERS)).toBe(true)
+    expect(
+      isListNarrowed('', { ...NO_WORKSPACE_ROW_FILTERS, showOnlyRunningTerminals: true })
+    ).toBe(true)
+    expect(isListNarrowed('', { ...NO_WORKSPACE_ROW_FILTERS, showOnlyNeedsYou: true })).toBe(true)
+  })
+})
+
+describe('filterWorktrees under Needs you', () => {
+  const NEEDS_YOU = { ...NO_WORKSPACE_ROW_FILTERS, showOnlyNeedsYou: true }
+
+  it('keeps only rows whose agent waits on you', () => {
+    const waiting = row('wt-waiting', { status: 'permission' })
+    const shown = filterWorktrees([waiting, row('wt-idle')], NEEDS_YOU, '')
+    expect(shown.map((w) => w.worktreeId)).toEqual(['wt-waiting'])
+  })
+
+  it('keeps every row from a desktop that sends no agent state', () => {
+    const legacy = row('wt-legacy', { status: undefined, agents: undefined })
+    expect(filterWorktrees([legacy], NEEDS_YOU, '').map((w) => w.worktreeId)).toEqual(['wt-legacy'])
   })
 })

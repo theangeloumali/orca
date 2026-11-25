@@ -4,6 +4,7 @@ import type { GlobalSettings } from '../../../../shared/settings/global-settings
 import type { HostOwnedSettings } from '../../../../shared/settings/host-owned-settings'
 import type { VoiceSettings } from '../../../../shared/speech/speech-types'
 import type { ExecutionHostId } from '../../../../shared/execution-host/execution-host'
+import type { HostSectionTint } from '../../../../shared/execution-host/host-setting-overrides'
 import type { WorkspaceCleanupRules } from '../../../../shared/workspace-cleanup/workspace-cleanup-policy'
 import type { SourceControlAiActionDefaults } from '../../../../shared/source-control/ai/recipes/source-control-ai-actions'
 import type { HostNotificationSettings } from '../../../../shared/notifications/notification-settings-types'
@@ -52,7 +53,7 @@ export type RuntimeClientSettings = Pick<
 > & {
   /** Always set; older hosts omit it, so clients must not write it to them (settings.update is strict). */
   workspaceCleanupPolicy: WorkspaceCleanupRules
-  hostSettingOverrides: RuntimeHostDisplayLabelOverrides
+  hostSettingOverrides: RuntimeHostOverrides
   sourceControlAi: RuntimeClientSourceControlAi
   /** This host's Chat or CLI choice for new agents; null on a headless host nobody set one on. Absent on older hosts. */
   nativeChatDefaults: NativeChatDefaultSettings | null
@@ -72,10 +73,13 @@ export type RuntimeClientSourceControlAi = {
   actions: SourceControlAiActionDefaults
 }
 
-/** Safe paired projection: host labels only; filesystem defaults stay host-private. */
-export type RuntimeHostDisplayLabelOverrides = Partial<
-  Record<ExecutionHostId, { displayLabel: string }>
->
+/** Safe paired projection: labels and appearance; filesystem defaults stay host-private. Older phones read displayLabel only. */
+export type RuntimeHostOverride = {
+  displayLabel?: string
+  color?: string
+  sectionTint?: HostSectionTint
+}
+export type RuntimeHostOverrides = Partial<Record<ExecutionHostId, RuntimeHostOverride>>
 
 export type RuntimeClientSettingsUpdate = Pick<
   Partial<GlobalSettings>,

@@ -2,6 +2,8 @@ import { recordCollapsedGroupChanges } from '@/store/slices/ui/collapsed-group-t
 import { isProjectOrPinnedSectionGroupKey } from '../../../../../../shared/sidebar-list/sections/group-keys'
 import type { HostSectionRow } from '../../../../../../shared/sidebar-list/hosts/host-section-rows'
 
+export { areAllProjectsCollapsed } from '../../../../../../shared/sidebar-list/sections/projects-collapsed'
+
 // Machine sections fold with projects; per-host lanes like `pinned:host:x` stay out.
 function isCollapseAllGroupKey(key: string): boolean {
   return key.startsWith('host:') || isProjectOrPinnedSectionGroupKey(key)
@@ -23,13 +25,6 @@ export function getRenderedProjectCollapseKeys(rows: readonly HostSectionRow[]):
     }
   }
   return [...keys]
-}
-
-export function areAllProjectsCollapsed(
-  projectKeys: readonly string[],
-  collapsedGroups: ReadonlySet<string>
-): boolean {
-  return projectKeys.length > 0 && projectKeys.every((key) => collapsedGroups.has(key))
 }
 
 // Expanding clears pinned, machine and every project key, including hidden nested projects.

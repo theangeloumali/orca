@@ -15,8 +15,10 @@ import { UpdaterSetup, type UpdaterSetupOptions } from './lifecycle/updater-setu
 import type { UpdateInstallMode } from './lifecycle/updater-state'
 import { OFFICIAL_UPDATES_DISABLED } from './fork-build-updates'
 import { createForkUpdater, startForkUpdateChecks } from './fork/create-fork-updater'
+import { setDesktopReportUpdateStatus } from '../orca-profiles/cloud-auth/desktop-client-report'
 
 const updater = new UpdaterSetup()
+setDesktopReportUpdateStatus(() => updater.getUpdateStatus())
 // Fork builds update from the fork's own releases; the official updater stays off for them.
 let automaticDownloads: () => boolean = () => true
 // Headless serve hosts have no window to restart, so the fork updater acts only once one exists.
@@ -117,8 +119,20 @@ export function quitAndInstall(): void {
   updater.quitAndInstall()
 }
 
+export function snoozeRequiredUpdate(): Promise<void> {
+  return updater.snoozeRequiredUpdate()
+}
+
 export function isQuittingForUpdate(): boolean {
   return updater.isQuittingForUpdate()
+}
+
+export function isNativeUpdateInstallUnderWay(): boolean {
+  return updater.isNativeUpdateInstallUnderWay()
+}
+
+export function applyTeamPolicyBeforeQuit(): void {
+  updater.applyTeamPolicyBeforeQuit()
 }
 
 export async function getLinuxPackageInstallInstructions(): Promise<LinuxPackageInstallInstructions> {

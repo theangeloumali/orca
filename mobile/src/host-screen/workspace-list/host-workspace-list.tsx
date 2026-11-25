@@ -34,6 +34,7 @@ import { hostScreenStyles as styles } from '../host-screen-styles'
 import { useRepoLookById } from '../catalog/host-repo-looks'
 import { HostSectionHeader } from './host-section-header'
 import { useSlowPendingKeys } from './use-slow-pending-keys'
+import { useHostListForkParts } from './use-host-list-fork-parts'
 import { useHostMutationDrafts } from '../../query/host-mutation-drafts'
 import { workspaceRenameDraftKey } from '../workspace-actions/workspace-rename-sheet'
 import type { HostScreenController } from '../use-host-screen-controller'
@@ -121,9 +122,27 @@ export function HostWorkspaceList({
   const { openWorktreeSession } = actions
   const statusLive = connState === 'connected'
 
+  const { onRefresh: refreshCatalog } = catalog
+  const onCatalogChanged = useCallback(() => void refreshCatalog(), [refreshCatalog])
+  const fork = useHostListForkParts({
+    sections,
+    displayWorktrees,
+    collapsedGroups,
+    pendingCollapseKeys,
+    settings,
+    state,
+    client,
+    connState,
+    onCatalogChanged
+  })
+  const { renderMachineHeader, toggleSubtree } = fork
   const renderSectionHeader = useCallback(
     ({ section }: { section: Section }) => {
       const collapseKey = section.collapseKey ?? section.key
+      const machineHeader = renderMachineHeader(section)
+      if (machineHeader) {
+        return machineHeader
+      }
       return (
         bots.header(section, collapsedGroups, pendingCollapseKeys, toggleCollapsed) ?? (
           <HostSectionHeader
@@ -139,6 +158,12 @@ export function HostWorkspaceList({
             groupByRepo={groupBy === 'repo'}
             repoLook={groupBy === 'repo' && section.repo ? repoLookById.get(section.repo.id) : null}
             onToggle={toggleCollapsed}
+            foldProjects={section.groupFold?.projects}
+            foldNeedsYou={section.groupFold?.needsYou}
+            subtreeKeys={section.groupFold?.subtreeKeys}
+            onToggleSubtree={toggleSubtree}
+            activityWorking={section.projectActivity?.working}
+            activityNeedsYou={section.projectActivity?.needsYou}
           />
         )
       )
@@ -150,7 +175,9 @@ export function HostWorkspaceList({
       groupBy,
       repoLookById,
       toggleCollapsed,
-      bots
+      bots,
+      renderMachineHeader,
+      toggleSubtree
     ]
   )
 
@@ -160,7 +187,7 @@ export function HostWorkspaceList({
   )
 
   const renderItem = useCallback(
-    ({ item: { row: item, view } }: { item: WorkspaceListItem }) =>
+    ({ item: { row: item, view }, section }: { item: WorkspaceListItem; section: Section }) =>
       bots.groupRow(item, view, isReadOnly) ?? (
         <WorktreeListRow
           item={item}
@@ -179,6 +206,8 @@ export function HostWorkspaceList({
           onLongPress={item.botHome === true || view.botFacts ? undefined : setActionTarget}
           onToggleLineage={toggleWorktreeLineage}
           unsavedName={unsavedRename(renameDrafts, hostId, item)}
+          pairedHostId={hostId ?? null}
+          machineColor={section.machineColor ?? null}
         />
       ),
     [
@@ -271,6 +300,7 @@ export function HostWorkspaceList({
       </Presence>
 
       {hasRows ? null : pageTitle?.element}
+      {hasRows ? null : fork.quickFilters}
 
       {controller.feed?.kind === 'reopen' ? (
         <HostWorkspaceListReopen aboveRows={sections.length > 0} />
@@ -284,6 +314,7 @@ export function HostWorkspaceList({
           ListHeaderComponent={
             <>
               {pageTitle?.element}
+              {fork.quickFilters}
               {offlineBanner ? (
                 <View style={styles.offlineBanner}>
                   <HostOfflineBanner

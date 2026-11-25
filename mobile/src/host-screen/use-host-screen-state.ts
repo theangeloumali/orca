@@ -11,7 +11,11 @@ import {
 } from '../worktree/workspace-list/workspace-view-settings'
 
 import type { ServedProjectSections } from '../../../src/shared/sidebar-list/catalog/project-section-catalog-schema'
-import type { SectionRepo, Worktree } from '../worktree/workspace-list/workspace-list-types'
+import type {
+  HostAppearanceOverride,
+  SectionRepo,
+  Worktree
+} from '../worktree/workspace-list/workspace-list-types'
 import {
   NO_SERVER_WORKSPACES,
   type ServerWorkspaces
@@ -60,6 +64,9 @@ export function useHostScreenState(
     new Map()
   )
   const [hostLabelById, setHostLabelById] = useState<Map<ExecutionHostId, string>>(new Map())
+  const [hostAppearanceById, setHostAppearanceById] = useState<
+    Map<ExecutionHostId, HostAppearanceOverride>
+  >(new Map())
   const [hostHealthById, setHostHealthById] = useState<Map<ExecutionHostId, ExecutionHostHealth>>(
     new Map()
   )
@@ -87,6 +94,7 @@ export function useHostScreenState(
     actionError,
     error,
     hostLabelById,
+    hostAppearanceById,
     hostHealthById,
     hostName,
     hostPlatform,
@@ -108,6 +116,7 @@ export function useHostScreenState(
     setActionError,
     setError,
     setHostLabelById,
+    setHostAppearanceById,
     setHostHealthById,
     setHostName,
     setHostPlatform,

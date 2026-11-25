@@ -120,19 +120,10 @@ export function createLastActiveAtSelector(): LastActiveAtSelector {
   }
 }
 
-/** Identifies a set of project rows; see {@link isIdleHintDismissed} for when a dismissal holds. */
-export function getRepoRowIdentitiesKey(idleRepos: readonly Repo[]): string {
-  return idleRepos.map(getRepoRowIdentity).sort().join('\n')
-}
-
-/** A dismissal holds while the idle set only shrinks; a newly idle project brings the hint back. */
-export function isIdleHintDismissed(idleKey: string, dismissedKey: string | null): boolean {
-  if (dismissedKey === null) {
-    return false
-  }
-  const dismissed = new Set(dismissedKey.split('\n'))
-  return idleKey.split('\n').every((identity) => dismissed.has(identity))
-}
+export {
+  getRepoRowIdentitiesKey,
+  isIdleHintDismissed
+} from '../../../../../shared/project/catalog/idle-hint-dismissal'
 
 export function selectIdleListedRepos(
   repos: readonly Repo[],

@@ -836,6 +836,10 @@
             "keepForkUpToDate": "Keep Fork Up to Date"
           }
         },
+        "serverList": {
+          "updatesCount_one": "{{count}} update",
+          "updatesCount_other": "{{count}} updates"
+        },
         "sshHostServer": {
           "automationsLeftDisabled_one": "This host’s Orca server took over {{count}} automation but couldn’t turn it back on. Turn it on in Automations.",
           "automationsLeftDisabled_other": "This host’s Orca server took over {{count}} automations but couldn’t turn them back on. Turn them on in Automations.",
@@ -929,12 +933,6 @@
           "moreLoadedPaths": "and {{value0}} more loaded paths",
           "moreLoadedPaths_one": "and {{count}} more loaded path",
           "moreLoadedPaths_other": "and {{count}} more loaded paths"
-        },
-        "DeleteWorktreeLineageNotice": {
-          "alsoDeletesChildren_one": "Deleting this workspace also deletes {{count}} child workspace.",
-          "alsoDeletesChildren_other": "Deleting this workspace also deletes {{count}} child workspaces.",
-          "moreChildren_one": "+{{count}} more",
-          "moreChildren_other": "+{{count}} more"
         },
         "HostRemoveDialog": {
           "alsoRemoveWorkspaces_one": "Also remove this workspace from Orca",
@@ -1514,6 +1512,7 @@
       "botMissing": "The bot this automation runs as no longer exists.",
       "botPaused": "{{bot}} is paused, so Orca skipped this run.",
       "botsOff": "Bots are turned off in Settings, so Orca skipped this run.",
+      "botsOffByTeam": "Bots are turned off by your team, so Orca skipped this run.",
       "destinationChanged": "The automation destination changed before this run could launch.",
       "hooksReviewBlocked": "The agent is waiting for someone to review new or changed hooks (\"Hooks need review\"). Open this run and trust them, or remove them. Scheduled runs keep going and succeed once nothing needs review.",
       "legacyTwinHosts": "This automation was saved before Orca tracked which host it runs on, and its project is on more than one host. Open the automation and pick the host it should run on.",
@@ -1754,6 +1753,7 @@
       "toolGone": "This bot no longer has that tool.",
       "toolNameTaken": "This bot already has a tool named {{name}}.",
       "toolNameTakenByAgent": "Your {{agent}} already has a tool named {{name}}, which this bot gets too. Pick another name with --name.",
+      "toolNameTakenByCodexStdio": "Your Codex already has a local tool named {{name}}, so this bot's {{name}} can't run. Rename this bot's tool.",
       "toolNeedsNoSignIn": "{{name}} uses its saved values and needs no sign-in.",
       "toolNotFound": "This bot has no tool named {{name}}.",
       "toolNotUpdated": "The tool was not updated.",
@@ -1779,14 +1779,6 @@
     "groups": {
       "allBotsCount": "All bots · {{count}}",
       "correctMention": "Correct mention",
-      "items": {
-        "outsideRoom_one": "{{count}} more outside this room",
-        "outsideRoom_other": "{{count}} more outside this room",
-        "outsideThread_one": "{{count}} more outside this thread",
-        "outsideThread_other": "{{count}} more outside this thread",
-        "outside_one": "{{count}} more outside this group",
-        "outside_other": "{{count}} more outside this group"
-      },
       "mentionedCount": "{{count}} mentioned",
       "remoteAsked": "Asked on {{computer}}",
       "remoteMayAnswer": "May still answer on {{computer}}.",
@@ -1810,10 +1802,6 @@
     "items": {
       "activity": {
         "anotherAgent": "Another agent"
-      },
-      "ask": {
-        "heldCount_one": "{{count}} answer not sent yet, <send>send anyway</send>",
-        "heldCount_other": "{{count}} answers not sent yet, <send>send anyway</send>"
       },
       "pill": {
         "moveCount_one": "Move {{count}} item to",
@@ -1890,10 +1878,6 @@
       "matchCount_other": "{{count}} matches",
       "pausedMatches_one": "{{count}} paused match",
       "pausedMatches_other": "{{count}} paused matches"
-    },
-    "section": {
-      "showMore_one": "Show {{count}} more bot",
-      "showMore_other": "Show {{count}} more bots"
     },
     "settingsView": {
       "memoryFiles_one": "{{count}} file",
@@ -2617,6 +2601,7 @@
           "github": {
             "assigned": "Assigned",
             "ci_failed": "CI failed",
+            "ci_finished": "CI finished",
             "ci_passed": "CI passed",
             "comment": "Comment",
             "deploy_finished": "Deploy finished",
@@ -2811,6 +2796,8 @@
         "attachmentsExpired": "{{names}} expired.",
         "backgroundTaskNotStopped": "The background task wasn't stopped.",
         "backgroundTasksNotStopped": "The background tasks weren't stopped.",
+        "botToolsGatewayOutdated": "{{agent}}'s gateway is still running an older copy of Orca's plugin, so this bot's tools can't act as the bot. Run `hermes gateway stop`, then start a new chat.",
+        "botToolsNeedStatusHooks": "{{agent}} bots need Agent status hooks: they are how a bot's tools act as the bot. Turn them on for {{agent}} in Settings → Agents, then start a new chat.",
         "cancelUnconfirmed": "Cancellation was not confirmed.",
         "cancelled": "This message was withdrawn before the agent started it.",
         "chatClosed": "The chat closed before this message was sent.",
@@ -3160,7 +3147,7 @@
         "runWebSearch_other": "Searched the web {{count}} times"
       },
       "toolAdded": {
-        "heading": "Added a tool",
+        "added": "Added",
         "remove": "Remove",
         "removed": "Removed"
       },
@@ -3173,12 +3160,16 @@
         "agentCount_other": "{{count}} agents",
         "clearAllLabel_one": "Clear failed worker",
         "clearAllLabel_other": "Clear all {{count}} failed workers",
+        "cleared_one": "Cleared 1 worker",
+        "cleared_other": "Cleared {{count}} workers",
         "commandCount_one": "{{count}} command",
         "commandCount_other": "{{count}} commands",
         "monitorCount_one": "{{count}} monitor",
         "monitorCount_other": "{{count}} monitors",
         "newQuestions_one": "{{count}} new worker question waiting on you",
         "newQuestions_other": "{{count}} new worker questions waiting on you",
+        "pillLabel_one": "{{count}} worker, latest: {{title}}",
+        "pillLabel_other": "{{count}} workers, latest: {{title}}",
         "taskCount_one": "{{count}} task",
         "taskCount_other": "{{count}} tasks",
         "workerCount_one": "{{count}} worker",
@@ -3208,6 +3199,8 @@
         "compactAfterSending": "Your earlier message is still being sent. Run /compact once it has gone.",
         "continuationSuperseded": "This chat has moved on. Check the latest messages before continuing.",
         "conversationCleared": "This conversation has been cleared.",
+        "diskFull": "The disk on the computer running this chat is full.",
+        "freeDiskSpace": "Free up space on that disk, then try again.",
         "goalsUnsupported": "This agent doesn't support goals.",
         "historyUnavailable": "Orca couldn't open this chat's history right now.",
         "historyUnreadable": "Orca couldn't read this chat's saved history.",
@@ -3340,10 +3333,6 @@
     "workspace": {
       "cleanup": {
         "browse": {
-          "forceDeleteRisk_one": "{{count}} workspace currently shows risk and may need a force delete",
-          "forceDeleteRisk_other": "{{count}} workspaces currently show risk and may need a force delete",
-          "selectAllSafetyChecked_one": "Select {{count}} safety-checked workspace",
-          "selectAllSafetyChecked_other": "Select all {{count}} safety-checked workspaces",
           "selectionVanishedCount_one": "{{count}} selected workspace no longer exists.",
           "selectionVanishedCount_other": "{{count}} selected workspaces no longer exist.",
           "selectionWithheldCount_one": "{{count}} selected workspace is hidden by the current filters and was deselected.",
@@ -3352,8 +3341,24 @@
           "workspaceCount_other": "{{count}} workspaces"
         },
         "confirm": {
-          "deletingTitle_one": "Deleting {{count}} workspace",
-          "deletingTitle_other": "Deleting {{count}} workspaces"
+          "title_one": "Delete {{count}} workspace?",
+          "title_other": "Delete {{count}} workspaces?"
+        },
+        "deleting": {
+          "title_one": "Deleting {{count}} workspace",
+          "title_other": "Deleting {{count}} workspaces"
+        },
+        "done": {
+          "failedLine_one": "{{count}} couldn't be deleted.",
+          "failedLine_other": "{{count}} couldn't be deleted."
+        },
+        "footer": {
+          "delete_one": "Delete {{count}} workspace",
+          "delete_other": "Delete {{count}} workspaces"
+        },
+        "row": {
+          "uncommittedFiles_one": "{{count}} uncommitted file",
+          "uncommittedFiles_other": "{{count}} uncommitted files"
         },
         "scan": {
           "multipleErrorsCount_one": "Could not check {{count}} repository ({{names}}). Some workspaces may be missing. Refresh to try again.",

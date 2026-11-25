@@ -28,7 +28,7 @@ import { withServerHosts } from '../../worktree/execution-hosts/server-workspace
 import { hostScreenStyles as styles } from '../host-screen-styles'
 import type { HostScreenController } from '../use-host-screen-controller'
 import { ListGroup, SectionHeader } from '../../components/list/ListGroup'
-import { DrillRow } from './workspace-option-rows'
+import { DrillRow, SwitchRow } from './workspace-option-rows'
 import {
   WORKSPACE_OPTION_CONTROLS,
   type WorkspaceOptionHost,
@@ -270,6 +270,19 @@ function WorkspaceOptionsContent({
           </View>
         )
       })}
+      {hosts.length > 1 && (
+        <ListGroup style={styles.optionGroup}>
+          <SwitchRow
+            label={t('hostScreen.workspaceOptionsSheet.machines', 'Machines')}
+            detail={t(
+              'hostScreen.workspaceOptionsSheet.machinesDetail',
+              'Group workspaces by computer on this phone'
+            )}
+            value={state.view.groupByMachine !== false}
+            onChange={settings.setGroupByMachine}
+          />
+        </ListGroup>
+      )}
     </>
   )
 

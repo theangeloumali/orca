@@ -62,6 +62,12 @@ export function hexToRgb(hex: string): Rgba {
   return [r, g, b, 1]
 }
 
+/** A hex color as a CSS rgba() string at the given alpha (0-1). */
+export function hexToRgba(hex: string, alpha: number): string {
+  const [red, green, blue] = hexToRgb(hex)
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`
+}
+
 export function rgbaToHex([r, g, b]: Rgba): string {
   return `#${[r, g, b]
     .map((channel) =>

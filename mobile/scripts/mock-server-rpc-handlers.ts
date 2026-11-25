@@ -15,14 +15,27 @@ import { handleMockAccountRequest } from './mock-server-account-rpc'
 import { handleMockNativeChatRequest } from './mock-server-native-chat-scenario'
 import { handleMockSessionTabsRequest } from './mock-server-session-tabs-fixture'
 import { handleMockTerminalRequest } from './mock-server-terminal-stream'
-import { createMockRepos, createMockWorktrees, readScenarioNumber } from './mobile-lag-scenario'
+import {
+  createMockRepos,
+  createMockWorktrees,
+  MOCK_SECOND_MACHINE_ID,
+  readScenarioNumber
+} from './mobile-lag-scenario'
 
 const MOCK_REPO_COUNT = readScenarioNumber('MOCK_REPO_COUNT', 2)
 const MOCK_WORKTREE_COUNT = readScenarioNumber('MOCK_WORKTREE_COUNT', 2)
 const MOCK_RPC_DELAY_MS = readScenarioNumber('MOCK_RPC_DELAY_MS', 0)
 
 const FAKE_REPOS = createMockRepos(MOCK_REPO_COUNT)
-let fakeWorktrees = createMockWorktrees(FAKE_REPOS, MOCK_WORKTREE_COUNT)
+const MOCK_MACHINES = process.env.MOCK_MACHINES === '1'
+let fakeWorktrees = createMockWorktrees(FAKE_REPOS, MOCK_WORKTREE_COUNT, Date.now(), MOCK_MACHINES)
+// Labels and colors as the fork desktop's settings.get shares them.
+const MOCK_HOST_OVERRIDES = MOCK_MACHINES
+  ? {
+      local: { color: '#3b82f6' },
+      [MOCK_SECOND_MACHINE_ID]: { displayLabel: 'M1 Max', color: '#22c55e' }
+    }
+  : undefined
 
 // Mutable commands let mock-backed mobile sheet add/edit/delete like a paired desktop.
 let fakeQuickCommands: TerminalQuickCommand[] = [
@@ -172,7 +185,8 @@ export function handleRequest(
           settings: {
             defaultTuiAgent: 'codex',
             disabledTuiAgents: [],
-            agentCmdOverrides: {}
+            agentCmdOverrides: {},
+            ...(MOCK_HOST_OVERRIDES ? { hostSettingOverrides: MOCK_HOST_OVERRIDES } : {})
           }
         })
       )

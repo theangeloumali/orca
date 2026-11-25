@@ -14,7 +14,7 @@ import { checksLabel } from '../review/workspace-review-check-label'
 import StatusIndicator from './StatusIndicator'
 import { useWorktreeActivityStatus } from '../activity/use-worktree-activity-status'
 import { laneStatusWithLineage } from './worktree-card-lineage-lane-status'
-import { getSessionHighlight } from '../activity/session-highlight'
+import { getSessionHighlight } from '../../../../../../shared/worktree/row-display/session-highlight'
 import { useShallow } from 'zustand/react/shallow'
 import { useAppStore } from '@/store/index'
 import {

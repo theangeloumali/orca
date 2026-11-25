@@ -4,6 +4,7 @@ import type { ExecutionHostId } from './execution-host'
 import {
   clearHostColor,
   HOST_COLOR_NONE,
+  pickHostAppearance,
   resolveHostColor,
   resolveHostSectionTint,
   setHostColor,
@@ -62,5 +63,14 @@ describe('host appearance', () => {
 
   it('gives a host missing from the order the neutral color, not the first preset', () => {
     expect(resolveHostColor({}, 'ssh:unlisted', order)).toBe(DEFAULT_REPO_BADGE_COLOR)
+  })
+})
+
+describe('pickHostAppearance', () => {
+  it('keeps a stored color and a known tint, and drops everything else', () => {
+    const stored = { color: '#22c55e', sectionTint: 'strong', displayLabel: 'M1' }
+    expect(pickHostAppearance(stored)).toEqual({ color: '#22c55e', sectionTint: 'strong' })
+    expect(pickHostAppearance({ color: '', sectionTint: 'loud' })).toEqual({})
+    expect(pickHostAppearance({ color: 7 })).toEqual({})
   })
 })

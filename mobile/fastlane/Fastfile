@@ -10,15 +10,18 @@ default_platform(:ios)
 MOBILE_ROOT = File.expand_path("..", __dir__)
 # Fastlane runs from mobile/fastlane regardless of the caller’s working directory.
 APP_CONFIG_PATH = File.join(MOBILE_ROOT, "app.json")
-WORKSPACE = File.join(MOBILE_ROOT, "ios", "Orca.xcworkspace")
+# Prebuild names the native project after the app name without spaces ("Orca ZK" -> OrcaZK).
+IOS_PROJECT_NAME = ENV.fetch("IOS_PROJECT_NAME", "OrcaZK")
+WORKSPACE = File.join(MOBILE_ROOT, "ios", "#{IOS_PROJECT_NAME}.xcworkspace")
 BUILD_OUTPUT_DIRECTORY = File.join(MOBILE_ROOT, "build")
-SCHEME = "Orca"
-BUNDLE_ID = "com.stably.orca.mobile"
-TESTFLIGHT_GROUPS = ["peeps"].freeze
+SCHEME = IOS_PROJECT_NAME
+# The fork ships its own app (scripts/fork-app-identity.cjs); IOS_BUNDLE_IDENTIFIER must match its ORCA_IOS_BUNDLE_ID.
+BUNDLE_ID = ENV.fetch("IOS_BUNDLE_IDENTIFIER", "com.zkidzdev.orca.mobile")
+TESTFLIGHT_GROUPS = ENV.fetch("TESTFLIGHT_GROUPS", "peeps").split(",").map(&:strip).reject(&:empty?).freeze
 DEFAULT_TESTFLIGHT_CHANGELOG = "Latest Orca Mobile updates and fixes.".freeze
 TESTFLIGHT_PROCESSING_TIMEOUT_SECONDS = 20 * 60
-# Google's Play app signing key for dev.orca.app. Play and GitHub installs both carry it, so each updates the other.
-PLAY_APP_SIGNING_CERT_SHA256 = "A0:A6:67:69:42:B2:DE:E1:F3:5F:B0:F6:FC:A0:AE:63:B5:65:4E:42:6C:A3:1A:DA:4C:F9:BE:09:2B:D7:DA:07".freeze
+# The Play app signing key of the package these lanes ship; the fork has no Play app until one is set.
+PLAY_APP_SIGNING_CERT_SHA256 = ENV.fetch("PLAY_APP_SIGNING_CERT_SHA256", "").freeze
 PLAY_APK_DOWNLOAD_ATTEMPTS = 20
 PLAY_APK_DOWNLOAD_RETRY_SECONDS = 30
 
@@ -49,8 +52,9 @@ def load_mobile_app_config
   JSON.parse(File.read(APP_CONFIG_PATH))
 end
 
+# app.json keeps upstream's package; app.config.js swaps in the fork's (scripts/fork-app-identity.cjs).
 def android_package
-  load_mobile_app_config.fetch("expo").fetch("android").fetch("package")
+  ENV.fetch("ORCA_ANDROID_PACKAGE", "com.zkidzdev.orca")
 end
 
 # The V3.0 signer is the one Android checks for updates; V3.2 (minSdk 37 PQC) and the source stamp also print digests.
@@ -61,6 +65,7 @@ def verify_play_signed_apk(apk)
   UI.user_error!("apksigner not found under ANDROID_HOME") unless apksigner
   output = sh(apksigner, "verify", "--print-certs", apk, log: false)
   digests = output.scan(/^V3\.0 Signer: certificate SHA-256 digest: (\h+)$/).flatten.uniq
+  UI.user_error!("Set PLAY_APP_SIGNING_CERT_SHA256 to the Play app signing key") if PLAY_APP_SIGNING_CERT_SHA256.empty?
   expected = PLAY_APP_SIGNING_CERT_SHA256.delete(":").downcase
   unless digests == [expected]
     UI.user_error!("#{apk} V3.0 signer #{digests.inspect} is not Google's Play app signing key #{expected}")

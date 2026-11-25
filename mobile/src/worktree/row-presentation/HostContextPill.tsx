@@ -1,4 +1,5 @@
 import { Text, View } from 'react-native'
+import { ColorDot } from '../../components/feedback/ColorDot'
 import type { ExecutionHostId } from '../../../../src/shared/execution-host/execution-host'
 import { HostKindIcon } from '../../components/icons/HostKindIcon'
 import { worktreeListRowStyles as styles } from './worktree-list-row-styles'
@@ -7,17 +8,21 @@ import { worktreeListRowStyles as styles } from './worktree-list-row-styles'
 export function HostContextPill({
   hostId,
   label,
-  healthLabel
+  healthLabel,
+  dotColor = null
 }: {
   hostId: ExecutionHostId | undefined
   label: string | undefined
   healthLabel: string | undefined
+  /** The machine's color, so the pill matches its section header. */
+  dotColor?: string | null
 }) {
   return (
     <View
       style={[styles.childBadge, styles.hostBadge]}
       accessibilityLabel={[label, healthLabel].filter(Boolean).join(', ')}
     >
+      {dotColor ? <ColorDot color={dotColor} /> : null}
       <HostKindIcon hostId={hostId} size={10} />
       {label ? (
         <Text style={[styles.childBadgeText, styles.hostBadgeText]} numberOfLines={1}>
