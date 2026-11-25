@@ -183,7 +183,7 @@ function isChatTab(tab: Pick<Tab, 'contentType'>): boolean {
 }
 
 /** Chat tabs, and the groups, focus and sleeping records that name them; they stay local. */
-function withoutChatTabs(session: WorkspaceSessionState): WorkspaceSessionState {
+export function withoutChatTabs(session: WorkspaceSessionState): WorkspaceSessionState {
   const chatIds = new Set(
     Object.values(session.unifiedTabs ?? {}).flatMap((tabs) =>
       tabs.filter(isChatTab).map((tab) => tab.id)

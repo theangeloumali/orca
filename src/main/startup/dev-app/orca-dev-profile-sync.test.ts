@@ -1,4 +1,13 @@
-import { mkdirSync, mkdtempSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  writeFileSync
+} from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, relative } from 'node:path'
@@ -316,5 +325,185 @@ describe('syncOrcaDevProfilesFromProd', () => {
     expect(report).toMatchObject({ kind: 'done', indexAdded: [PROFILE_ID] })
     const devIndex = JSON.parse(await readFile(join(paths.dev, 'orca-profile-index.json'), 'utf8'))
     expect(devIndex).toEqual(snapshot)
+  })
+})
+
+const WORKTREE = 'wt-1::/repo'
+const LIVE_PTY = `${WORKTREE}@@0a1b2c3d`
+const PANE_KEY = 'tab-1:leaf-1'
+const providerSession = { key: 'session_id', id: 'claude-session-1', cwd: '/repo' }
+
+function unifiedTab(id: string, contentType: 'terminal' | 'agent-session') {
+  const tab = { id, entityId: id, groupId: 'group-1', worktreeId: WORKTREE, contentType }
+  return { ...tab, label: id, customLabel: null, color: null, sortOrder: 0, createdAt: 1 }
+}
+
+function sessionWith(ptyId: string, state: 'working' | 'done') {
+  return {
+    activeRepoId: 'prod-repo',
+    activeWorktreeId: WORKTREE,
+    activeTabId: 'tab-1',
+    tabsByWorktree: {
+      [WORKTREE]: [
+        {
+          id: 'tab-1',
+          ptyId,
+          worktreeId: WORKTREE,
+          title: 'claude',
+          customTitle: null,
+          color: null,
+          sortOrder: 0,
+          createdAt: 1
+        }
+      ]
+    },
+    terminalLayoutsByTabId: {
+      'tab-1': {
+        root: { type: 'leaf', leafId: 'leaf-1' },
+        activeLeafId: 'leaf-1',
+        expandedLeafId: null,
+        ptyIdsByLeafId: { 'leaf-1': ptyId }
+      }
+    },
+    unifiedTabs: {
+      [WORKTREE]: [unifiedTab('tab-1', 'terminal'), unifiedTab('chat-1', 'agent-session')]
+    },
+    tabGroups: {
+      [WORKTREE]: [
+        { id: 'group-1', worktreeId: WORKTREE, activeTabId: 'tab-1', tabOrder: ['tab-1', 'chat-1'] }
+      ]
+    },
+    terminalPtyIncarnationsByPaneKey: { [PANE_KEY]: 'incarnation-1' },
+    activeConnectionIdsAtShutdown: ['ssh-1'],
+    remoteSessionIdsByTabId: { 'tab-1': 'remote-1' },
+    sleepingAgentSessionsByPaneKey: {
+      [PANE_KEY]: {
+        paneKey: PANE_KEY,
+        tabId: 'tab-1',
+        worktreeId: WORKTREE,
+        agent: 'claude',
+        providerSession,
+        connectionId: null,
+        prompt: 'ship it',
+        state,
+        capturedAt: 1,
+        updatedAt: 1,
+        origin: 'live'
+      }
+    }
+  }
+}
+
+const prodWithSessions = {
+  ...prodState,
+  workspaceSession: sessionWith(LIVE_PTY, 'working'),
+  claudeLivePtySessionIds: [LIVE_PTY],
+  sshRemotePtyLeases: [{ ptyId: LIVE_PTY }]
+}
+
+// The -shm is SQLite's shared WAL index, which every reader updates; the data lives in the db and WAL.
+function hashTree(directory: string): Map<string, string> {
+  return new Map(
+    listFiles(directory)
+      .filter((name) => !name.endsWith('-shm'))
+      .map((name) => [
+        name,
+        createHash('sha256')
+          .update(readFileSync(join(directory, name)))
+          .digest('hex')
+      ])
+  )
+}
+
+describe('syncOrcaDevProfilesFromProd sessions', () => {
+  it('carries every prod tab and agent stopped, with no live PTY or lease ids', () => {
+    const paths = makeUserDataPaths()
+    writeProfile(paths.prod, prodWithSessions)
+    writeProfile(paths.dev, { schemaVersion: 7 })
+
+    syncOrcaDevProfilesFromProd({ prodUserDataPath: paths.prod, devUserDataPath: paths.dev })
+
+    const dev = readDomains(paths.dev, [
+      'workspaceSession',
+      'claudeLivePtySessionIds',
+      'sshRemotePtyLeases'
+    ])
+    expect(dev.has('claudeLivePtySessionIds')).toBe(false)
+    expect(dev.has('sshRemotePtyLeases')).toBe(false)
+    const session = dev.get('workspaceSession')
+    expect(JSON.stringify(session)).not.toContain('@@')
+    expect(session).toMatchObject({
+      activeTabId: 'tab-1',
+      tabsByWorktree: { [WORKTREE]: [{ id: 'tab-1', ptyId: null }] },
+      terminalLayoutsByTabId: { 'tab-1': { activeLeafId: 'leaf-1' } },
+      sleepingAgentSessionsByPaneKey: {
+        [PANE_KEY]: {
+          providerSession,
+          origin: 'worktree-sleep',
+          state: 'done',
+          restoreOnTabOpenOnly: true
+        }
+      }
+    })
+    // Native chats live in the journal, which stays in prod.
+    expect(session).toMatchObject({
+      unifiedTabs: { [WORKTREE]: [{ id: 'tab-1' }] },
+      tabGroups: { [WORKTREE]: [{ tabOrder: ['tab-1'] }] }
+    })
+    expect(JSON.stringify(session)).not.toContain('chat-1')
+    expect(session).not.toHaveProperty('terminalPtyIncarnationsByPaneKey')
+    expect(session).not.toHaveProperty('activeConnectionIdsAtShutdown')
+    expect(session).not.toHaveProperty('remoteSessionIdsByTabId')
+  })
+
+  it('seeds a first launch with the stopped session', async () => {
+    const paths = makeUserDataPaths()
+    writeProfile(paths.prod, prodWithSessions)
+
+    syncOrcaDevProfilesFromProd({ prodUserDataPath: paths.prod, devUserDataPath: paths.dev })
+
+    const legacy = JSON.parse(
+      await readFile(join(paths.dev, 'profiles', PROFILE_ID, 'orca-data.json'), 'utf8')
+    )
+    expect(JSON.stringify(legacy)).not.toContain('@@')
+    expect(legacy).not.toHaveProperty('claudeLivePtySessionIds')
+    expect(legacy.workspaceSession.sleepingAgentSessionsByPaneKey[PANE_KEY]).toMatchObject({
+      state: 'done',
+      restoreOnTabOpenOnly: true
+    })
+  })
+
+  it("never changes prod's bytes while prod holds its database open", () => {
+    const paths = makeUserDataPaths()
+    const prodDb = openProfileWith(paths.prod, prodWithSessions)
+    writeProfile(paths.dev, { schemaVersion: 7 })
+    try {
+      const before = hashTree(paths.prod)
+      syncOrcaDevProfilesFromProd({ prodUserDataPath: paths.prod, devUserDataPath: paths.dev })
+      expect(hashTree(paths.prod)).toEqual(before)
+    } finally {
+      prodDb.close()
+    }
+  })
+
+  it("keeps Dev's previous session when the copy fails mid-write", () => {
+    const paths = makeUserDataPaths()
+    writeProfile(paths.prod, prodWithSessions)
+    const devSession = sessionWith('', 'done')
+    const devDb = openProfileWith(paths.dev, { schemaVersion: 7, workspaceSession: devSession })
+    devDb.exec(
+      `CREATE TRIGGER fail_settings_insert BEFORE INSERT ON profile_state_documents
+       WHEN NEW.domain = 'settings' BEGIN SELECT RAISE(ABORT, 'disk full'); END`
+    )
+    devDb.close()
+    const before = readDomains(paths.dev, ['workspaceSession']).get('workspaceSession')
+
+    const report = syncOrcaDevProfilesFromProd({
+      prodUserDataPath: paths.prod,
+      devUserDataPath: paths.dev
+    })
+
+    expect(report).toMatchObject({ profiles: [{ profileId: PROFILE_ID, kind: 'failed' }] })
+    expect(readDomains(paths.dev, ['workspaceSession']).get('workspaceSession')).toEqual(before)
   })
 })
