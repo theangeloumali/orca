@@ -6,13 +6,17 @@ import {
   isSeededSessionField,
   isSessionField
 } from '../../persistence/moving-wsl-projects/terminal-state/wsl-move-session-rewrite'
+import { editorTabShowsFile } from '../../../shared/workspace-layout/editor-tabs/workspace-layout-editor-tab-file'
 import { collectTabGroupLayoutGroupIds } from '../../../shared/workspace-layout/tab-groups/tab-group-moves'
 import { WORKSPACE_SESSION_FIELD_OWNERSHIP } from '../../../shared/workspace-session/workspace-session-host-field-ownership'
 import {
   isWorkspaceSessionRecord,
   type WorkspaceSessionRecord
 } from '../../../shared/workspace-session/workspace-session-host-records'
-import { paneBelongsToTabs } from '../../../shared/workspace-session/workspace-session-pane-ownership'
+import {
+  ownedEditorFileId,
+  paneBelongsToTabs
+} from '../../../shared/workspace-session/workspace-session-pane-ownership'
 import { safeParseWorkspaceSession } from '../../../shared/workspace-session/workspace-session-schema'
 import type { WorkspaceSessionState } from '../../../shared/workspace-session/workspace-session-state-types'
 import { filterWorkspaceSessionTabs } from '../../../shared/workspace-session/workspace-session-tab-filter'
@@ -37,9 +41,9 @@ export function mergedOrcaDevSession(
   if (!dev?.success) {
     return null
   }
-  const devForks = devForkTabIds(dev.data)
+  const devOwned = devOwnedTabIds(dev.data)
   const imported = new Set(
-    [...priorImportedTabIds, ...importedTabIds(prod)].filter((tabId) => !devForks.has(tabId))
+    [...priorImportedTabIds, ...importedTabIds(prod)].filter((tabId) => !devOwned.has(tabId))
   )
   const merged: WorkspaceSessionRecord = { ...withoutImportedTabs(dev.data, imported) }
   const prodRows: WorkspaceSessionRecord = { ...prod }
@@ -52,12 +56,23 @@ export function mergedOrcaDevSession(
   return result?.success ? withDevSelection(foldGroupsOutsideLayout(result.data), dev.data) : null
 }
 
-/** An imported tab holding a fork Dev made is Dev's now: its panes and layout survive later syncs. */
-function devForkTabIds(dev: WorkspaceSessionState): Set<string> {
+/** An imported tab holding a Dev fork or an unsaved Dev draft is Dev's now: later syncs keep it. */
+function devOwnedTabIds(dev: WorkspaceSessionState): Set<string> {
   const records = Object.values(dev.sleepingAgentSessionsByPaneKey ?? {})
-  return new Set(
-    records.flatMap((record) => (record.tabId && !isImportedRecord(record) ? [record.tabId] : []))
+  const forks = records.flatMap((record) =>
+    record.tabId && !isImportedRecord(record) ? [record.tabId] : []
   )
+  const drafts = Object.entries(dev.unifiedTabs ?? {}).flatMap(([owner, tabs]) => {
+    const files = (dev.openFilesByWorktree?.[owner] ?? []).filter(
+      (file) => file.dirtyDraftContent !== undefined
+    )
+    return tabs
+      .filter((tab) =>
+        files.some((file) => editorTabShowsFile(tab.entityId, file, file.worktreeId))
+      )
+      .map((tab) => tab.id)
+  })
+  return new Set([...forks, ...drafts])
 }
 
 /** Dev minus every row of an imported tab; Dev's own (unflagged) fork records stay. */
@@ -128,8 +143,18 @@ function rowId(row: unknown): unknown {
   if (!isWorkspaceSessionRecord(row)) {
     return row
   }
-  // Client-hosted browser rows carry no id; their page id tells distinct pages apart.
-  return row.id ?? row.browserPageId ?? row.filePath ?? row
+  // Browser pages key by page id; editor rows by the store's owned id, so equal paths on two hosts stay apart.
+  return row.id ?? row.browserPageId ?? editorRowId(row) ?? row
+}
+
+function editorRowId(row: WorkspaceSessionRecord): string | undefined {
+  const { filePath, worktreeId, runtimeEnvironmentId, externalSshTargetId } = row
+  if (typeof filePath !== 'string' || typeof worktreeId !== 'string') {
+    return undefined
+  }
+  const runtime = typeof runtimeEnvironmentId === 'string' ? runtimeEnvironmentId : null
+  const sshTarget = typeof externalSshTargetId === 'string' ? externalSshTargetId : ''
+  return `${ownedEditorFileId(filePath, worktreeId, runtime)}|${sshTarget}`
 }
 
 function unionRows(devRows: unknown[], prodRows: unknown[], unionGroups: boolean): unknown[] {

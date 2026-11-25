@@ -51,6 +51,11 @@ function agentRecord(tabId: string, sessionId: string, importedFromProd?: true) 
   }
 }
 
+function openFile(runtimeEnvironmentId: string | null) {
+  const file = { filePath: '/repo/src/a.ts', relativePath: 'src/a.ts', worktreeId: WORKTREE }
+  return { ...file, language: 'typescript', runtimeEnvironmentId }
+}
+
 /** One group holding the given terminal tabs, each with a one-leaf layout. */
 function sessionOf(tabIds: string[], groupId = 'group-1', extra: Record<string, unknown> = {}) {
   return {
@@ -255,6 +260,54 @@ describe('mergedOrcaDevSession', () => {
     expect(merged?.tabGroups?.[WORKTREE]?.[0]?.activeTabId).toBe('tab-2')
     // The renderer holds a record flagged as imported until it is clicked.
     expect(merged?.sleepingAgentSessionsByPaneKey?.['tab-2:leaf-1']?.importedFromProd).toBe(true)
+  })
+
+  it('keeps the same editor path open on two hosts as two rows', () => {
+    const dev = sessionOf(['dev-tab'], 'group-1', {
+      openFilesByWorktree: { [WORKTREE]: [openFile(null)] }
+    })
+    const prod = parsed(
+      sessionOf(['tab-1'], 'group-1', {
+        openFilesByWorktree: { [WORKTREE]: [openFile('remote-env')] }
+      })
+    )
+
+    const merged = mergedOrcaDevSession(dev, prod, [])
+
+    expect(
+      merged?.openFilesByWorktree?.[WORKTREE]?.map((file) => file.runtimeEnvironmentId ?? 'local')
+    ).toEqual(['local', 'remote-env'])
+  })
+
+  it("keeps Dev's unsaved editor draft and its tab when prod closed the imported tab", () => {
+    const editorTab = { ...unifiedTab('editor-tab', 'group-1'), contentType: 'editor' }
+    const draft = { ...openFile(null), dirtyDraftContent: 'unsaved' }
+    const dev = sessionOf(['tab-1'], 'group-1', {
+      unifiedTabs: {
+        [WORKTREE]: [unifiedTab('tab-1', 'group-1'), { ...editorTab, entityId: draft.filePath }]
+      },
+      tabGroups: {
+        [WORKTREE]: [
+          {
+            id: 'group-1',
+            worktreeId: WORKTREE,
+            activeTabId: 'tab-1',
+            tabOrder: ['tab-1', 'editor-tab']
+          }
+        ]
+      },
+      openFilesByWorktree: { [WORKTREE]: [draft] }
+    })
+    const prod = parsed(
+      sessionOf(['tab-1'], 'group-1', { openFilesByWorktree: { [WORKTREE]: [openFile(null)] } })
+    )
+
+    const merged = mergedOrcaDevSession(dev, prod, ['tab-1', 'editor-tab'])
+
+    expect(merged?.unifiedTabs?.[WORKTREE]?.map((tab) => tab.id)).toContain('editor-tab')
+    expect(merged?.openFilesByWorktree?.[WORKTREE]).toEqual([
+      expect.objectContaining({ dirtyDraftContent: 'unsaved' })
+    ])
   })
 
   it("takes prod's import whole when Dev has no session yet", () => {
