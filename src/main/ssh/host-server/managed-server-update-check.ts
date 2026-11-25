@@ -102,7 +102,9 @@ function skipped(
     case 'no-template':
     case 'migrating':
       return { note: { state: reason }, reason: 'connected', recorded: false }
+    // dev-app: Orca Dev leaves the host on its build; the status still offers Update.
     case 'current':
+    case 'dev-app':
       return { note: undefined, reason: 'connected', recorded: false }
   }
 }

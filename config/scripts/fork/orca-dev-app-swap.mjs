@@ -7,8 +7,10 @@ import { promisify } from 'node:util'
 const execFileAsync = promisify(execFile)
 const ORCA_DEV_APP_BUNDLE_NAME = 'Orca Dev.app'
 const TICK_MS = 500
-// 30s at TICK_MS: the quit wait and the health check share one budget.
-const DEFAULT_TICKS = 60
+// 30s at TICK_MS for the quit wait.
+const DEFAULT_QUIT_TICKS = 60
+// 120s: the marker lands after the up-to-30s profile sync and the first window load.
+const DEFAULT_HEALTH_TICKS = 240
 
 /**
  * Replaces Orca Dev.app with a new build, keeping the old one as .previous until the new one
@@ -20,8 +22,8 @@ export async function swapOrcaDevApp({
   markerPath,
   commit,
   ops,
-  quitTicks = DEFAULT_TICKS,
-  healthTicks = DEFAULT_TICKS
+  quitTicks = DEFAULT_QUIT_TICKS,
+  healthTicks = DEFAULT_HEALTH_TICKS
 }) {
   // Hard guard: whatever the caller passes, prod Orca.app is never a swap target.
   if (basename(appPath) !== ORCA_DEV_APP_BUNDLE_NAME) {

@@ -1,6 +1,9 @@
 import { mkdir, unlink } from 'node:fs/promises'
 import { dirname } from 'node:path'
-import type { CliInstallStatus } from '../../shared/cli/cli-install-types'
+import type {
+  CliInstallStatus,
+  CliInstallUnsupportedReason
+} from '../../shared/cli/cli-install-types'
 import {
   pruneAppImageExtractedRoots,
   removeAppImageInstalledPayloads
@@ -13,10 +16,19 @@ import {
   resolveLegacyAppImageNamespacePath
 } from './appimage/appimage-extracted-root'
 import { isAppImageStableLauncherReady } from './appimage/appimage-stable-launcher'
+import { IS_ORCA_DEV_APP } from '../../shared/fork/orca-dev-app-flag'
 import { CliPathRegistration } from './command-paths/cli-path-registration'
+import type { CliInstallerOptions } from './installation/cli-installer-contracts'
 import { removeLinuxBareOrcaDispatcher } from './launchers/linux-bare-orca-dispatcher'
 
 export class CliInstaller extends CliPathRegistration {
+  private readonly isOrcaDevApp: boolean
+
+  constructor(options: CliInstallerOptions = {}) {
+    super(options)
+    this.isOrcaDevApp = options.isOrcaDevApp ?? IS_ORCA_DEV_APP
+  }
+
   isAppImageRegistrationOwnedBySibling(status: CliInstallStatus): boolean {
     if (
       status.currentTarget !== status.launcherPath ||
@@ -31,22 +43,19 @@ export class CliInstaller extends CliPathRegistration {
   }
 
   async getStatus(): Promise<CliInstallStatus> {
+    if (this.isOrcaDevApp) {
+      // Returning before inspection keeps prod's launcher from ever reading as stale here.
+      return this.unsupportedStatus(
+        'side_by_side_app',
+        'Orca Dev runs beside Orca, so the orca command stays registered to Orca.'
+      )
+    }
     const defaultSpec = this.resolveInstallSpec()
     if (!defaultSpec) {
-      return {
-        platform: this.platform,
-        commandName: this.commandName,
-        commandPath: null,
-        pathDirectory: null,
-        pathConfigured: false,
-        launcherPath: null,
-        installMethod: null,
-        supported: false,
-        state: 'unsupported',
-        currentTarget: null,
-        unsupportedReason: 'platform_not_supported',
-        detail: 'CLI registration is not implemented on this platform.'
-      }
+      return this.unsupportedStatus(
+        'platform_not_supported',
+        'CLI registration is not implemented on this platform.'
+      )
     }
 
     const launcherPath = await this.resolveLauncherPath()
@@ -75,6 +84,26 @@ export class CliInstaller extends CliPathRegistration {
     }
 
     return this.getStatusForLauncher(launcherPath)
+  }
+
+  private unsupportedStatus(
+    unsupportedReason: CliInstallUnsupportedReason,
+    detail: string
+  ): CliInstallStatus {
+    return {
+      platform: this.platform,
+      commandName: this.commandName,
+      commandPath: null,
+      pathDirectory: null,
+      pathConfigured: false,
+      launcherPath: null,
+      installMethod: null,
+      supported: false,
+      state: 'unsupported',
+      currentTarget: null,
+      unsupportedReason,
+      detail
+    }
   }
 
   private async getStatusForLauncher(launcherPath: string): Promise<CliInstallStatus> {
@@ -165,6 +194,9 @@ export class CliInstaller extends CliPathRegistration {
   }
 
   private async removeUnlocked(): Promise<CliInstallStatus> {
+    if (this.isOrcaDevApp) {
+      return this.getStatus()
+    }
     await this.removeLinuxBareOrcaDispatcher()
     const status = await this.getStatus()
     if (!status.supported || !status.commandPath || !status.launcherPath || !status.installMethod) {

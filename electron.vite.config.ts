@@ -258,6 +258,8 @@ export const electronViteConfig: UserConfig = {
     cacheDir: resolve('.cache/vite/renderer'),
     define: {
       ORCA_BUILD_COMMIT: ORCA_BUILD_COMMIT_LITERAL,
+      // Fork-only: Orca Dev's renderer hides what would touch prod's installs.
+      ORCA_FORK_DEV_APP: JSON.stringify(process.env.ORCA_FORK_DEV_APP === '1'),
       ...DARK_BUILD_DEFINES
     },
     resolve: {

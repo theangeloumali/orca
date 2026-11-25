@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process'
-import { readFileSync, statSync } from 'node:fs'
+import { readFileSync, realpathSync, statSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { homedir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
@@ -35,22 +35,19 @@ export function parseInstallArgs(argv) {
 }
 
 /** Default: the main checkout. A directory builds in place; anything else is a branch. */
-export function resolveBuildSource({ target, mainCheckout, isDirectory, git, fetch }) {
+export function resolveBuildSource({ target, mainCheckout, isDirectory, git, realpath, fetch }) {
   if (target === null) {
-    return { kind: 'default', ...describeCleanCheckout(mainCheckout, git) }
+    return { kind: 'default', ...describeCleanCheckout(mainCheckout, git, realpath) }
   }
   const targetPath = resolve(target)
   if (isDirectory(targetPath)) {
-    if (!git(targetPath, ['rev-parse', '--show-toplevel']).ok) {
-      throw new Error(`${targetPath} is not a git checkout`)
-    }
-    return { kind: 'path', ...describeCleanCheckout(targetPath, git) }
+    return { kind: 'path', ...describeCleanCheckout(targetPath, git, realpath) }
   }
   return resolveBranchSource({ branch: target, mainCheckout, git, fetch })
 }
 
-function describeCleanCheckout(checkoutPath, git) {
-  assertClean(checkoutPath, git)
+function describeCleanCheckout(checkoutPath, git, realpath) {
+  assertClean(checkoutPath, git, realpath)
   return {
     label: gitOut(checkoutPath, ['rev-parse', '--abbrev-ref', 'HEAD'], git),
     checkoutPath,
@@ -83,7 +80,7 @@ function resolveBranchSource({ branch, mainCheckout, git, fetch }) {
 }
 
 /** Branch builds share one detached worktree, so a branch checked out elsewhere still builds. */
-export function prepareBuildCheckout({ source, mainCheckout, isDirectory, git }) {
+export function prepareBuildCheckout({ source, mainCheckout, isDirectory, git, realpath }) {
   if (source.kind !== 'branch') {
     return
   }
@@ -91,11 +88,40 @@ export function prepareBuildCheckout({ source, mainCheckout, isDirectory, git })
     gitOut(mainCheckout, ['worktree', 'add', '--detach', source.checkoutPath, source.commit], git)
     return
   }
-  assertClean(source.checkoutPath, git)
+  assertClean(source.checkoutPath, git, realpath)
   gitOut(source.checkoutPath, ['checkout', '--detach', source.commit], git)
 }
 
-function assertClean(checkoutPath, git) {
+/** Checks out the target first, so the pinned pnpm comes from the commit being built. */
+export function prepareSourceAndReadPnpm({
+  source,
+  mainCheckout,
+  dryRun,
+  isDirectory,
+  git,
+  realpath,
+  readPackageManager
+}) {
+  if (!dryRun) {
+    prepareBuildCheckout({ source, mainCheckout, isDirectory, git, realpath })
+  }
+  // A dry run never creates the build worktree, so a branch reads the main checkout.
+  const packageRoot = dryRun && source.kind === 'branch' ? mainCheckout : source.checkoutPath
+  return pnpmSpecFromPackageManager(readPackageManager(join(packageRoot, 'package.json')))
+}
+
+/** git -C walks up to an enclosing repo, so a plain directory would act on the main checkout. */
+function assertCheckoutRoot(checkoutPath, git, realpath) {
+  const topLevel = git(checkoutPath, ['rev-parse', '--show-toplevel'])
+  if (!topLevel.ok || realpath(topLevel.out) !== realpath(checkoutPath)) {
+    throw new Error(
+      `${checkoutPath} is not a git checkout root${topLevel.ok ? ` (git resolves it to ${topLevel.out})` : ''}; remove it or pass the checkout itself`
+    )
+  }
+}
+
+function assertClean(checkoutPath, git, realpath) {
+  assertCheckoutRoot(checkoutPath, git, realpath)
   const status = gitOut(checkoutPath, ['status', '--porcelain'], git)
   if (status !== '') {
     throw new Error(
@@ -190,17 +216,14 @@ async function main(argv) {
   }
   const mainCheckout = findMainCheckout()
   // A dry run reads refs as they are: no fetch, no worktree.
-  const source = resolveBuildSource({
-    target,
-    mainCheckout,
-    isDirectory,
-    git: runGit,
-    fetch: !dryRun
+  const checkoutDeps = { mainCheckout, isDirectory, git: runGit, realpath: realpathSync }
+  const source = resolveBuildSource({ target, ...checkoutDeps, fetch: !dryRun })
+  const pnpmSpec = prepareSourceAndReadPnpm({
+    source,
+    ...checkoutDeps,
+    dryRun,
+    readPackageManager: (path) => JSON.parse(readFileSync(path, 'utf8')).packageManager
   })
-  const packageJsonPath = join(dryRun ? mainCheckout : source.checkoutPath, 'package.json')
-  const pnpmSpec = pnpmSpecFromPackageManager(
-    JSON.parse(readFileSync(packageJsonPath, 'utf8')).packageManager
-  )
   const steps = createBuildSteps({ checkoutPath: source.checkoutPath, pnpmSpec })
   const appPath = join('/Applications', `${ORCA_DEV_IDENTITY.productName}.app`)
   const userDataPath = getOrcaDevAppUserDataPath(join(homedir(), 'Library', 'Application Support'))
@@ -209,7 +232,6 @@ async function main(argv) {
   if (dryRun) {
     return 0
   }
-  prepareBuildCheckout({ source, mainCheckout, isDirectory, git: runGit })
   for (const step of steps) {
     console.log(`[orca-dev-install] ${step.label}`)
     const result = spawnSync(step.command, step.args, {

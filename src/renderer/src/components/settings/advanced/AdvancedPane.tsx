@@ -14,6 +14,7 @@ import { SettingsGroup } from '../section-layout/SettingsGroup'
 import { matchesSettingsSearch } from '../search/settings-search'
 import { useAppStore } from '../../../store/index'
 import { OrcaUninstallSection } from './uninstall/OrcaUninstallSection'
+import { IS_ORCA_DEV_APP } from '../../../../../shared/fork/orca-dev-app-flag'
 
 type AdvancedPaneProps = {
   settings: GlobalSettings
@@ -144,17 +145,19 @@ export function AdvancedPane({ settings, updateSettings }: AdvancedPaneProps): R
       </SettingsGroup>
 
       {/* Hidden, not unmounted, so filtering mid-run keeps the run's progress. */}
-      <SettingsGroup
-        id="advanced-uninstall"
-        title={t('settings.uninstall.groupTitle', 'Uninstall')}
-        className={
-          matchesSettingsSearch(searchQuery, [getAdvancedSearchEntry().uninstall])
-            ? undefined
-            : 'hidden'
-        }
-      >
-        <OrcaUninstallSection />
-      </SettingsGroup>
+      {IS_ORCA_DEV_APP ? null : (
+        <SettingsGroup
+          id="advanced-uninstall"
+          title={t('settings.uninstall.groupTitle', 'Uninstall')}
+          className={
+            matchesSettingsSearch(searchQuery, [getAdvancedSearchEntry().uninstall])
+              ? undefined
+              : 'hidden'
+          }
+        >
+          <OrcaUninstallSection />
+        </SettingsGroup>
+      )}
     </div>
   )
 }

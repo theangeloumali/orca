@@ -10,8 +10,8 @@ import {
   type SecretAtRestProtection
 } from '../../shared/secure-storage/secret-at-rest-protection'
 import { mkdir, readFile, rm } from 'node:fs/promises'
-import { homedir } from 'node:os'
 import { join } from 'node:path'
+import { getOrcaHomeStateDir } from '../startup/dev-app/orca-home-state-dir'
 
 type StoredOpenAiKey = {
   encryptedKeyBase64: string
@@ -21,7 +21,7 @@ const OPENAI_SPEECH_TOKEN_FILE = 'openai-speech-token.enc'
 let cachedOpenAiSpeechApiKey: string | null = null
 
 function getOrcaDir(): string {
-  return join(homedir(), '.orca')
+  return getOrcaHomeStateDir()
 }
 
 async function ensureOrcaDir(): Promise<void> {

@@ -10,6 +10,7 @@ import {
 } from '../../shared/uninstall/orca-uninstall-types'
 import { getClaudeAgentViewService } from '../claude/agent-view/agent-view-service'
 import type { Store } from '../persistence/loading-store/store'
+import { IS_ORCA_DEV_APP } from '../../shared/fork/orca-dev-app-flag'
 import { getLinuxRootPackageType } from '../updater/linux-package/linux-update-package-type'
 import {
   findWindowsUninstaller,
@@ -28,7 +29,9 @@ import { stopTerminalDaemonsForUninstall } from '../daemon/providers/lifecycle/d
 import { isLocalTerminalDaemonLive } from '../daemon/launch/local-terminal-daemon-stop'
 import { readLocalCliInstallStatus, removeLocalCliRegistration } from './cli'
 
-async function createHost(store: Store): Promise<OrcaUninstallHost> {
+type OrcaUninstallStore = Pick<Store, 'updateSettingsAndFlush' | 'getSettings'>
+
+async function createHost(store: OrcaUninstallStore): Promise<OrcaUninstallHost> {
   const userDataPath = app.getPath('userData')
   return {
     platform: process.platform,
@@ -72,7 +75,11 @@ async function openWindowsUninstaller(appPath: string | null): Promise<void> {
   await once(child, 'spawn')
 }
 
-export function registerOrcaUninstallHandlers(store: Store): void {
+export function registerOrcaUninstallHandlers(store: OrcaUninstallStore): void {
+  // Orca Dev would remove prod's serve LaunchAgent and agent hooks; Settings hides it too.
+  if (IS_ORCA_DEV_APP) {
+    return
+  }
   // Steps update the plan the renderer last read, so retries keep earlier results.
   let current: OrcaUninstallPlan | null = null
 

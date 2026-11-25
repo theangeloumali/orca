@@ -260,10 +260,10 @@ export function configureOrcaUserDataPathEnv(): void {
   stampRuntimeSourceEnv(process.env, null)
 }
 
-export function shouldInstallManagedHooks(isDev: boolean): boolean {
+export function shouldInstallManagedHooks(isDev: boolean, isDevApp = IS_ORCA_DEV_APP): boolean {
   void isDev
-  // Codex hooks now target Orca-owned homes; retain installation until every agent has its own seam.
-  return true
+  // Orca Dev panes run prod's ~/.orca/agent-hooks scripts, which post to the pane's own hook port.
+  return !isDevApp
 }
 
 export function installDevParentDisconnectQuit(isDev: boolean): void {

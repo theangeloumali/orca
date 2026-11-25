@@ -1,3 +1,6 @@
+import { spawnSync } from 'node:child_process'
+import { mkdirSync, mkdtempSync, realpathSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
@@ -5,6 +8,7 @@ import {
   parseInstallArgs,
   pnpmSpecFromPackageManager,
   prepareBuildCheckout,
+  prepareSourceAndReadPnpm,
   resolveBuildSource
 } from './orca-dev-install.mjs'
 
@@ -25,6 +29,8 @@ function fakeGit(responses) {
 }
 
 const noDirectories = () => false
+// Fake checkouts have no real paths to resolve.
+const realpath = (path) => path
 
 describe('parseInstallArgs', () => {
   it('defaults to the main checkout without a dry run', () => {
@@ -45,6 +51,7 @@ describe('parseInstallArgs', () => {
 describe('resolveBuildSource', () => {
   it('builds the clean main checkout by default', () => {
     const { git } = fakeGit({
+      [`${MAIN}: rev-parse --show-toplevel`]: MAIN,
       [`${MAIN}: status --porcelain`]: '',
       [`${MAIN}: rev-parse HEAD`]: SHA_A,
       [`${MAIN}: rev-parse --abbrev-ref HEAD`]: 'angelo/daily'
@@ -54,6 +61,7 @@ describe('resolveBuildSource', () => {
       mainCheckout: MAIN,
       isDirectory: noDirectories,
       git,
+      realpath,
       fetch: false
     })
     expect(source).toEqual({
@@ -65,13 +73,17 @@ describe('resolveBuildSource', () => {
   })
 
   it('refuses a dirty checkout, whose build would not match its commit', () => {
-    const { git } = fakeGit({ [`${MAIN}: status --porcelain`]: ' M src/a.ts' })
+    const { git } = fakeGit({
+      [`${MAIN}: rev-parse --show-toplevel`]: MAIN,
+      [`${MAIN}: status --porcelain`]: ' M src/a.ts'
+    })
     expect(() =>
       resolveBuildSource({
         target: null,
         mainCheckout: MAIN,
         isDirectory: noDirectories,
         git,
+        realpath,
         fetch: false
       })
     ).toThrow(/uncommitted changes/)
@@ -90,6 +102,7 @@ describe('resolveBuildSource', () => {
       mainCheckout: MAIN,
       isDirectory: (p) => p === path,
       git,
+      realpath,
       fetch: false
     })
     expect(source).toEqual({ kind: 'path', label: 'feat/other', checkoutPath: path, commit: SHA_B })
@@ -103,6 +116,7 @@ describe('resolveBuildSource', () => {
         mainCheckout: MAIN,
         isDirectory: () => true,
         git,
+        realpath,
         fetch: false
       })
     ).toThrow(/not a git checkout/)
@@ -120,6 +134,7 @@ describe('resolveBuildSource', () => {
       mainCheckout: MAIN,
       isDirectory: noDirectories,
       git,
+      realpath,
       fetch: true
     })
     expect(source).toEqual({
@@ -144,6 +159,7 @@ describe('resolveBuildSource', () => {
       mainCheckout: MAIN,
       isDirectory: noDirectories,
       git,
+      realpath,
       fetch: true
     })
     expect(source.commit).toBe(SHA_A)
@@ -159,6 +175,7 @@ describe('resolveBuildSource', () => {
       mainCheckout: MAIN,
       isDirectory: noDirectories,
       git,
+      realpath,
       fetch: false
     })
     expect(source.commit).toBe(SHA_A)
@@ -173,6 +190,7 @@ describe('resolveBuildSource', () => {
         mainCheckout: MAIN,
         isDirectory: noDirectories,
         git,
+        realpath,
         fetch: true
       })
     ).toThrow(/No branch "nope"/)
@@ -186,6 +204,7 @@ describe('resolveBuildSource', () => {
         mainCheckout: MAIN,
         isDirectory: noDirectories,
         git,
+        realpath,
         fetch: true
       })
     ).toThrow(/Not a valid branch/)
@@ -195,6 +214,7 @@ describe('resolveBuildSource', () => {
         mainCheckout: MAIN,
         isDirectory: noDirectories,
         git,
+        realpath,
         fetch: true
       })
     ).toThrow(/Not a valid branch/)
@@ -218,30 +238,92 @@ describe('prepareBuildCheckout', () => {
       source: branchSource,
       mainCheckout: MAIN,
       isDirectory: noDirectories,
-      git
+      git,
+      realpath
     })
     expect(calls).toEqual([`${MAIN}: worktree add --detach ${BUILD_WORKTREE} ${SHA_B}`])
   })
 
   it('moves an existing clean build worktree to the commit', () => {
     const { git, calls } = fakeGit({
+      [`${BUILD_WORKTREE}: rev-parse --show-toplevel`]: BUILD_WORKTREE,
       [`${BUILD_WORKTREE}: status --porcelain`]: '',
       [`${BUILD_WORKTREE}: checkout --detach ${SHA_B}`]: ''
     })
-    prepareBuildCheckout({ source: branchSource, mainCheckout: MAIN, isDirectory: () => true, git })
+    prepareBuildCheckout({
+      source: branchSource,
+      mainCheckout: MAIN,
+      isDirectory: () => true,
+      git,
+      realpath
+    })
     expect(calls).toContain(`${BUILD_WORKTREE}: checkout --detach ${SHA_B}`)
   })
 
   it('refuses a dirty build worktree instead of discarding its changes', () => {
-    const { git } = fakeGit({ [`${BUILD_WORKTREE}: status --porcelain`]: '?? notes.txt' })
+    const { git } = fakeGit({
+      [`${BUILD_WORKTREE}: rev-parse --show-toplevel`]: BUILD_WORKTREE,
+      [`${BUILD_WORKTREE}: status --porcelain`]: '?? notes.txt'
+    })
     expect(() =>
       prepareBuildCheckout({
         source: branchSource,
         mainCheckout: MAIN,
         isDirectory: () => true,
-        git
+        git,
+        realpath
       })
     ).toThrow(/uncommitted changes/)
+  })
+
+  it('refuses a path argument inside a checkout, which git would resolve to its parent', () => {
+    const subdir = join(MAIN, 'src')
+    const { git, calls } = fakeGit({ [`${subdir}: rev-parse --show-toplevel`]: MAIN })
+    expect(() =>
+      resolveBuildSource({
+        target: subdir,
+        mainCheckout: MAIN,
+        isDirectory: (p) => p === subdir,
+        git,
+        realpath,
+        fetch: false
+      })
+    ).toThrow(/not a git checkout root/)
+    expect(calls.some((call) => call.includes('status'))).toBe(false)
+  })
+
+  it('never detaches the main checkout through a plain directory at dev-app-build', () => {
+    const root = realpathSync(mkdtempSync(join(tmpdir(), 'orca-dev-install-')))
+    const runGit = (cwd, args) => {
+      const result = spawnSync('git', ['-C', cwd, ...args], { encoding: 'utf8' })
+      return { ok: result.status === 0, out: (result.stdout ?? '').trim() }
+    }
+    try {
+      const main = join(root, 'orca')
+      mkdirSync(main)
+      for (const args of [
+        ['init', '-q', '-b', 'main'],
+        ['-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '--allow-empty', '-m', 'a']
+      ]) {
+        runGit(main, args)
+      }
+      const plainDir = join(main, '.claude', 'worktrees', 'dev-app-build')
+      mkdirSync(plainDir, { recursive: true })
+      const commit = runGit(main, ['rev-parse', 'HEAD']).out
+      const source = { kind: 'branch', label: 'main', checkoutPath: plainDir, commit }
+      expect(() =>
+        prepareBuildCheckout({
+          source,
+          mainCheckout: main,
+          isDirectory: () => true,
+          git: runGit,
+          realpath: realpathSync
+        })
+      ).toThrow(/not a git checkout root/)
+      expect(runGit(main, ['symbolic-ref', '--short', 'HEAD']).out).toBe('main')
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
   })
 
   it('leaves default and path checkouts as they are', () => {
@@ -250,7 +332,8 @@ describe('prepareBuildCheckout', () => {
       source: { kind: 'path', label: 'x', checkoutPath: '/p', commit: SHA_A },
       mainCheckout: MAIN,
       isDirectory: () => true,
-      git
+      git,
+      realpath
     })
     expect(calls).toEqual([])
   })
@@ -284,5 +367,47 @@ describe('createBuildSteps', () => {
   it('reads the pinned pnpm version without its integrity hash', () => {
     expect(pnpmSpecFromPackageManager('pnpm@12.18.0+sha512.abc')).toBe('pnpm@12.18.0')
     expect(() => pnpmSpecFromPackageManager('yarn@4')).toThrow(/pnpm/)
+  })
+})
+
+describe('prepareSourceAndReadPnpm', () => {
+  it("checks out the target commit before reading that commit's pinned pnpm", () => {
+    const { git, calls } = fakeGit({
+      [`${MAIN}: worktree add --detach ${BUILD_WORKTREE} ${SHA_B}`]: ''
+    })
+    const pnpmSpec = prepareSourceAndReadPnpm({
+      source: { kind: 'branch', label: 'feat/x', checkoutPath: BUILD_WORKTREE, commit: SHA_B },
+      mainCheckout: MAIN,
+      dryRun: false,
+      isDirectory: noDirectories,
+      git,
+      realpath,
+      readPackageManager: (path) => {
+        calls.push(`read ${path}`)
+        return 'pnpm@12.18.0'
+      }
+    })
+    expect(pnpmSpec).toBe('pnpm@12.18.0')
+    expect(calls).toEqual([
+      `${MAIN}: worktree add --detach ${BUILD_WORKTREE} ${SHA_B}`,
+      `read ${join(BUILD_WORKTREE, 'package.json')}`
+    ])
+  })
+
+  it('reads the main checkout on a dry run, which never creates the build worktree', () => {
+    const { git, calls } = fakeGit({})
+    prepareSourceAndReadPnpm({
+      source: { kind: 'branch', label: 'feat/x', checkoutPath: BUILD_WORKTREE, commit: SHA_B },
+      mainCheckout: MAIN,
+      dryRun: true,
+      isDirectory: noDirectories,
+      git,
+      realpath,
+      readPackageManager: (path) => {
+        calls.push(`read ${path}`)
+        return 'pnpm@12.18.0'
+      }
+    })
+    expect(calls).toEqual([`read ${join(MAIN, 'package.json')}`])
   })
 })

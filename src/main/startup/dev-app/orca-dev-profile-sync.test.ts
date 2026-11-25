@@ -86,7 +86,7 @@ describe('syncOrcaDevProfilesFromProd', () => {
 
     expect(report).toEqual({
       kind: 'done',
-      indexCopied: false,
+      indexAdded: [],
       profiles: [{ profileId: PROFILE_ID, kind: 'synced' }]
     })
     const dev = readDomains(paths.dev, ['repos', 'settings', 'automations', 'terminalSessions'])
@@ -174,7 +174,7 @@ describe('syncOrcaDevProfilesFromProd', () => {
 
     expect(report).toEqual({
       kind: 'done',
-      indexCopied: true,
+      indexAdded: [PROFILE_ID],
       profiles: [{ profileId: PROFILE_ID, kind: 'seeded' }]
     })
     const legacyFile = join('profiles', PROFILE_ID, 'orca-data.json')
@@ -221,5 +221,60 @@ describe('syncOrcaDevProfilesFromProd', () => {
 
     expect(report).toMatchObject({ profiles: [{ profileId: PROFILE_ID, kind: 'failed' }] })
     expect(readDomains(paths.dev, ['repos']).get('repos')).toEqual([{ id: 'dev-repo' }])
+  })
+
+  it("keeps Orca Dev's machine name and account logins across a sync", () => {
+    const paths = makeUserDataPaths()
+    writeProfile(paths.prod, {
+      ...prodState,
+      settings: { theme: 'dark', machineName: 'M5', claudeManagedAccounts: [{ id: 'prod' }] }
+    })
+    writeProfile(paths.dev, {
+      schemaVersion: 7,
+      settings: { theme: 'light', machineName: 'M5 (Orca Dev)', claudeManagedAccounts: [] }
+    })
+
+    syncOrcaDevProfilesFromProd({ prodUserDataPath: paths.prod, devUserDataPath: paths.dev })
+
+    expect(readDomains(paths.dev, ['settings']).get('settings')).toEqual({
+      theme: 'dark',
+      machineName: 'M5 (Orca Dev)',
+      claudeManagedAccounts: []
+    })
+  })
+
+  it('adds new prod profiles to an existing dev index without touching its own edits', async () => {
+    const paths = makeUserDataPaths()
+    writeProfile(paths.prod, prodState)
+    writeProfile(paths.dev, { schemaVersion: 7 })
+    const devIndex = {
+      schemaVersion: 1,
+      activeProfileId: 'dev-only',
+      profiles: [
+        { id: PROFILE_ID, name: 'Renamed in dev' },
+        { id: 'dev-only', name: 'Dev only' }
+      ]
+    }
+    writeFileSync(join(paths.dev, 'orca-profile-index.json'), JSON.stringify(devIndex))
+    const prodIndex = {
+      schemaVersion: 1,
+      activeProfileId: PROFILE_ID,
+      profiles: [
+        { id: PROFILE_ID, name: 'Default' },
+        { id: 'work', name: 'Work' }
+      ]
+    }
+    writeFileSync(join(paths.prod, 'orca-profile-index.json'), JSON.stringify(prodIndex))
+
+    const report = syncOrcaDevProfilesFromProd({
+      prodUserDataPath: paths.prod,
+      devUserDataPath: paths.dev
+    })
+
+    expect(report).toMatchObject({ kind: 'done', indexAdded: ['work'] })
+    expect(JSON.parse(await readFile(join(paths.dev, 'orca-profile-index.json'), 'utf8'))).toEqual({
+      ...devIndex,
+      profiles: [...devIndex.profiles, { id: 'work', name: 'Work' }]
+    })
   })
 })

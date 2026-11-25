@@ -1,8 +1,7 @@
 import { join } from 'node:path'
+import { IS_ORCA_DEV_APP } from '../../../shared/fork/orca-dev-app-flag'
 
-/** True only in the installed Orca Dev build (ORCA_FORK_DEV_APP=1 at build time). */
-export const IS_ORCA_DEV_APP =
-  typeof ORCA_FORK_DEV_APP !== 'undefined' && ORCA_FORK_DEV_APP === true
+export { IS_ORCA_DEV_APP }
 
 export const ORCA_DEV_APP_NAME = 'Orca Dev'
 export const ORCA_DEV_APP_USER_MODEL_ID = 'com.theangeloumali.orca.dev'
@@ -14,8 +13,10 @@ const PNPM_DEV_DESKTOP_WS_PORT = 6769
 const ORCA_DEV_APP_DESKTOP_WS_PORT = 6770
 
 /** Not prod's `orca`, and no "orca-dev" substring: CLI checks read that as a `pnpm dev` profile. */
+export const ORCA_DEV_APP_USER_DATA_DIR_NAME = 'OrcaDev'
+
 export function getOrcaDevAppUserDataPath(appDataPath: string): string {
-  return join(appDataPath, 'OrcaDev')
+  return join(appDataPath, ORCA_DEV_APP_USER_DATA_DIR_NAME)
 }
 
 /** Packaged prod Orca's default userData; Orca Dev syncs from it read-only. */

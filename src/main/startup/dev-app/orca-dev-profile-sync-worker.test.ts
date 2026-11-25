@@ -42,7 +42,7 @@ describe('runOrcaDevProfileSync', () => {
   it('returns the worker report once the worker exits cleanly', async () => {
     const { runOrcaDevProfileSync } = await import('./orca-dev-profile-sync-worker')
     const pending = runOrcaDevProfileSync(paths, { workerPath: '/out/entry.js' })
-    const report = { kind: 'done', indexCopied: false, profiles: [] }
+    const report = { kind: 'done', indexAdded: [], profiles: [] }
     lastWorker().emit('message', { ok: true, report })
     lastWorker().emit('exit', 0)
     await expect(pending).resolves.toEqual(report)

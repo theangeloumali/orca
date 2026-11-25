@@ -156,4 +156,21 @@ describe('swapOrcaDevApp', () => {
     ).rejects.toThrow(/Orca Dev\.app/)
     expect(await appVersion(prodAppPath)).toBe('prod')
   })
+
+  it("waits out Orca Dev's 30s profile sync before judging the launch by default", async () => {
+    await makeApp(appPath, 'old')
+    let ticks = 0
+    const ops = {
+      ...fakeOps(),
+      sleepTick: async () => {
+        ticks += 1
+        // 100 ticks of 500ms: 50s, past the sync timeout plus a slow first paint.
+        if (ticks === 100) {
+          await writeFile(markerPath, JSON.stringify({ commit: COMMIT, pid: 2 }))
+        }
+      }
+    }
+    const result = await swapOrcaDevApp({ builtAppPath, appPath, markerPath, commit: COMMIT, ops })
+    expect(result).toEqual({ kind: 'installed', previousKept: true })
+  })
 })

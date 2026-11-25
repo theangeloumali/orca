@@ -1,9 +1,12 @@
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ORCA_DEV_LAUNCH_MARKER_FILE } from './orca-dev-app'
-import { writeOrcaDevLaunchMarker } from './orca-dev-app-launch-marker'
+import {
+  markOrcaDevLaunchedOnWindowLoad,
+  writeOrcaDevLaunchMarker
+} from './orca-dev-app-launch-marker'
 
 describe('writeOrcaDevLaunchMarker', () => {
   let userDataPath: string
@@ -37,5 +40,32 @@ describe('writeOrcaDevLaunchMarker', () => {
     expect(await readFile(join(freshUserData, ORCA_DEV_LAUNCH_MARKER_FILE), 'utf8')).toContain(
       '"c"'
     )
+  })
+})
+
+describe('markOrcaDevLaunchedOnWindowLoad', () => {
+  function fakeWebContents(): { once: typeof once; finishLoad: () => void } {
+    const listeners: (() => void)[] = []
+    const once = (_event: 'did-finish-load', listener: () => void): void => {
+      listeners.push(listener)
+    }
+    return { once, finishLoad: () => listeners.splice(0).forEach((listener) => listener()) }
+  }
+
+  it('records the launch only once the main window has loaded', () => {
+    const contents = fakeWebContents()
+    const markLaunched = vi.fn()
+    markOrcaDevLaunchedOnWindowLoad(contents, true, markLaunched)
+    expect(markLaunched).not.toHaveBeenCalled()
+    contents.finishLoad()
+    expect(markLaunched).toHaveBeenCalledTimes(1)
+  })
+
+  it('records nothing outside Orca Dev', () => {
+    const contents = fakeWebContents()
+    const markLaunched = vi.fn()
+    markOrcaDevLaunchedOnWindowLoad(contents, false, markLaunched)
+    contents.finishLoad()
+    expect(markLaunched).not.toHaveBeenCalled()
   })
 })
