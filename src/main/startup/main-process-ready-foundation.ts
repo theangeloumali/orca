@@ -14,6 +14,7 @@ import {
 } from '../browser/guest-lifecycle/manager/browser-manager'
 import { browserSiteDisplayController } from '../browser/site-settings/display/browser-site-display-controller'
 import { ensureActiveOrcaProfile } from '../orca-profiles/profile-index-store'
+import { initializeTeamCapabilities } from '../orca-profiles/cloud-auth/initialize-team-capabilities'
 import { getCanonicalUserDataPath } from '../persistence/loading-store/user-data-path'
 import { getAppEnvironment } from '../../shared/app-lifecycle/app-environment'
 import { loadWslMappedDriveAnswers } from '../wsl/filesystem/wsl-mapped-drive-answers-file'
@@ -60,7 +61,6 @@ import { createWslCliReconciliationStartupBarrier } from './wsl-startup/wsl-cli-
 import { agentHookServer } from '../agent-hooks/server/agent-hook-server'
 import { isAgentStatusHooksEnabled } from '../../shared/agent-hook-listener/configuration/agent-status-hooks-setting'
 import { reportProfileStateWriteFailure } from './profile-startup/profile-state-write-failure'
-import { reportProfileStateSaveDelay } from './profile-startup/profile-state-save-delay'
 import { preloadSsh2 } from '../ssh/authentication/ssh2-module-load'
 
 export async function initializeReadyFoundation(): Promise<void> {
@@ -144,6 +144,7 @@ export async function initializeReadyFoundation(): Promise<void> {
   )
   const profile = ensureActiveOrcaProfile()
   state.activeOrcaProfile = profile
+  await initializeTeamCapabilities(getProfileUserDataPath(), profile.profile)
   // Read durable browser hosting ID before window argv stamps it or renderer and lease ownership diverge.
   initializeBrowserClientHostId(profile.profileDirectory)
   // Before the profile store and the fence: a conversion that rewrites the profile here leaves
@@ -166,8 +167,7 @@ export async function initializeReadyFoundation(): Promise<void> {
     runtime: 'desktop',
     initializeHomeWorkspace: !state.isServeMode,
     storageAuthority: state.isServeMode ? 'runtime' : 'desktop',
-    onPersistenceFailure: reportProfileStateWriteFailure,
-    onPersistenceSaveDelayChanged: reportProfileStateSaveDelay
+    onPersistenceFailure: reportProfileStateWriteFailure
   })
   state.profileStateStartup = {
     backend: profileState.backend,

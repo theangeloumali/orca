@@ -2,11 +2,14 @@ import type { ProjectGroup } from './project-group-types'
 import { normalizeRepoBadgeColor } from '../../repository/appearance/repo-badge-color'
 import { DEFAULT_HOST_SECTION_TINT, HOST_SECTION_TINTS } from '../../execution-host/host-appearance'
 import type { HostSectionTint } from '../../execution-host/host-setting-overrides'
-import type { GlobalSettings } from '../../settings/global-settings-types'
 
 export type ProjectGroupTint = HostSectionTint
+/** Per-computer sidebar background strength by group id; group colors sync on the group. */
+export type ProjectGroupTintSettings = {
+  projectGroupTints?: Partial<Record<string, ProjectGroupTint>>
+}
 /** Every explicit choice is stored; a group with no key follows the group that owns its color. */
-export type ProjectGroupTints = NonNullable<GlobalSettings['projectGroupTints']>
+export type ProjectGroupTints = NonNullable<ProjectGroupTintSettings['projectGroupTints']>
 export type ProjectGroupColorLink = Pick<ProjectGroup, 'id' | 'parentGroupId' | 'color'>
 export type ResolvedProjectGroupColor = { groupId: string; color: string }
 /** One host's copy of a group; updatedAt picks the latest write across hosts. */
