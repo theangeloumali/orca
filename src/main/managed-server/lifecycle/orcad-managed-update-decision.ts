@@ -43,7 +43,8 @@ export function planManagedOrcadAutoUpdate(input: {
   if (record.active === candidateVersion) {
     return { action: 'skip', reason: 'current' }
   }
-  if ((input.isDevApp ?? IS_ORCA_DEV_APP) && record.active !== null) {
+  // A stopped host restarts prod's previous build, never Orca Dev's.
+  if ((input.isDevApp ?? IS_ORCA_DEV_APP) && (record.active !== null || record.previous !== null)) {
     return { action: 'skip', reason: 'dev-app' }
   }
   if (record.rolledBackFrom === candidateVersion) {

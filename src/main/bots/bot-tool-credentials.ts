@@ -4,10 +4,10 @@
 import { BotFailureError } from '../../shared/bots/bot-failure-copy'
 import { createHash, randomBytes } from 'node:crypto'
 import { readFileSync, rmSync } from 'node:fs'
-import { homedir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { z } from 'zod'
 import { writeSecureFile } from '../../shared/secure-storage/secure-file'
+import { getOrcaHomeStateDir } from '../startup/dev-app/orca-home-state-dir'
 import type { BotToolServer } from '../../shared/bot-tools'
 import { announceBotToolCredentialsEnded } from './bot-tool-credential-ended'
 import {
@@ -55,7 +55,7 @@ export function useBotToolCredentialsRoot(root: string | null): void {
 }
 
 const credentialsRoot = (): string =>
-  rootOverride ?? join(homedir(), '.orca', 'bot-tool-credentials')
+  rootOverride ?? join(getOrcaHomeStateDir(), 'bot-tool-credentials')
 
 export const botToolCredentialsPath = (folder: string): string =>
   join(

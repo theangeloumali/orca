@@ -7,7 +7,7 @@ import { performance } from 'node:perf_hooks'
 import {
   ORCA_DEV_LAUNCH_MARKER_FILE,
   getOrcaDevAppUserDataPath
-} from '../../../src/main/startup/dev-app/orca-dev-app.ts'
+} from '../../../src/main/startup/dev-app/orca-dev-app-paths.ts'
 import { createMacSwapOps, swapOrcaDevApp } from './orca-dev-app-swap.mjs'
 
 const { resolveBuilderAppIdentity } = createRequire(import.meta.url)(
@@ -15,6 +15,7 @@ const { resolveBuilderAppIdentity } = createRequire(import.meta.url)(
 )
 const ORCA_DEV_IDENTITY = resolveBuilderAppIdentity({ ORCA_FORK_DEV_APP: '1' })
 const BUILD_WORKTREE_NAME = 'dev-app-build'
+const DEV_APP_FLAG_ENTRY = join('out', 'main', 'startup', 'dev-app', 'orca-dev-app.js')
 const USAGE = 'Usage: orca-dev-install [branch | worktree path] [--dry-run]'
 
 export function parseInstallArgs(argv) {
@@ -178,6 +179,31 @@ export function createBuildSteps({ checkoutPath, pnpmSpec }) {
   ]
 }
 
+/** The CLI requires this entry under plain node; anything but true means the flag was never folded. */
+export function checkOrcaDevBuildFlag(checkoutPath) {
+  const entryPath = join(checkoutPath, DEV_APP_FLAG_ENTRY)
+  const read = spawnSync(
+    process.execPath,
+    ['-p', 'String(require(process.argv[1]).IS_ORCA_DEV_APP)', entryPath],
+    { encoding: 'utf8' }
+  )
+  const flag = read.status === 0 ? read.stdout.trim() : 'unreadable'
+  return flag === 'true'
+    ? null
+    : `${entryPath} has IS_ORCA_DEV_APP ${flag}, so this is not an Orca Dev build`
+}
+
+/** Any failure before the swap leaves the installed app untouched. */
+export async function buildThenSwap({ steps, runStep, verifyBuild, swap }) {
+  for (const step of steps) {
+    if (!runStep(step)) {
+      return { kind: 'not-swapped', reason: `${step.label} failed` }
+    }
+  }
+  const refusal = verifyBuild()
+  return refusal ? { kind: 'not-swapped', reason: refusal } : swap()
+}
+
 const runGit = (cwd, args) => {
   const result = spawnSync('git', ['-C', cwd, ...args], { encoding: 'utf8' })
   return { ok: result.status === 0, out: (result.stdout ?? '').trim() }
@@ -232,31 +258,37 @@ async function main(argv) {
   if (dryRun) {
     return 0
   }
-  for (const step of steps) {
-    console.log(`[orca-dev-install] ${step.label}`)
-    const result = spawnSync(step.command, step.args, {
-      cwd: step.cwd,
-      env: { ...process.env, ...step.env },
-      stdio: 'inherit'
-    })
-    if (result.status !== 0) {
-      console.error(`[orca-dev-install] ${step.label} failed; ${appPath} was not touched`)
-      return 1
-    }
-  }
   const builtAppPath = join(
     source.checkoutPath,
     'dist',
     'mac-arm64',
     `${ORCA_DEV_IDENTITY.productName}.app`
   )
-  const swap = await swapOrcaDevApp({
-    builtAppPath,
-    appPath,
-    markerPath,
-    commit: source.commit,
-    ops: createMacSwapOps({ bundleId: ORCA_DEV_IDENTITY.appId })
+  const swap = await buildThenSwap({
+    steps,
+    runStep: (step) => {
+      console.log(`[orca-dev-install] ${step.label}`)
+      const result = spawnSync(step.command, step.args, {
+        cwd: step.cwd,
+        env: { ...process.env, ...step.env },
+        stdio: 'inherit'
+      })
+      return result.status === 0
+    },
+    verifyBuild: () => checkOrcaDevBuildFlag(source.checkoutPath),
+    swap: () =>
+      swapOrcaDevApp({
+        builtAppPath,
+        appPath,
+        markerPath,
+        commit: source.commit,
+        ops: createMacSwapOps({ bundleId: ORCA_DEV_IDENTITY.appId })
+      })
   })
+  if (swap.kind === 'not-swapped') {
+    console.error(`[orca-dev-install] ${swap.reason}; ${appPath} was not touched`)
+    return 1
+  }
   const seconds = Math.round((performance.now() - startedAt) / 1000)
   console.log(`[orca-dev-install] ${swap.kind}: ${source.label} @ ${source.commit} in ${seconds}s`)
   if (swap.kind === 'rolled-back') {

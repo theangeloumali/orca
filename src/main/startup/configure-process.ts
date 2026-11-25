@@ -260,12 +260,6 @@ export function configureOrcaUserDataPathEnv(): void {
   stampRuntimeSourceEnv(process.env, null)
 }
 
-export function shouldInstallManagedHooks(isDev: boolean, isDevApp = IS_ORCA_DEV_APP): boolean {
-  void isDev
-  // Orca Dev panes run prod's ~/.orca/agent-hooks scripts, which post to the pane's own hook port.
-  return !isDevApp
-}
-
 export function installDevParentDisconnectQuit(isDev: boolean): void {
   if (!isDev || typeof process.send !== 'function') {
     return

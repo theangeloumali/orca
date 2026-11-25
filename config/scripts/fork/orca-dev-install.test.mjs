@@ -1,9 +1,11 @@
 import { spawnSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, realpathSync, rmSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
+  buildThenSwap,
+  checkOrcaDevBuildFlag,
   createBuildSteps,
   parseInstallArgs,
   pnpmSpecFromPackageManager,
@@ -409,5 +411,108 @@ describe('prepareSourceAndReadPnpm', () => {
       }
     })
     expect(calls).toEqual([`read ${join(MAIN, 'package.json')}`])
+  })
+})
+
+describe('orca-dev-install.sh', () => {
+  it('runs a dry run under plain node through its shim', () => {
+    const root = realpathSync(mkdtempSync(join(tmpdir(), 'orca-dev-install-shim-')))
+    const git = (args) => spawnSync('git', ['-C', root, ...args], { encoding: 'utf8' })
+    try {
+      git(['init', '-q', '-b', 'main'])
+      writeFileSync(join(root, 'package.json'), JSON.stringify({ packageManager: 'pnpm@12.18.0' }))
+      git(['add', 'package.json'])
+      git(['-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'a'])
+      const shim = join(import.meta.dirname, 'orca-dev-install.sh')
+      const run = spawnSync('sh', [shim, '--dry-run', root], { encoding: 'utf8' })
+      expect(run.stderr).not.toMatch(/ERR_MODULE_NOT_FOUND/)
+      expect(run.status).toBe(0)
+      expect(run.stdout).toMatch(/DRY RUN/)
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  })
+})
+
+describe('checkOrcaDevBuildFlag', () => {
+  const ENTRY = join('out', 'main', 'startup', 'dev-app', 'orca-dev-app.js')
+
+  function withBuiltEntry(source, check) {
+    const root = mkdtempSync(join(tmpdir(), 'orca-dev-install-flag-'))
+    try {
+      mkdirSync(join(root, 'out', 'main', 'startup', 'dev-app'), { recursive: true })
+      writeFileSync(join(root, ENTRY), source)
+      return check(root)
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  }
+
+  it('accepts a build whose CLI entry has the flag folded to true', () => {
+    expect(withBuiltEntry('exports.IS_ORCA_DEV_APP = true', checkOrcaDevBuildFlag)).toBeNull()
+  })
+
+  it('refuses a build that still reads a bare ORCA_FORK_DEV_APP', () => {
+    const unfolded =
+      "exports.IS_ORCA_DEV_APP = typeof ORCA_FORK_DEV_APP === 'boolean' && ORCA_FORK_DEV_APP"
+    expect(withBuiltEntry(unfolded, checkOrcaDevBuildFlag)).toMatch(/not an Orca Dev build/)
+  })
+
+  it('refuses a build with no CLI entry', () => {
+    const root = mkdtempSync(join(tmpdir(), 'orca-dev-install-flag-'))
+    try {
+      expect(checkOrcaDevBuildFlag(root)).toMatch(/not an Orca Dev build/)
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  })
+})
+
+describe('buildThenSwap', () => {
+  const steps = [{ label: 'install' }, { label: 'package' }]
+
+  it('never swaps a build that fails the Orca Dev flag check', async () => {
+    let swapped = false
+    const outcome = await buildThenSwap({
+      steps,
+      runStep: () => true,
+      verifyBuild: () => 'out/main/startup/dev-app/orca-dev-app.js is not an Orca Dev build',
+      swap: async () => {
+        swapped = true
+        return { kind: 'installed' }
+      }
+    })
+    expect(swapped).toBe(false)
+    expect(outcome).toEqual({
+      kind: 'not-swapped',
+      reason: 'out/main/startup/dev-app/orca-dev-app.js is not an Orca Dev build'
+    })
+  })
+
+  it('stops at the first failed step before checking or swapping', async () => {
+    const ran = []
+    const outcome = await buildThenSwap({
+      steps,
+      runStep: (step) => {
+        ran.push(step.label)
+        return false
+      },
+      verifyBuild: () => {
+        throw new Error('checked a failed build')
+      },
+      swap: async () => ({ kind: 'installed' })
+    })
+    expect(ran).toEqual(['install'])
+    expect(outcome).toEqual({ kind: 'not-swapped', reason: 'install failed' })
+  })
+
+  it('swaps a verified build', async () => {
+    const outcome = await buildThenSwap({
+      steps,
+      runStep: () => true,
+      verifyBuild: () => null,
+      swap: async () => ({ kind: 'installed' })
+    })
+    expect(outcome).toEqual({ kind: 'installed' })
   })
 })

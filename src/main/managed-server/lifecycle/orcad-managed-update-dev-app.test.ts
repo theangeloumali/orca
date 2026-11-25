@@ -53,6 +53,16 @@ describe('managed orcad updates from Orca Dev', () => {
     })
   })
 
+  it("leaves a stopped host to restart prod's previous build, never Orca Dev's", async () => {
+    const { planManagedOrcadAutoUpdate, planOrcadUpdateForIntent } = await loadDecisionInOrcaDev()
+    const stopped = {
+      ...input,
+      record: { ...emptyOrcadActivationRecord(), previous: 'prod-build' }
+    }
+    expect(planManagedOrcadAutoUpdate(stopped)).toEqual({ action: 'skip', reason: 'dev-app' })
+    expect(planOrcadUpdateForIntent('update', stopped)).toEqual({ action: 'update' })
+  })
+
   it('keeps updating on connect in prod', async () => {
     const { planManagedOrcadAutoUpdate } = await import('./orcad-managed-update-decision')
     expect(planManagedOrcadAutoUpdate(input)).toEqual({ action: 'update' })

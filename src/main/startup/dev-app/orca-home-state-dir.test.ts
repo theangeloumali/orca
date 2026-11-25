@@ -27,6 +27,17 @@ describe('getOrcaHomeStateDir', () => {
     expect(getOpenAiKeyPath()).toBe(join(homedir(), '.orca-dev-app', 'openai-speech-token.enc'))
   })
 
+  it("keeps Orca Dev's bot tool credentials out of prod's store", async () => {
+    vi.stubGlobal('ORCA_FORK_DEV_APP', true)
+    vi.resetModules()
+    const { botToolCredentialsPath } = await import('../../bots/bot-tool-credentials')
+    expect(botToolCredentialsPath('/repo/bot')).toMatch(
+      new RegExp(
+        `^${join(homedir(), '.orca-dev-app', 'bot-tool-credentials')}/[0-9a-f]{32}\\.json$`
+      )
+    )
+  })
+
   it("keeps Orca Dev's keybindings beside its own state", async () => {
     vi.stubGlobal('ORCA_FORK_DEV_APP', true)
     vi.resetModules()
