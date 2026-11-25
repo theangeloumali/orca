@@ -172,6 +172,91 @@ describe('mergedOrcaDevSession', () => {
     expect(merged?.activeWorktreeIdsOnShutdown).toEqual([WORKTREE])
   })
 
+  it("keeps a fork's split pane in an imported tab when prod syncs again", () => {
+    const leaf = (leafId: string) => ({ type: 'leaf', leafId })
+    const splitLayout = {
+      root: {
+        type: 'split',
+        direction: 'horizontal',
+        first: leaf('leaf-1'),
+        second: leaf('leaf-2')
+      },
+      activeLeafId: 'leaf-2',
+      expandedLeafId: null
+    }
+    const dev = sessionOf(['tab-1'], 'group-1', {
+      terminalLayoutsByTabId: { 'tab-1': splitLayout },
+      sleepingAgentSessionsByPaneKey: {
+        'tab-1:leaf-1': agentRecord('tab-1', 'prod-old', true),
+        'tab-1:leaf-2': { ...agentRecord('tab-1', 'dev-fork'), paneKey: 'tab-1:leaf-2' }
+      }
+    })
+    const prod = parsed(
+      sessionOf(['tab-1'], 'group-1', {
+        sleepingAgentSessionsByPaneKey: { 'tab-1:leaf-1': agentRecord('tab-1', 'prod-new', true) }
+      })
+    )
+
+    const merged = mergedOrcaDevSession(dev, prod, ['tab-1'])
+
+    expect(merged?.terminalLayoutsByTabId['tab-1']).toEqual(splitLayout)
+    const sessionIds = Object.fromEntries(
+      Object.entries(merged?.sleepingAgentSessionsByPaneKey ?? {}).map(([key, record]) => [
+        key,
+        record.providerSession?.id
+      ])
+    )
+    expect(sessionIds).toEqual({ 'tab-1:leaf-1': 'prod-new', 'tab-1:leaf-2': 'dev-fork' })
+  })
+
+  it('keeps every distinct client-hosted browser page from both sides', () => {
+    const page = (browserPageId: string) => ({
+      v: 1,
+      browserPageId,
+      workspaceId: WORKTREE,
+      browserProfileId: 'profile',
+      url: `https://example.test/${browserPageId}`,
+      title: browserPageId,
+      pairedDeviceId: 'device',
+      savedAt: 1
+    })
+    const dev = sessionOf(['dev-tab'], 'group-1', {
+      clientHostedBrowserPagesByWorktree: { [WORKTREE]: [page('dev-page')] }
+    })
+    const prod = parsed(
+      sessionOf(['tab-1'], 'group-1', {
+        clientHostedBrowserPagesByWorktree: { [WORKTREE]: [page('prod-a'), page('prod-b')] }
+      })
+    )
+
+    const merged = mergedOrcaDevSession(dev, prod, [])
+
+    expect(
+      merged?.clientHostedBrowserPagesByWorktree?.[WORKTREE]?.map((row) => row.browserPageId)
+    ).toEqual(['dev-page', 'prod-a', 'prod-b'])
+  })
+
+  it("restores Dev's selected tab after the merge, and the imported pane stays held", () => {
+    const dev = sessionOf(['tab-2', 'tab-1', 'dev-tab'], 'group-1', {
+      activeTabIdByWorktree: { [WORKTREE]: 'tab-2' }
+    })
+    const prod = parsed(
+      sessionOf(['tab-1', 'tab-2'], 'group-1', {
+        activeTabIdByWorktree: { [WORKTREE]: 'tab-1' },
+        sleepingAgentSessionsByPaneKey: {
+          'tab-2:leaf-1': agentRecord('tab-2', 'prod-session', true)
+        }
+      })
+    )
+
+    const merged = mergedOrcaDevSession(dev, prod, ['tab-1', 'tab-2'])
+
+    expect(merged?.activeTabIdByWorktree?.[WORKTREE]).toBe('tab-2')
+    expect(merged?.tabGroups?.[WORKTREE]?.[0]?.activeTabId).toBe('tab-2')
+    // The renderer holds a record flagged as imported until it is clicked.
+    expect(merged?.sleepingAgentSessionsByPaneKey?.['tab-2:leaf-1']?.importedFromProd).toBe(true)
+  })
+
   it("takes prod's import whole when Dev has no session yet", () => {
     const prod = parsed(sessionOf(['tab-1']))
     expect(mergedOrcaDevSession(undefined, prod, [])).toEqual(prod)

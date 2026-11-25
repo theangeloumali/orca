@@ -3,10 +3,13 @@ import { seedResumeLaunchIdentityFromSpawn } from '../pane/resume-launch-identit
 import { forkOrcaDevProdOriginResume } from './spawn-resume'
 
 const recordLaunchResumeIdentity = vi.hoisted(() => vi.fn())
+const isClaudeSessionLiveOnThisMac = vi.hoisted(() =>
+  vi.fn(async (sessionId: string, _settings?: unknown) => sessionId === 'live-session')
+)
 
 vi.mock('../../../../shared/fork/orca-dev-app-flag', () => ({ IS_ORCA_DEV_APP: true }))
 vi.mock('../../../startup/dev-app/orca-dev-claude-liveness', () => ({
-  isClaudeSessionLiveOnThisMac: async (sessionId: string) => sessionId === 'live-session'
+  isClaudeSessionLiveOnThisMac
 }))
 vi.mock('../../../agent-hooks/server/agent-hook-server', () => ({
   agentHookServer: { recordLaunchResumeIdentity }
@@ -69,6 +72,14 @@ describe('forkOrcaDevProdOriginResume', () => {
     await forkOrcaDevProdOriginResume(state, true)
     publishSpawn(state)
     expect(recordLaunchResumeIdentity).not.toHaveBeenCalled()
+  })
+
+  it("checks liveness against the custom Claude homes in Dev's settings", async () => {
+    const settings = { agentDefaultEnv: { claude: { CLAUDE_CONFIG_DIR: '/custom/claude' } } }
+    const store = { getSettings: () => settings }
+    const state = { ...resumeSpawn('idle-session'), deps: { store } }
+    await forkOrcaDevProdOriginResume(state, false)
+    expect(isClaudeSessionLiveOnThisMac).toHaveBeenCalledWith('idle-session', settings)
   })
 
   it('leaves WSL resumes to their own distro', async () => {

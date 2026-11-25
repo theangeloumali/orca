@@ -37,7 +37,10 @@ export function mergedOrcaDevSession(
   if (!dev?.success) {
     return null
   }
-  const imported = new Set([...priorImportedTabIds, ...importedTabIds(prod)])
+  const devForks = devForkTabIds(dev.data)
+  const imported = new Set(
+    [...priorImportedTabIds, ...importedTabIds(prod)].filter((tabId) => !devForks.has(tabId))
+  )
   const merged: WorkspaceSessionRecord = { ...withoutImportedTabs(dev.data, imported) }
   const prodRows: WorkspaceSessionRecord = { ...prod }
   for (const field of Object.keys(WORKSPACE_SESSION_FIELD_OWNERSHIP)) {
@@ -46,7 +49,15 @@ export function mergedOrcaDevSession(
     }
   }
   const result = safeParseWorkspaceSession(merged)
-  return result?.success ? foldGroupsOutsideLayout(result.data) : null
+  return result?.success ? withDevSelection(foldGroupsOutsideLayout(result.data), dev.data) : null
+}
+
+/** An imported tab holding a fork Dev made is Dev's now: its panes and layout survive later syncs. */
+function devForkTabIds(dev: WorkspaceSessionState): Set<string> {
+  const records = Object.values(dev.sleepingAgentSessionsByPaneKey ?? {})
+  return new Set(
+    records.flatMap((record) => (record.tabId && !isImportedRecord(record) ? [record.tabId] : []))
+  )
 }
 
 /** Dev minus every row of an imported tab; Dev's own (unflagged) fork records stay. */
@@ -114,7 +125,11 @@ function mergeField(devValue: unknown, prodValue: unknown, unionGroups: boolean)
 }
 
 function rowId(row: unknown): unknown {
-  return isWorkspaceSessionRecord(row) ? (row.id ?? row.filePath) : row
+  if (!isWorkspaceSessionRecord(row)) {
+    return row
+  }
+  // Client-hosted browser rows carry no id; their page id tells distinct pages apart.
+  return row.id ?? row.browserPageId ?? row.filePath ?? row
 }
 
 function unionRows(devRows: unknown[], prodRows: unknown[], unionGroups: boolean): unknown[] {
@@ -163,4 +178,39 @@ function foldGroupsOutsideLayout(session: WorkspaceSessionState): WorkspaceSessi
     folded = true
   }
   return folded ? { ...session, tabGroups, unifiedTabs } : session
+}
+
+/** Dev's selected tab, per group and per workspace, wherever it survived the merge. */
+function withDevSelection(
+  session: WorkspaceSessionState,
+  dev: WorkspaceSessionState
+): WorkspaceSessionState {
+  const devActive = new Map(
+    Object.values(dev.tabGroups ?? {})
+      .flat()
+      .map((group) => [group.id, group.activeTabId])
+  )
+  const tabGroups = Object.fromEntries(
+    Object.entries(session.tabGroups ?? {}).map(([owner, groups]) => [
+      owner,
+      groups.map((group) => {
+        const selected = devActive.get(group.id)
+        return selected && group.tabOrder.includes(selected)
+          ? { ...group, activeTabId: selected }
+          : group
+      })
+    ])
+  )
+  const activeTabIdByWorktree = { ...session.activeTabIdByWorktree }
+  const activeTabTypeByWorktree = { ...session.activeTabTypeByWorktree }
+  for (const [owner, tabId] of Object.entries(dev.activeTabIdByWorktree ?? {})) {
+    if (tabId && session.unifiedTabs?.[owner]?.some((tab) => tab.id === tabId)) {
+      activeTabIdByWorktree[owner] = tabId
+      const devType = dev.activeTabTypeByWorktree?.[owner]
+      if (devType) {
+        activeTabTypeByWorktree[owner] = devType
+      }
+    }
+  }
+  return { ...session, tabGroups, activeTabIdByWorktree, activeTabTypeByWorktree }
 }

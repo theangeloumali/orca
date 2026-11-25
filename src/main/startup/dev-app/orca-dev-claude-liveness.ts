@@ -1,8 +1,12 @@
 import { readFile, readdir } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
+import type { ClaudeManagedAccount } from '../../../shared/agent-accounts/managed-account-types'
 import { getAppEnvironment } from '../../../shared/app-lifecycle/app-environment'
+import { resolveAbsoluteDirOverride } from '../../../shared/file-access/absolute-dir-override'
+import type { GlobalSettings } from '../../../shared/settings/global-settings-types'
 import { listClaudeProfileHomesAsync } from '../../claude-accounts/profiles/claude-profile-homes'
+import { readUserClaudeConfigDir } from '../../claude-accounts/profiles/claude-profile-paths'
 import { isProcessAlive } from '../../daemon/endpoint/identity/daemon-process-inspection'
 import { isRecord } from '../../persistence/profile-state/documents/profile-state-document-validation'
 import { getOrcaDevAppUserDataPath, getOrcaProdUserDataPath } from './orca-dev-app-paths'
@@ -10,16 +14,42 @@ import { getOrcaDevAppUserDataPath, getOrcaProdUserDataPath } from './orca-dev-a
 // Claude writes sessions/<pid>.json while it runs; sibling <pid>.<hash>.key files are peer tokens.
 const REGISTRY_FILE_NAME = /^\d+\.json$/
 
-/** Prod's and Dev's managed Claude homes, then the default one. */
+/** Where a user's own Claude home is configured; Dev's settings carry prod's synced accounts. */
+export type ConfiguredClaudeHomes = {
+  env?: NodeJS.ProcessEnv
+  settings?: Pick<GlobalSettings, 'agentDefaultEnv'> & {
+    claudeManagedAccounts?: readonly Pick<
+      ClaudeManagedAccount,
+      'managedAuthPath' | 'managedAuthRuntime'
+    >[]
+  }
+}
+
+/** Prod's and Dev's profile homes, configured custom homes, then the default one. */
 export async function listOrcaDevClaudeHomes(
   appDataPath: string,
-  userHome: string
+  userHome: string,
+  configured: ConfiguredClaudeHomes = {}
 ): Promise<string[]> {
   const [prodHomes, devHomes] = await Promise.all([
     listClaudeProfileHomesAsync(getOrcaProdUserDataPath(appDataPath)),
     listClaudeProfileHomesAsync(getOrcaDevAppUserDataPath(appDataPath))
   ])
-  return [...prodHomes, ...devHomes, join(userHome, '.claude')]
+  const custom = configuredClaudeHomes(configured)
+  return [...new Set([...prodHomes, ...devHomes, ...custom, join(userHome, '.claude')])]
+}
+
+function configuredClaudeHomes({ env = {}, settings }: ConfiguredClaudeHomes): string[] {
+  // A WSL account's home lives in the guest, where no Mac process registers.
+  const accountHomes = (settings?.claudeManagedAccounts ?? [])
+    .filter((account) => account.managedAuthRuntime !== 'wsl')
+    .map((account) => account.managedAuthPath)
+  const candidates = [
+    readUserClaudeConfigDir(env),
+    settings?.agentDefaultEnv?.claude?.CLAUDE_CONFIG_DIR,
+    ...accountHomes
+  ]
+  return candidates.map((home) => resolveAbsoluteDirOverride(home, '')).filter(Boolean)
 }
 
 /** A reused pid only costs a needless fork, never a second writer. */
@@ -34,9 +64,16 @@ export async function isClaudeSessionLive(
   return verdicts.includes(true)
 }
 
-export async function isClaudeSessionLiveOnThisMac(sessionId: string): Promise<boolean> {
+export async function isClaudeSessionLiveOnThisMac(
+  sessionId: string,
+  settings?: ConfiguredClaudeHomes['settings']
+): Promise<boolean> {
   const appDataPath = getAppEnvironment().getPath('appData')
-  return isClaudeSessionLive(sessionId, await listOrcaDevClaudeHomes(appDataPath, homedir()))
+  const homes = await listOrcaDevClaudeHomes(appDataPath, homedir(), {
+    env: process.env,
+    settings
+  })
+  return isClaudeSessionLive(sessionId, homes)
 }
 
 async function homeRunsSession(

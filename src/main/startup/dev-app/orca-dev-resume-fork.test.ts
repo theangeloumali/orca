@@ -119,6 +119,30 @@ describe('isClaudeSessionLive', () => {
   })
 })
 
+describe('configured Claude homes', () => {
+  it('finds a live session in a custom home from CLAUDE_CONFIG_DIR, settings or a managed account', async () => {
+    const appData = tempRoot()
+    const envHome = claudeHome(process.pid)
+    const settingsHome = join(tempRoot(), 'settings-home')
+    const accountHome = join(tempRoot(), 'account-home')
+    const settings = {
+      agentDefaultEnv: { claude: { CLAUDE_CONFIG_DIR: settingsHome } },
+      claudeManagedAccounts: [
+        { managedAuthPath: accountHome, managedAuthRuntime: 'host' as const },
+        { managedAuthPath: '/wsl/home', managedAuthRuntime: 'wsl' as const }
+      ]
+    }
+
+    const homes = await listOrcaDevClaudeHomes(appData, '/Users/me', {
+      env: { CLAUDE_CONFIG_DIR: envHome },
+      settings
+    })
+
+    expect(homes).toEqual([envHome, settingsHome, accountHome, join('/Users/me', '.claude')])
+    await expect(isClaudeSessionLive(SESSION_ID, homes)).resolves.toBe(true)
+  })
+})
+
 describe('forkProdOriginResume', () => {
   it('forks a session prod is running and leaves its files unchanged', async () => {
     const home = claudeHome(process.pid)
