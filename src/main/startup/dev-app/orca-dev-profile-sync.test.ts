@@ -2,17 +2,38 @@ import { mkdirSync, mkdtempSync, readdirSync, rmSync, statSync, writeFileSync } 
 import { readFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, relative } from 'node:path'
-import { afterEach, describe, expect, it } from 'vitest'
+import type * as SeededProfileStateDomains from '../../../shared/orca-profiles/seeded-profile-state-domains'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { openProfileStateDatabase } from '../../persistence/profile-state/database/profile-state-database'
 import { importProfileStateJson } from '../../persistence/profile-state/documents/profile-state-documents'
 import { readProfileStateDomains } from '../../persistence/profile-state/documents/profile-state-domain-reader'
 import { getOrcaProfileStateDatabaseFile } from '../../../shared/orca-profiles/profile-state-storage-paths'
 import { syncOrcaDevProfilesFromProd } from './orca-dev-profile-sync'
 
+const midSync = vi.hoisted(() => {
+  const state: { run?: () => void } = {}
+  return state
+})
+
+// Runs between the prod DB read and the index publish, like a prod write landing mid-sync.
+vi.mock('../../../shared/orca-profiles/seeded-profile-state-domains', async (importOriginal) => {
+  const actual = await importOriginal<typeof SeededProfileStateDomains>()
+  return {
+    ...actual,
+    pickSeededProfileStateDomains: (
+      ...args: Parameters<typeof actual.pickSeededProfileStateDomains>
+    ) => {
+      midSync.run?.()
+      return actual.pickSeededProfileStateDomains(...args)
+    }
+  }
+})
+
 const PROFILE_ID = 'local-default'
 const roots: string[] = []
 
 afterEach(() => {
+  midSync.run = undefined
   for (const root of roots.splice(0)) {
     rmSync(root, { recursive: true, force: true })
   }
@@ -276,5 +297,24 @@ describe('syncOrcaDevProfilesFromProd', () => {
       ...devIndex,
       profiles: [...devIndex.profiles, { id: 'work', name: 'Work' }]
     })
+  })
+  it('publishes the prod index read with the synced data, not one prod wrote mid-sync', async () => {
+    const paths = makeUserDataPaths()
+    writeProfile(paths.prod, prodState)
+    const prodIndexPath = join(paths.prod, 'orca-profile-index.json')
+    const snapshot = JSON.parse(await readFile(prodIndexPath, 'utf8'))
+    midSync.run = () => {
+      const later = { ...snapshot, profiles: [...snapshot.profiles, { id: 'added-mid-sync' }] }
+      writeFileSync(prodIndexPath, JSON.stringify(later))
+    }
+
+    const report = syncOrcaDevProfilesFromProd({
+      prodUserDataPath: paths.prod,
+      devUserDataPath: paths.dev
+    })
+
+    expect(report).toMatchObject({ kind: 'done', indexAdded: [PROFILE_ID] })
+    const devIndex = JSON.parse(await readFile(join(paths.dev, 'orca-profile-index.json'), 'utf8'))
+    expect(devIndex).toEqual(snapshot)
   })
 })

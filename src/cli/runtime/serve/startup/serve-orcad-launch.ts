@@ -20,6 +20,7 @@ import {
 import { ORCA_SERVE_APPIMAGE_ENV } from '../../../../shared/remote-runtime/serve-supervisor/orcad-server-launch-env'
 import { SPEECH_RECOGNIZER_DIR_ENV } from '../../../../shared/speech/native-recognizer/speech-recognizer-package'
 import { ORCA_SERVE_SUPERVISED_ENV } from '../../../../shared/remote-runtime/serve-supervisor/serve-supervised-terminal-durability'
+import { IS_ORCA_DEV_APP, ORCA_FORK_DEV_APP_ENV } from '../../../../shared/fork/orca-dev-app-flag'
 
 /** A first run may download and verify the pinned Node; bound it well past that. */
 const SELECTION_TIMEOUT_MS = 10 * 60_000
@@ -67,6 +68,29 @@ export async function resolveLocalServeRuntime(
   }
 }
 
+export function orcadServeEnv(input: {
+  baseEnv: NodeJS.ProcessEnv
+  userDataPath: string
+  version: string
+  supervise: boolean
+  speechRecognizerDir?: string
+  appImagePath?: string
+}): NodeJS.ProcessEnv {
+  return {
+    ...input.baseEnv,
+    // The desktop's profile: its instance lock makes the two refuse each other.
+    ORCA_USER_DATA: input.userDataPath,
+    ORCA_VERSION: input.version,
+    // Always set: a value inherited from an Orca terminal would name another install's copy.
+    [SPEECH_RECOGNIZER_DIR_ENV]: input.speechRecognizerDir ?? '',
+    [ORCA_SERVE_APPIMAGE_ENV]: input.appImagePath ?? '',
+    // orcad is built without the define; this is how it knows it belongs to Orca Dev.
+    [ORCA_FORK_DEV_APP_ENV]: IS_ORCA_DEV_APP ? '1' : '',
+    // A service manager restarts this server, so it must not run terminals that die with it.
+    [ORCA_SERVE_SUPERVISED_ENV]: input.supervise ? '1' : ''
+  }
+}
+
 /** Electron serve binds every interface (`exposeNetworkByDefault`); orcad does it on request. */
 export function serveWithOrcad(
   selection: Extract<ServeRuntimeSelection, { kind: 'orcad' }>,
@@ -86,17 +110,14 @@ export function serveWithOrcad(
     detached: args.recipeJson === true,
     cwd: dirname(selection.entry),
     stdio: args.recipeJson === true ? ['ignore', 'pipe', 'inherit'] : 'inherit',
-    env: {
-      ...baseEnv,
-      // The desktop's profile: its instance lock makes the two refuse each other.
-      ORCA_USER_DATA: userDataPath,
-      ORCA_VERSION: selection.version,
-      // Always set: a value inherited from an Orca terminal would name another install's copy.
-      [SPEECH_RECOGNIZER_DIR_ENV]: speechRecognizerDir ?? '',
-      [ORCA_SERVE_APPIMAGE_ENV]: appImagePath ?? '',
-      // A service manager restarts this server, so it must not run terminals that die with it.
-      [ORCA_SERVE_SUPERVISED_ENV]: args.supervise === true ? '1' : ''
-    }
+    env: orcadServeEnv({
+      baseEnv,
+      userDataPath,
+      version: selection.version,
+      supervise: args.supervise === true,
+      speechRecognizerDir,
+      appImagePath
+    })
   }
   const spawnChild = shouldRedactSupervisedStdout(args.supervise === true)
     ? redactingSpawn(spawnProcess)

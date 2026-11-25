@@ -14,6 +14,8 @@ import {
 } from '../../../shared/agent-hook-listener/configuration/agent-status-hooks-setting'
 import { probeClaudeCliVersion } from '../../claude/cli-capabilities/claude-hook-event-versions'
 import { detectLocalManagedAgentCliPresence } from './local-agent-cli-presence'
+import { IS_ORCA_DEV_APP } from '../../../shared/fork/orca-dev-app-flag'
+import { orcaDevSkippedHookStatus } from './orca-dev-hook-skip'
 import {
   MANAGED_AGENT_HOOK_ASYNC_REMOVERS,
   MANAGED_AGENT_HOOK_INSTALLERS,
@@ -134,6 +136,9 @@ export async function installManagedAgentHooks(
   settings: ManagedHookSettings = null,
   options: InstallOptions = {}
 ): Promise<AgentHookInstallStatus[]> {
+  if (IS_ORCA_DEV_APP) {
+    return selectedInstallers(options).map(([agent]) => orcaDevSkippedHookStatus(agent))
+  }
   await refreshExistingManagedScripts(options)
   const installers = selectedInstallers(options)
   const disabled = new Set(normalizeDisabledTuiAgents(settings?.disabledTuiAgents))
@@ -207,6 +212,10 @@ export async function removeManagedAgentHooks(
     if (allowed !== null && !allowed.has(agent)) {
       continue
     }
+    if (IS_ORCA_DEV_APP) {
+      results.push(orcaDevSkippedHookStatus(agent))
+      continue
+    }
     try {
       results.push(await remove())
     } catch (error) {
@@ -224,6 +233,9 @@ export async function removeManagedAgentHooksAsync(
     MANAGED_AGENT_HOOK_ASYNC_REMOVERS.filter(
       ([agent]) => allowed === null || allowed.has(agent)
     ).map(async ([agent, remove]) => {
+      if (IS_ORCA_DEV_APP) {
+        return orcaDevSkippedHookStatus(agent)
+      }
       try {
         return await remove()
       } catch (error) {

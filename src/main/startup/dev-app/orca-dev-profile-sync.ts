@@ -53,7 +53,8 @@ export function syncOrcaDevProfilesFromProd(
   // Last, so the dev index never names a profile whose data is not written yet.
   const devIndexPath = join(paths.devUserDataPath, PROFILE_INDEX_FILE_NAME)
   if (!existsSync(devIndexPath)) {
-    writePrivateFileAtomically(devIndexPath, readFileSync(prodIndexPath, 'utf8'))
+    // The snapshot read above, not a re-read: prod may have written its index during the sync.
+    writePrivateFileAtomically(devIndexPath, JSON.stringify(prodIndex.raw))
     return { kind: 'done', indexAdded: profileIds, profiles }
   }
   return { kind: 'done', indexAdded: addMissingProfiles(prodIndex, devIndexPath), profiles }

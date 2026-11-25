@@ -25,6 +25,8 @@ import { dshHookService } from '../../dsh/hook-service'
 import { museHookService } from '../../muse/hook-service'
 import { zcodeHookService } from '../../zcode/hook-service'
 import { openClaudeHookService } from '../../openclaude/hook-service'
+import { IS_ORCA_DEV_APP } from '../../../shared/fork/orca-dev-app-flag'
+import { orcaDevSkippedHookStatus } from './orca-dev-hook-skip'
 
 export type RemoteManagedHookInstallOptions = {
   /** Redirected runtime CODEX_HOME, including managed WSL homes. */
@@ -113,6 +115,11 @@ export async function installRemoteManagedAgentHooks(
   const results: AgentHookInstallStatus[] = []
   for (const [agent, install] of REMOTE_MANAGED_HOOK_INSTALLERS) {
     if (!allowedAgents.has(agent)) {
+      continue
+    }
+    // A guest home is shared with prod's relay installs, like the local user-global configs.
+    if (IS_ORCA_DEV_APP) {
+      results.push(orcaDevSkippedHookStatus(agent))
       continue
     }
     // Stop further config mutations when the owning relay request disappears.
