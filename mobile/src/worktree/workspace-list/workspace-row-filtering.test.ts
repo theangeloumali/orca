@@ -92,3 +92,18 @@ describe('isListNarrowed', () => {
     expect(isListNarrowed('', { ...NO_WORKSPACE_ROW_FILTERS, showOnlyNeedsYou: true })).toBe(true)
   })
 })
+
+describe('filterWorktrees under Needs you', () => {
+  const NEEDS_YOU = { ...NO_WORKSPACE_ROW_FILTERS, showOnlyNeedsYou: true }
+
+  it('keeps only rows whose agent waits on you', () => {
+    const waiting = row('wt-waiting', { status: 'permission' })
+    const shown = filterWorktrees([waiting, row('wt-idle')], NEEDS_YOU, '')
+    expect(shown.map((w) => w.worktreeId)).toEqual(['wt-waiting'])
+  })
+
+  it('keeps every row from a desktop that sends no agent state', () => {
+    const legacy = row('wt-legacy', { status: undefined, agents: undefined })
+    expect(filterWorktrees([legacy], NEEDS_YOU, '').map((w) => w.worktreeId)).toEqual(['wt-legacy'])
+  })
+})

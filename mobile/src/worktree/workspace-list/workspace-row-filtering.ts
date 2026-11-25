@@ -15,6 +15,7 @@ import {
 } from '../../../../src/shared/workspace-view/workspace-find-query'
 import { branchRefLabel } from '../../../../src/shared/git/refs/branch-ref-label'
 import type { FilterState, Worktree } from './workspace-list-types'
+import { hasWorktreeAgentState } from './workspace-list-ordering'
 import { resolveWorktreeHostId } from '../row-presentation/worktree-host-context-labels'
 import { getWorktreeRowIdentity } from '../row-presentation/worktree-host-row-identity'
 import { rowNeedsYou } from './row-agent-states'
@@ -54,7 +55,8 @@ export function isPhoneRowInHiddenProject(
 function phoneRowFacts(
   repoHostIdByRepoId: ReadonlyMap<string, ExecutionHostId>,
   hiddenProjects: HiddenProjects,
-  parentByChild: ReadonlyMap<string, string>
+  parentByChild: ReadonlyMap<string, string>,
+  hasAgentState: boolean
 ): WorkspaceRowFactReader<Worktree> {
   return {
     isArchived: (w) => w.isArchived === true,
@@ -75,7 +77,8 @@ function phoneRowFacts(
     isSleeping: (w) => !isWorktreeActive(w),
     // Lost contact is unverifiable, never gone, as the feed reads it (activityHasRunningTerminal).
     hasRunningTerminal: (w) => w.liveTerminalCount > 0 || (w.unverifiableTerminalCount ?? 0) > 0,
-    needsYou: rowNeedsYou
+    // An older desktop sends no agent state; without the fact, Needs you keeps every row.
+    ...(hasAgentState ? { needsYou: rowNeedsYou } : {})
   }
 }
 
@@ -130,7 +133,12 @@ export function filterWorktrees(
       children.map((child) => [getWorktreeRowIdentity(child), parent] as const)
     )
   )
-  const read = phoneRowFacts(repoHostIdByRepoId, hiddenProjects, parentByChild)
+  const read = phoneRowFacts(
+    repoHostIdByRepoId,
+    hiddenProjects,
+    parentByChild,
+    worktrees.some(hasWorktreeAgentState)
+  )
   const result = withListedFolderAncestors(worktrees, filters, read, parentByChild)
   const query = normalizeFindQuery(search)
   if (!query) {

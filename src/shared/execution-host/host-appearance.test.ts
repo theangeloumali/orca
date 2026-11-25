@@ -68,9 +68,8 @@ describe('host appearance', () => {
 
 describe('pickHostAppearance', () => {
   it('keeps a stored color and a known tint, and drops everything else', () => {
-    expect(
-      pickHostAppearance({ color: '#22c55e', sectionTint: 'strong', displayLabel: 'M1' })
-    ).toEqual({ color: '#22c55e', sectionTint: 'strong' })
+    const stored = { color: '#22c55e', sectionTint: 'strong', displayLabel: 'M1' }
+    expect(pickHostAppearance(stored)).toEqual({ color: '#22c55e', sectionTint: 'strong' })
     expect(pickHostAppearance({ color: '', sectionTint: 'loud' })).toEqual({})
     expect(pickHostAppearance({ color: 7 })).toEqual({})
   })
