@@ -78,7 +78,7 @@ export abstract class UpdaterRemoteStatus extends UpdaterNudge {
     if (this.currentStatus.state !== 'available') {
       throw new Error('remote_update_not_available')
     }
-    this.downloadUpdate()
+    this.startRemoteDownload()
     return this.getRemoteServerUpdaterSnapshot(runtimeId)
   }
 
@@ -98,8 +98,18 @@ export abstract class UpdaterRemoteStatus extends UpdaterNudge {
       targetVersion,
       runtimeId
     }
-    this.quitAndInstall()
+    this.startRemoteInstall()
     return result
+  }
+
+  /** Starts a paired client's download; fork builds route it to their own updater. */
+  protected startRemoteDownload(): void {
+    this.downloadUpdate()
+  }
+
+  /** Starts a paired client's install; fork builds route it to their own updater. */
+  protected startRemoteInstall(): void {
+    this.quitAndInstall()
   }
 
   private assertRemoteUpdaterIdle(): void {

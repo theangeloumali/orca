@@ -2,9 +2,33 @@ import type { UpdateStatus } from '../../../shared/updater/update-status-types'
 import { UpdaterDownloadInstall } from './updater-download-install'
 import { resolveWindowsUpdateInstallDirectory } from './windows-update-install-directory'
 
+type ForkRemoteUpdateRoutes = { download: () => void; install: () => void }
+
 // The seams the fork's own updater (../fork) drives; kept out of updater-setup.ts so upstream syncs merge cleanly.
 export abstract class UpdaterForkHooks extends UpdaterDownloadInstall {
   protected windowsInstallDirectory: string | undefined
+  private forkRemoteUpdateRoutes: ForkRemoteUpdateRoutes | undefined
+
+  /** Sends paired clients' download and install requests to the fork updater. */
+  routeRemoteUpdatesToFork(routes: ForkRemoteUpdateRoutes): void {
+    this.forkRemoteUpdateRoutes = routes
+  }
+
+  protected override startRemoteDownload(): void {
+    if (this.forkRemoteUpdateRoutes) {
+      this.forkRemoteUpdateRoutes.download()
+      return
+    }
+    super.startRemoteDownload()
+  }
+
+  protected override startRemoteInstall(): void {
+    if (this.forkRemoteUpdateRoutes) {
+      this.forkRemoteUpdateRoutes.install()
+      return
+    }
+    super.startRemoteInstall()
+  }
 
   /** Resolves the running Windows install folder at setup and keeps it for the fork updater. */
   protected rememberWindowsInstallDirectory(): string | undefined {
