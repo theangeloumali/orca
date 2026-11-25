@@ -366,6 +366,20 @@ describe('createBuildSteps', () => {
     expect(steps.map((step) => step.args[3])).toContain('build:desktop')
   })
 
+  it('installs mobile/ from its lockfile after the root install, before build:desktop', () => {
+    const labels = steps.map((step) => step.label)
+    expect(steps[1].args).toEqual([
+      '-y',
+      'pnpm@12.18.0',
+      '-C',
+      'mobile',
+      'install',
+      '--frozen-lockfile'
+    ])
+    expect(labels.indexOf('install mobile')).toBe(1)
+    expect(labels.indexOf('install mobile')).toBeLessThan(labels.indexOf('build:desktop'))
+  })
+
   it('reads the pinned pnpm version without its integrity hash', () => {
     expect(pnpmSpecFromPackageManager('pnpm@12.18.0+sha512.abc')).toBe('pnpm@12.18.0')
     expect(() => pnpmSpecFromPackageManager('yarn@4')).toThrow(/pnpm/)

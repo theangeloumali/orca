@@ -158,6 +158,8 @@ export function createBuildSteps({ checkoutPath, pnpmSpec }) {
   })
   return [
     pnpm('install', 'install', '--frozen-lockfile'),
+    // build:desktop bundles the mobile web app, which needs mobile/'s own dependencies.
+    pnpm('install mobile', '-C', 'mobile', 'install', '--frozen-lockfile'),
     ...[
       'build:desktop',
       'build:computer-macos',
