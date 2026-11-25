@@ -31,6 +31,7 @@ import {
   type OrcadRunningAdoption
 } from '../activation/orcad-running-version-adoption'
 import { readLocalFullVersion } from '../install/remote-versioned-install'
+import { refuseOrcadDeployFromOrcaDev } from './orcad-managed-update-decision'
 
 import { ORCAD_ACTIVATION_POLICY_REFUSED_CODE } from '../activation/orcad-installed-activation'
 import { pruneManagedOrcadVersions } from './orcad-managed-version-gc'
@@ -57,6 +58,8 @@ export async function createManagedOrcadEnvironment(
     migration?: boolean
   }
 ): Promise<OrcadManagedDeployResult> {
+  // Before the target claim, so Orca Dev leaves no half-provisioned host behind.
+  refuseOrcadDeployFromOrcaDev()
   return runTargetLifecycle(args.sshTargetId, async () => {
     const { connectionManager, targetStore, claims } = requireManagedOrcadInfrastructure()
     const environmentId =

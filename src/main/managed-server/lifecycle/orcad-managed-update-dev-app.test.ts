@@ -15,6 +15,10 @@ const input = {
   appVersion: '1.0.0',
   failedBefore: false
 }
+const empty = { ...input, record: emptyOrcadActivationRecord() }
+const stopped = { ...input, record: { ...emptyOrcadActivationRecord(), previous: 'prod-build' } }
+const devAppSkip = { action: 'skip', reason: 'dev-app' } as const
+const REFUSAL = "Orca Dev doesn't update remote servers; use Orca."
 
 async function loadDecisionInOrcaDev() {
   vi.stubGlobal('ORCA_FORK_DEV_APP', true)
@@ -28,43 +32,50 @@ describe('managed orcad updates from Orca Dev', () => {
     vi.resetModules()
   })
 
-  it("skips the connect update so Orca Dev never flips the host's server build", async () => {
-    const { planManagedOrcadAutoUpdate, planOrcadUpdateForIntent, orcadUpdateSkipRefusal } =
-      await loadDecisionInOrcaDev()
-    const skip = { action: 'skip', reason: 'dev-app' } as const
-    expect(planManagedOrcadAutoUpdate(input)).toEqual(skip)
-    expect(planOrcadUpdateForIntent('connect', input)).toEqual(skip)
-    expect(orcadUpdateSkipRefusal(skip, serving, 'dev-build', '1.0.0')).toMatch(/Update/)
+  it('never puts its build on a host on connect, serving, stopped or empty', async () => {
+    const { planManagedOrcadAutoUpdate, planOrcadUpdateForIntent } = await loadDecisionInOrcaDev()
+    for (const host of [input, stopped, empty]) {
+      expect(planManagedOrcadAutoUpdate(host)).toEqual(devAppSkip)
+      expect(planOrcadUpdateForIntent('connect', host)).toEqual(devAppSkip)
+    }
   })
 
-  it('still runs an explicit Update or Force and still advertises the update', async () => {
-    const { planOrcadUpdateForIntent, availableManagedOrcadUpdate } = await loadDecisionInOrcaDev()
-    expect(planOrcadUpdateForIntent('update', input)).toEqual({ action: 'update' })
-    expect(planOrcadUpdateForIntent('force', input)).toEqual({ action: 'update' })
+  it('refuses an explicit Update or Force and sends the user to Orca', async () => {
+    const { planOrcadUpdateForIntent, admitOrcadRecordForIntent, availableManagedOrcadUpdate } =
+      await loadDecisionInOrcaDev()
+    for (const host of [input, stopped, empty]) {
+      expect(planOrcadUpdateForIntent('update', host)).toEqual(devAppSkip)
+      expect(planOrcadUpdateForIntent('force', host)).toEqual(devAppSkip)
+    }
+    expect(admitOrcadRecordForIntent('update', '1.0.0')(serving, 'dev-build')).toBe(REFUSAL)
+    expect(admitOrcadRecordForIntent('force', '1.0.0')(empty.record, 'dev-build')).toBe(REFUSAL)
+    expect(availableManagedOrcadUpdate({ ...input, deferredCandidateVersion: null })).toBeNull()
+  })
+
+  it('refuses any deploy before an upload', async () => {
+    const { refuseOrcadDeployFromOrcaDev } = await loadDecisionInOrcaDev()
+    expect(() => refuseOrcadDeployFromOrcaDev()).toThrow(REFUSAL)
+    expect(() => refuseOrcadDeployFromOrcaDev(false)).not.toThrow()
+  })
+
+  it('leaves prod connect, Update and Force unchanged', async () => {
+    const {
+      planManagedOrcadAutoUpdate,
+      planOrcadUpdateForIntent,
+      admitOrcadRecordForIntent,
+      availableManagedOrcadUpdate,
+      refuseOrcadDeployFromOrcaDev
+    } = await import('./orcad-managed-update-decision')
+    const update = { action: 'update' }
+    for (const host of [input, stopped, empty]) {
+      expect(planManagedOrcadAutoUpdate(host)).toEqual(update)
+      expect(planOrcadUpdateForIntent('update', host)).toEqual(update)
+      expect(planOrcadUpdateForIntent('force', host)).toEqual(update)
+    }
+    expect(admitOrcadRecordForIntent('update', '1.0.0')(serving, 'dev-build')).toBeNull()
     expect(availableManagedOrcadUpdate({ ...input, deferredCandidateVersion: null })).toBe(
       'dev-build'
     )
-  })
-
-  it('still starts a host that serves no build yet', async () => {
-    const { planManagedOrcadAutoUpdate } = await loadDecisionInOrcaDev()
-    expect(planManagedOrcadAutoUpdate({ ...input, record: emptyOrcadActivationRecord() })).toEqual({
-      action: 'update'
-    })
-  })
-
-  it("leaves a stopped host to restart prod's previous build, never Orca Dev's", async () => {
-    const { planManagedOrcadAutoUpdate, planOrcadUpdateForIntent } = await loadDecisionInOrcaDev()
-    const stopped = {
-      ...input,
-      record: { ...emptyOrcadActivationRecord(), previous: 'prod-build' }
-    }
-    expect(planManagedOrcadAutoUpdate(stopped)).toEqual({ action: 'skip', reason: 'dev-app' })
-    expect(planOrcadUpdateForIntent('update', stopped)).toEqual({ action: 'update' })
-  })
-
-  it('keeps updating on connect in prod', async () => {
-    const { planManagedOrcadAutoUpdate } = await import('./orcad-managed-update-decision')
-    expect(planManagedOrcadAutoUpdate(input)).toEqual({ action: 'update' })
+    expect(() => refuseOrcadDeployFromOrcaDev()).not.toThrow()
   })
 })

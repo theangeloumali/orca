@@ -35,6 +35,7 @@ export function stopOrcadAgentListeners(server: AgentHookServer): void {
  * Reconcile hooks at startup as well as setting changes so newly managed hosts report status immediately.
  * Call `readinessPublished` once readiness is out; work held off the ready path starts then.
  */
+// No Orca Dev gate: Orca Dev never deploys orcad (refuseOrcadDeployFromOrcaDev), so this runs only on prod builds.
 export function startOrcadManagedAgentHooks(
   store: Pick<ProfilePreferences, 'getSettings' | 'onSettingsChanged'>,
   setStatusHooksEnabled: (enabled: boolean) => void,
