@@ -6,9 +6,9 @@ import {
 } from '../credentials/credential-file-io'
 import { getSecretStore } from '../../shared/secure-storage/secret-store'
 import { readFile, rm } from 'node:fs/promises'
-import { homedir } from 'node:os'
 import { join } from 'node:path'
 import type { SecretAtRestProtection } from '../../shared/secure-storage/secret-at-rest-protection'
+import { getOrcaHomeStateDir } from '../startup/dev-app/orca-home-state-dir'
 
 const ZCODE_PLAN_API_KEY_FILE = 'zcode-plan-api-key.enc'
 export const API_KEY_ENVELOPE_PREFIX = 'orca-zcode-plan-api-key:v1:'
@@ -21,7 +21,7 @@ type ZcodePlanApiKeyEnvelope = {
 }
 
 export function getZcodePlanApiKeyPath(): string {
-  return join(homedir(), '.orca', ZCODE_PLAN_API_KEY_FILE)
+  return join(getOrcaHomeStateDir(), ZCODE_PLAN_API_KEY_FILE)
 }
 
 function encodeApiKeyEnvelope(kind: ZcodePlanApiKeyEnvelope['kind'], payload: Buffer): string {

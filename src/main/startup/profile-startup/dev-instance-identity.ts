@@ -1,6 +1,11 @@
 import { createHash } from 'node:crypto'
 import path from 'node:path'
 import type { AppIdentity } from '../../../shared/app-lifecycle/identity/app-identity'
+import {
+  IS_ORCA_DEV_APP,
+  ORCA_DEV_APP_NAME,
+  ORCA_DEV_APP_USER_MODEL_ID
+} from '../dev-app/orca-dev-app'
 
 const BASE_APP_NAME = 'Orca'
 const BASE_APP_USER_MODEL_ID = 'com.stablyai.orca'
@@ -50,10 +55,26 @@ function createDevAppUserModelId(identityKey: string | null): string {
   return `${BASE_APP_USER_MODEL_ID}.dev.${hash}`
 }
 
+// Packaged but dev-flavoured: isDev renames the app before ready, so its Keychain key is never prod's.
+const ORCA_DEV_APP_IDENTITY: DevInstanceIdentity = {
+  name: ORCA_DEV_APP_NAME,
+  appName: ORCA_DEV_APP_NAME,
+  isDev: true,
+  devLabel: ORCA_DEV_APP_NAME,
+  devBranch: null,
+  devWorktreeName: null,
+  devRepoRoot: null,
+  dockBadgeLabel: null,
+  appUserModelId: ORCA_DEV_APP_USER_MODEL_ID
+}
+
 export function getDevInstanceIdentity(
   isDev: boolean,
   env: NodeJS.ProcessEnv = process.env
 ): DevInstanceIdentity {
+  if (IS_ORCA_DEV_APP) {
+    return ORCA_DEV_APP_IDENTITY
+  }
   if (!isDev) {
     return {
       name: BASE_APP_NAME,

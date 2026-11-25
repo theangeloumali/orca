@@ -9,6 +9,7 @@ import {
   refuseOrcadHostDowngrade,
   type OrcadHostVersionRefusal
 } from '../activation/orcad-host-version-admission'
+import { IS_ORCA_DEV_APP } from '../../../shared/fork/orca-dev-app-flag'
 
 export type ManagedOrcadAutoUpdateSkip =
   | 'current'
@@ -16,6 +17,8 @@ export type ManagedOrcadAutoUpdateSkip =
   | 'rolled-back'
   | 'failed-before'
   | 'migrating'
+  /** Orca Dev never puts its orcad on a host; prod Orca owns every host's server. */
+  | 'dev-app'
   | OrcadHostVersionRefusal
 
 /** Connect honors all skips; Update retries local failures/rollbacks; Force also lifts version skips. */
@@ -25,11 +28,22 @@ export type ManagedOrcadAutoUpdatePlan =
   | { action: 'update' }
   | { action: 'skip'; reason: ManagedOrcadAutoUpdateSkip }
 
+const ORCA_DEV_ORCAD_REFUSAL = "Orca Dev doesn't update remote servers; use Orca."
+
+/** Orca Dev's orcad carries the dev flag onto the host, so every deploy refuses before its upload. */
+export function refuseOrcadDeployFromOrcaDev(isDevApp = IS_ORCA_DEV_APP): void {
+  if (isDevApp) {
+    throw new Error(ORCA_DEV_ORCAD_REFUSAL)
+  }
+}
+
 export function planManagedOrcadAutoUpdate(input: {
   record: OrcadActivationRecord
   candidateVersion: string | null
   appVersion: string
   failedBefore: boolean
+  /** Defaults to the build flag. */
+  isDevApp?: boolean
 }): ManagedOrcadAutoUpdatePlan {
   const { record, candidateVersion } = input
   if (!candidateVersion) {
@@ -37,6 +51,9 @@ export function planManagedOrcadAutoUpdate(input: {
   }
   if (record.active === candidateVersion) {
     return { action: 'skip', reason: 'current' }
+  }
+  if (input.isDevApp ?? IS_ORCA_DEV_APP) {
+    return { action: 'skip', reason: 'dev-app' }
   }
   if (record.rolledBackFrom === candidateVersion) {
     return { action: 'skip', reason: 'rolled-back' }
@@ -57,7 +74,9 @@ export function planOrcadUpdateForIntent(
   input: Parameters<typeof planManagedOrcadAutoUpdate>[0]
 ): ManagedOrcadAutoUpdatePlan {
   if (intent === 'force') {
-    return { action: 'update' }
+    return (input.isDevApp ?? IS_ORCA_DEV_APP)
+      ? { action: 'skip', reason: 'dev-app' }
+      : { action: 'update' }
   }
   if (intent === 'connect') {
     return planManagedOrcadAutoUpdate(input)
@@ -108,6 +127,9 @@ export function orcadUpdateSkipRefusal(
 ): string | null {
   if (plan.action !== 'skip' || plan.reason === 'current') {
     return null
+  }
+  if (plan.reason === 'dev-app') {
+    return ORCA_DEV_ORCAD_REFUSAL
   }
   return plan.reason === 'rolled-back'
     ? `This host's server rolled back from ${candidateVersion}, so a connect does not activate ` +

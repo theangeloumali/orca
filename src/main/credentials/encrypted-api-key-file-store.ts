@@ -6,11 +6,11 @@ import {
   inCredentialFileOrder,
   stageCredentialFile
 } from './credential-file-io'
-import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { isUnreadableError } from '../../shared/secure-storage/secure-file'
 import type { SecretAtRestProtection } from '../../shared/secure-storage/secret-at-rest-protection'
 import { ApiKeyFileUnreadableError } from './api-key-file-unreadable-error'
+import { getOrcaHomeStateDir } from '../startup/dev-app/orca-home-state-dir'
 
 type EncryptedApiKeyFileStore = {
   /** Envelope location and prefix used by orcad's plaintext migration. */
@@ -42,7 +42,7 @@ export function createEncryptedApiKeyFileStore({
   }
 
   function getOrcaDir(): string {
-    return join(homedir(), '.orca')
+    return getOrcaHomeStateDir()
   }
 
   function getApiKeyPath(): string {

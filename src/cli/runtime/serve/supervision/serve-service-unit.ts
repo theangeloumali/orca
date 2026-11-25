@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import { join } from 'node:path'
-import { SERVE_LAUNCHD_LABEL_PREFIX } from '../../../../shared/remote-runtime/serve-supervisor/serve-bundle-coordination'
+import { serveServiceNamespace } from '../../../../shared/remote-runtime/serve-supervisor/serve-service-unit-removal'
 
 export type ServeServiceManager = 'launchd' | 'systemd'
 
@@ -67,8 +67,9 @@ export function renderServeService(input: ServeServiceInput): ServeServiceSpec {
   // The manager’s environment may resolve a different default profile.
   const env: Record<string, string> = { PATH: input.path, ORCA_USER_DATA_PATH: input.userDataPath }
   const argv = [input.command, ...serveServiceArgs(input)]
+  const namespace = serveServiceNamespace()
   if (manager === 'launchd') {
-    const name = suffix ? `${SERVE_LAUNCHD_LABEL_PREFIX}.${suffix}` : SERVE_LAUNCHD_LABEL_PREFIX
+    const name = suffix ? `${namespace.launchdLabel}.${suffix}` : namespace.launchdLabel
     const logPath = join(input.homeDir, 'Library', 'Logs', 'Orca', `${name}.log`)
     return {
       manager,
@@ -78,7 +79,7 @@ export function renderServeService(input: ServeServiceInput): ServeServiceSpec {
       content: renderLaunchAgent(name, argv, env, logPath)
     }
   }
-  const name = suffix ? `orca-serve-${suffix}.service` : 'orca-serve.service'
+  const name = `${namespace.systemdName}${suffix ? `-${suffix}` : ''}.service`
   return {
     manager,
     name,

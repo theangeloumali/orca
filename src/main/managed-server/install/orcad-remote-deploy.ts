@@ -18,6 +18,7 @@ import { ORCAD_STARTUP_READINESS_TIMEOUT_MS } from '../../../shared/remote-runti
 import { materializeOrcadArtifact } from '../../orcad/artifact-slots/orcad-artifact-materializer'
 import { readOrcadBundleTarget } from './orcad-deployment-target'
 import { resolveOrcadRuntimeTarget } from '../lifecycle/orcad-runtime-target'
+import { refuseOrcadDeployFromOrcaDev } from '../lifecycle/orcad-managed-update-decision'
 import {
   orcadNodeRuntimeInstallOptions,
   type NodeRuntimeDownloadBudget
@@ -95,6 +96,7 @@ export async function deployOrcad(
   input: OrcadDeployOptions,
   retryClearedFence = true
 ): Promise<OrcadDeployResult> {
+  refuseOrcadDeployFromOrcaDev()
   const target =
     input.target ??
     (input.localOrcadDir

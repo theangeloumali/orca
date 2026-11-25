@@ -30,6 +30,7 @@ import type { SettingsHostScope } from '../host-scope/settings-host-scope'
 import { SettingsGroup } from '../section-layout/SettingsGroup'
 import { useTranslate } from '@/i18n/use-translate'
 import { AgentWorkspaceTrustSetting } from './behavior/AgentWorkspaceTrustSetting'
+import { IS_ORCA_DEV_APP } from '../../../../../shared/fork/orca-dev-app-flag'
 
 type AgentSettingProps = {
   settings: GlobalSettings
@@ -94,7 +95,8 @@ export function AgentsPane({
         <SettingsSwitchRow
           label={getClaudeSubagentNavigationTitle(t)}
           description={getClaudeSubagentNavigationDescription(t)}
-          checked={settings.claudeSubagentNavigationEnabled !== false}
+          checked={settings.claudeSubagentNavigationEnabled !== false && !IS_ORCA_DEV_APP}
+          disabled={IS_ORCA_DEV_APP}
           onChange={() =>
             updateSettings({
               claudeSubagentNavigationEnabled: settings.claudeSubagentNavigationEnabled === false
@@ -132,7 +134,8 @@ function AgentStatusHooksSetting({ settings, updateSettings }: AgentSettingProps
     <SettingsSwitchRow
       label={getAgentStatusHooksTitle(t)}
       description={getAgentStatusHooksDescription(t)}
-      checked={enabled}
+      checked={enabled && !IS_ORCA_DEV_APP}
+      disabled={IS_ORCA_DEV_APP}
       onChange={() => updateSettings({ agentStatusHooksEnabled: !enabled })}
       ariaLabel={getAgentStatusHooksTitle(t)}
     />

@@ -1,6 +1,7 @@
 import { translate } from '@/i18n/i18n'
 import type { Translate } from '@/i18n/use-translate'
 import { searchKeywords } from '../../search/settings-search-keywords'
+import { IS_ORCA_DEV_APP } from '../../../../../../shared/fork/orca-dev-app-flag'
 
 const AGENT_STATUS_HOOKS_TITLE_KEY = 'auto.components.settings.agent-status-hooks-copy.7707c15abb'
 const AGENT_STATUS_HOOKS_DESCRIPTION_KEY =
@@ -11,6 +12,12 @@ export function getAgentStatusHooksTitle(t: Translate = translate): string {
 }
 
 export function getAgentStatusHooksDescription(t: Translate = translate): string {
+  if (IS_ORCA_DEV_APP) {
+    return t(
+      'auto.components.settings.agent-status-hooks-copy.orcaDevUnavailable',
+      'Unavailable in Orca Dev. Use Orca to manage agent hooks.'
+    )
+  }
   return t(
     AGENT_STATUS_HOOKS_DESCRIPTION_KEY,
     'Shows working, waiting, and done states in Orca. Turn off to remove Orca-managed hooks and stop reinstalling them.'

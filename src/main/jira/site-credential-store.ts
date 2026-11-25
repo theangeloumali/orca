@@ -1,6 +1,5 @@
 import { inCredentialFileOrder, credentialFileExists } from '../credentials/credential-file-io'
 import { mkdir, readFile, unlink, writeFile } from 'node:fs/promises'
-import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { writeEncryptedCredential } from '../credentials/integration-credential-file'
 import { readCredentialFileProtection } from '../credentials/credential-file-protection'
@@ -10,6 +9,7 @@ import { createIntegrationStateFileCache } from '../credentials/integration-stat
 import { isJiraGatewayBaseUrl } from './gateway-base-url'
 import { resolveJiraAuthType } from './site-identity'
 import { createIntegrationTokenFileCache } from '../credentials/integration-token-file-cache'
+import { getOrcaHomeStateDir } from '../startup/dev-app/orca-home-state-dir'
 
 export type JiraSiteFile = {
   version: 1
@@ -29,7 +29,7 @@ export async function getCredentialError(siteId: string): Promise<string | undef
 }
 
 function getOrcaDir(): string {
-  return join(homedir(), '.orca')
+  return getOrcaHomeStateDir()
 }
 
 function getSiteFilePath(): string {

@@ -21,7 +21,7 @@ export type ClaudeThemeOwnership = {
 
 type OwnershipByConfigDir = Map<string, ClaudeThemeOwnership>
 
-// Why under ~/.orca, not userData: every Orca build on this machine must agree on what it replaced.
+// Shared ~/.orca, Orca Dev included: every Orca build on this machine must agree on what it replaced.
 function ownershipPath(): string {
   return join(homedir(), '.orca', 'claude-theme-sync.json')
 }

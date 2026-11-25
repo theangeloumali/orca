@@ -2,6 +2,7 @@ import { access, readdir, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { runProcess } from '@orca/process-host'
 import { SERVE_LAUNCHD_LABEL_PREFIX } from './serve-bundle-coordination'
+import { IS_ORCA_DEV_APP } from '../../fork/orca-dev-app-flag'
 
 /** One `orca serve service install` unit; profiles other than the default carry a hash suffix. */
 export type InstalledServeServiceUnit = {
@@ -24,6 +25,16 @@ export const runServeServiceManager: ServeServiceRun = async (program, args) => 
   }
 }
 
+/** Orca Dev's own unit names, so neither build's `serve service` or uninstall reaches the other's. */
+export function serveServiceNamespace(isDevApp = IS_ORCA_DEV_APP): {
+  launchdLabel: string
+  systemdName: string
+} {
+  return isDevApp
+    ? { launchdLabel: `${SERVE_LAUNCHD_LABEL_PREFIX}.dev`, systemdName: 'orca-dev-serve' }
+    : { launchdLabel: SERVE_LAUNCHD_LABEL_PREFIX, systemdName: 'orca-serve' }
+}
+
 function launchdDir(homeDir: string): string {
   return join(homeDir, 'Library', 'LaunchAgents')
 }
@@ -44,10 +55,11 @@ export async function listInstalledServeServiceUnits(
   platform: NodeJS.Platform,
   homeDir: string
 ): Promise<InstalledServeServiceUnit[]> {
+  const namespace = serveServiceNamespace()
   if (platform === 'darwin') {
     const dir = launchdDir(homeDir)
     const label = new RegExp(
-      `^${SERVE_LAUNCHD_LABEL_PREFIX.replace(/\./g, '\\.')}(\\.[0-9a-f]{8})?\\.plist$`
+      `^${namespace.launchdLabel.replace(/\./g, '\\.')}(\\.[0-9a-f]{8})?\\.plist$`
     )
     return (await listNames(dir, (file) => label.test(file))).map(
       (file): InstalledServeServiceUnit => ({
@@ -59,7 +71,8 @@ export async function listInstalledServeServiceUnits(
   }
   if (platform === 'linux') {
     const dir = systemdDir(homeDir)
-    return (await listNames(dir, (file) => /^orca-serve(-[0-9a-f]{8})?\.service$/.test(file))).map(
+    const unit = new RegExp(`^${namespace.systemdName}(-[0-9a-f]{8})?\\.service$`)
+    return (await listNames(dir, (file) => unit.test(file))).map(
       (file): InstalledServeServiceUnit => ({
         manager: 'systemd',
         name: file,

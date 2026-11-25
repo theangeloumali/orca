@@ -1,6 +1,5 @@
 import { inCredentialFileOrder, credentialFileExists } from '../credentials/credential-file-io'
 import { mkdir, readFile, unlink } from 'node:fs/promises'
-import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { z } from 'zod'
 import {
@@ -12,6 +11,7 @@ import {
 } from '../credentials/integration-credential-file'
 import { readCredentialFileProtection } from '../credentials/credential-file-protection'
 import type { SecretAtRestProtection } from '../../shared/secure-storage/secret-at-rest-protection'
+import { getOrcaHomeStateDir } from '../startup/dev-app/orca-home-state-dir'
 
 // Plaintext display metadata lets status reads avoid keychain prompts.
 export type GiteaStoredMetadata = {
@@ -37,7 +37,7 @@ let credentialError: string | null = null
 let storedCredentialChecked = false
 
 function getOrcaDir(): string {
-  return join(homedir(), '.orca')
+  return getOrcaHomeStateDir()
 }
 
 function getMetadataPath(): string {

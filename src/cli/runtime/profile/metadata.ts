@@ -6,6 +6,10 @@ import {
   getRuntimeMetadataPath,
   type RuntimeMetadata
 } from '../../../shared/remote-runtime/bootstrap/runtime-bootstrap'
+import {
+  IS_ORCA_DEV_APP,
+  ORCA_DEV_APP_USER_DATA_DIR_NAME
+} from '../../../main/startup/dev-app/orca-dev-app'
 import { runtimeAccessDeniedError } from '../connection/runtime-access-denied'
 import { RuntimeClientError } from '../connection/types'
 
@@ -82,10 +86,13 @@ export function getDefaultUserDataPath(
 /** The packaged app's own default profile, ignoring any CLI override. */
 export function getPlatformUserDataPath(
   platform: NodeJS.Platform = process.platform,
-  homeDir = homedir()
+  homeDir = homedir(),
+  isDevApp = IS_ORCA_DEV_APP
 ): string {
+  // Orca Dev's bundled CLI must reach its own app, never prod's.
+  const dirName = isDevApp ? ORCA_DEV_APP_USER_DATA_DIR_NAME : 'orca'
   if (platform === 'darwin') {
-    return join(homeDir, 'Library', 'Application Support', 'orca')
+    return join(homeDir, 'Library', 'Application Support', dirName)
   }
   if (platform === 'win32') {
     const appData = process.env.APPDATA
@@ -95,8 +102,8 @@ export function getPlatformUserDataPath(
         'APPDATA is not set, so the Orca runtime metadata path cannot be resolved.'
       )
     }
-    return join(appData, 'orca')
+    return join(appData, dirName)
   }
   // Match Electron’s packaged userData path.
-  return join(process.env.XDG_CONFIG_HOME || join(homeDir, '.config'), 'orca')
+  return join(process.env.XDG_CONFIG_HOME || join(homeDir, '.config'), dirName)
 }

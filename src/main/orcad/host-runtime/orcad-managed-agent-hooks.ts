@@ -14,6 +14,7 @@ import type { BackendServiceCleanup } from '../../backend/service-composition'
 import type { AgentHookServer } from '../../agent-hooks/server/agent-hook-server'
 import { installLocalHookRootEvidence } from '../../agent-hooks/observations/local-hook-root-evidence'
 import { botToolRelay } from '../../bots/tool-relay/bot-tool-relay'
+import { IS_ORCA_DEV_APP } from '../../../shared/fork/orca-dev-app-flag'
 
 /** SSH and WSL-host panes run beside this host, so it proves which agent owns each pane, from the
  *  first record its startup replay reads. */
@@ -54,6 +55,10 @@ export function startOrcadManagedAgentHooks(
     stopping = true
     removeSettingsListener()
   })
+  // An orcad Orca Dev starts locally carries its identity; the hook configs below are prod's.
+  if (IS_ORCA_DEV_APP) {
+    return { readinessPublished: () => published.resolve() }
+  }
   const getSettings = () => store.getSettings()
   const shouldHydrateShellPath = getAppEnvironment().isPackaged()
   startCodexHooks({

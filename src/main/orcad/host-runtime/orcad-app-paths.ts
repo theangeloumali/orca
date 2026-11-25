@@ -4,6 +4,9 @@ import { homedir, tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import process from 'node:process'
 import type { AppPathName } from '../../../shared/app-lifecycle/app-environment'
+import { IS_ORCA_DEV_APP } from '../../../shared/fork/orca-dev-app-flag'
+import { ORCA_DEV_APP_USER_DATA_DIR_NAME } from '../../startup/dev-app/orca-dev-app-paths'
+import { getOrcaHomeStateDir } from '../../startup/dev-app/orca-home-state-dir'
 
 // Empty exported paths remain unset.
 function env(name: string): string | null {
@@ -17,7 +20,10 @@ export function resolveUserDataPath(): string {
     return explicit
   }
   const xdg = env('XDG_DATA_HOME')
-  return xdg ? join(xdg, 'Orca') : join(homedir(), '.orca')
+  if (xdg) {
+    return join(xdg, IS_ORCA_DEV_APP ? ORCA_DEV_APP_USER_DATA_DIR_NAME : 'Orca')
+  }
+  return getOrcaHomeStateDir(homedir())
 }
 
 function resolveAppDataPath(): string {

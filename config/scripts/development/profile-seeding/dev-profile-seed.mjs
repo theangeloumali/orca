@@ -11,30 +11,8 @@ import {
   sameFilesystemPath
 } from '../instance-isolation/dev-instance-isolation.mjs'
 import { isProcessAlive } from '../remote-session-cleanup/remote-agent-session-process-cleanup.mjs'
+import { pickSeededProfileStateDomains } from '../../../../src/shared/orca-profiles/seeded-profile-state-domains.ts'
 
-// Allowlist of profile-state domains: projects, workspaces, settings, and SSH targets.
-// Terminal sessions, PTY leases, automations (they would run twice), and telemetry stay behind.
-export const SEEDED_PROFILE_STATE_DOMAINS = [
-  'schemaVersion',
-  'repos',
-  'projects',
-  'projectHostSetups',
-  'projectGroups',
-  'folderWorkspaces',
-  'sparsePresetsByRepo',
-  'worktreeMeta',
-  'worktreeMetaByIdentity',
-  'worktreeIdentityAliases',
-  'worktreeLineageById',
-  'workspaceLineageByChildKey',
-  'settings',
-  'ui',
-  'onboarding',
-  'sshTargets',
-  'sshTargetGenerationCounter',
-  'deletedSshConfigAliases',
-  'removedSshTargetTombstones'
-]
 // Orca account session (encrypted with the app's safeStorage key).
 const SEEDED_PROFILE_FILES = ['account-session.json.enc']
 // Why Local State: on Windows it holds the DPAPI-wrapped key that decrypts safeStorage secrets.
@@ -87,17 +65,7 @@ async function readProfileDomains(profileDir) {
 }
 
 function pickSeededDomains(domains) {
-  const picked = {}
-  for (const domain of SEEDED_PROFILE_STATE_DOMAINS) {
-    if (domains[domain] !== undefined) {
-      picked[domain] = domains[domain]
-    }
-  }
-  if (picked.settings) {
-    picked.settings = { ...picked.settings }
-    delete picked.settings.aiVaultSearch
-  }
-  return picked
+  return Object.fromEntries(pickSeededProfileStateDomains(new Map(Object.entries(domains))))
 }
 
 function writePrivateJson(filePath, value) {

@@ -34,5 +34,7 @@ export const CLI_MAIN_ENTRY_NAMES = [
   'persistence/profile-state/legacy-json/profile-state-recovery',
   'startup/network-compatibility/http1-compatibility-marker',
   // The CLI's own app environment, so main-process hook removers can resolve profile paths.
-  'backend/node-service-environment'
+  'backend/node-service-environment',
+  // Vite defines ORCA_FORK_DEV_APP here; tsc-emitted CLI code never sees build defines.
+  'startup/dev-app/orca-dev-app'
 ] as const

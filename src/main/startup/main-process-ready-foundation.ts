@@ -14,6 +14,8 @@ import {
 } from '../browser/guest-lifecycle/manager/browser-manager'
 import { browserSiteDisplayController } from '../browser/site-settings/display/browser-site-display-controller'
 import { ensureActiveOrcaProfile } from '../orca-profiles/profile-index-store'
+import { IS_ORCA_DEV_APP } from './dev-app/orca-dev-app'
+import { syncOrcaDevProfileAtStartup } from './dev-app/orca-dev-profile-sync-worker'
 import { initializeTeamCapabilities } from '../orca-profiles/cloud-auth/initialize-team-capabilities'
 import { getCanonicalUserDataPath } from '../persistence/loading-store/user-data-path'
 import { getAppEnvironment } from '../../shared/app-lifecycle/app-environment'
@@ -142,6 +144,10 @@ export async function initializeReadyFoundation(): Promise<void> {
   state.managedWslCliStartupBarrierReady = createWslCliReconciliationStartupBarrier(
     state.managedWslCliReconciliationReady
   )
+  if (IS_ORCA_DEV_APP) {
+    // Before the profile store loads, so each launch opens on Orca's latest state.
+    await syncOrcaDevProfileAtStartup()
+  }
   const profile = ensureActiveOrcaProfile()
   state.activeOrcaProfile = profile
   await initializeTeamCapabilities(getProfileUserDataPath(), profile.profile)

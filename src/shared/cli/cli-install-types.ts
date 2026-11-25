@@ -6,6 +6,8 @@ export type CliInstallUnsupportedReason =
   | 'launch_mode_unavailable'
   /** wsl.exe did not answer in time (often a distro still booting); retryable. */
   | 'wsl_unreachable'
+  /** Orca Dev runs beside Orca; the orca command stays Orca's. */
+  | 'side_by_side_app'
 
 export type CliInstallMethod = 'symlink' | 'wrapper'
 

@@ -17,13 +17,11 @@ import {
 } from '../runtime/rpc/callers/rpc-caller-identity'
 import { BrowserExpectedUrlMismatch } from '../../shared/browser/client-hosting/browser-expected-url'
 import { BrowserClientPageCommandError } from '../browser/client-pages/execution/browser-client-page-command-failure'
-import { startCodexHooks } from '../codex/hooks/reconciliation/codex-hook-reconcile'
 import { startCodexStateDbBackfillRecoveryInBackground } from '../codex/history/index/codex-state-db-backfill-recovery'
 import { getOrcaManagedCodexHomePath } from '../codex/configuration/homes/codex-home-paths'
 import { hydrateAgentCliShellPath } from '../agent-hooks/installation/local-agent-cli-presence'
 import { isAgentStatusHooksEnabledForAgent } from '../../shared/agent-hook-listener/configuration/agent-status-hooks-setting'
-import { reconcileStartupManagedAgentHooks } from '../agent-hooks/installation/managed-agent-hook-startup'
-import { shouldInstallManagedHooks } from '../startup/configure-process'
+import { startDesktopAgentHooks } from './desktop-agent-hooks-startup'
 import { installFirstWorkRenameHookSubscription } from '../agent-hooks/first-work/first-work-rename-hook-subscription'
 import { firstWorkRenameDeps } from '../agent-hooks/first-work/first-work-rename-runtime'
 import { initializeMainProcessAccountServices } from '../startup/agent-accounts/main-process-account-services'
@@ -290,24 +288,24 @@ export async function composeDesktopCore(
     startCodexStateDbBackfillRecoveryInBackground(getOrcaManagedCodexHomePath())
   )
   // Register launch reconciliation now; defer background probes and scratch cleanup until first paint.
-  startCodexHooks({
-    startAfter: providerMaintenanceReady,
-    pathReady: paths.isPackaged ? hydrateAgentCliShellPath() : Promise.resolve(),
-    isEnabled: () => isAgentStatusHooksEnabledForAgent(store.getSettings(), 'codex'),
-    resolveLaunchHome: () => {
-      if (!core.codexRuntimeHome) {
-        throw new Error('Codex runtime home service is not initialized')
+  startDesktopAgentHooks({
+    codex: {
+      startAfter: providerMaintenanceReady,
+      pathReady: paths.isPackaged ? hydrateAgentCliShellPath() : Promise.resolve(),
+      isEnabled: () => isAgentStatusHooksEnabledForAgent(store.getSettings(), 'codex'),
+      resolveLaunchHome: () => {
+        if (!core.codexRuntimeHome) {
+          throw new Error('Codex runtime home service is not initialized')
+        }
+        return core.codexRuntimeHome.resolveHostCodexHomePathForLaunchReadOnly()
       }
-      return core.codexRuntimeHome.resolveHostCodexHomePathForLaunchReadOnly()
-    }
-  })
-  if (shouldInstallManagedHooks(!paths.isPackaged)) {
-    reconcileStartupManagedAgentHooks({
+    },
+    managed: {
       getSettings: () => store.getSettings(),
       isQuitting: native.isQuitting,
       shouldHydrateShellPath: paths.isPackaged
-    })
-  }
+    }
+  })
   native.startCrashObservers()
   // Await duplicate-pane repair behind queued writes; all later phases must read the repaired tree.
   if (ORCA_LAYOUT_OWNER_IS_MAIN) {

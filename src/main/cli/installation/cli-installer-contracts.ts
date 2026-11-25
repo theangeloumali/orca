@@ -26,6 +26,8 @@ export type CliInstallerOptions = {
   appImageExtractRunner?: (appImagePath: string, cwd: string) => Promise<void>
   /** Absolute time (ms) by which AppImage extraction and its lock wait must finish. */
   appImageDeadlineAt?: number
+  /** Defaults to the build flag; Orca Dev never registers or removes the orca command. */
+  isOrcaDevApp?: boolean
 }
 
 export type InstallSpec = {

@@ -69,6 +69,8 @@ export function prependOrcaCliDirToChildPath(
     if (platform === 'darwin') {
       env.ORCA_CLI_BIN_DIR = bundledCliBin
     }
+    // The bundled CLI defaults to its build's userData; name it so a pane always reaches this app.
+    env.ORCA_USER_DATA_PATH = opts.userDataPath
     const inheritedPath = readInheritedPath(env, platform)
     env[resolvePathEnvKey(env, platform)] = inheritedPath
       ? `${bundledCliBin}${pathDelimiter}${inheritedPath}`

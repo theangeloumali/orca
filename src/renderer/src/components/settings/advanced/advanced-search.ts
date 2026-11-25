@@ -1,4 +1,5 @@
 import type { SettingsSearchEntry } from '../search/settings-search'
+import { IS_ORCA_DEV_APP } from '../../../../../shared/fork/orca-dev-app-flag'
 import { getAdvancedNetworkSearchEntries } from './network/advanced-network-search'
 import { createLocalizedCatalog } from '@/i18n/localized-catalog'
 import { translate } from '@/i18n/i18n'
@@ -84,5 +85,6 @@ export const getAdvancedSearchEntry = createLocalizedCatalog(
 export const getAdvancedPaneSearchEntries = createLocalizedCatalog((): SettingsSearchEntry[] => [
   ...getAdvancedNetworkSearchEntries(),
   getAdvancedSearchEntry().http1Compatibility,
-  getAdvancedSearchEntry().uninstall
+  // Orca Dev has no Uninstall: it would remove prod's serve LaunchAgent and agent hooks.
+  ...(IS_ORCA_DEV_APP ? [] : [getAdvancedSearchEntry().uninstall])
 ])

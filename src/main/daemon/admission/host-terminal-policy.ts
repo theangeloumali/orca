@@ -24,6 +24,7 @@ export function hostTerminalPolicyPath(home: string, machine: string | null): st
     .update(`${process.platform}:${machine}`)
     .digest('hex')
     .slice(0, 16)
+  // Shared with Orca Dev: the terminal cap guards this machine's PTYs, which both apps draw on.
   return join(home, '.orca', 'host-settings', key, 'terminals.json')
 }
 
