@@ -28,6 +28,7 @@ import {
   startTerminalRuntimeStartupServices
 } from '../pty-startup/main-process-pty-startup'
 import { prepareCodexRuntimeHomeForLaunch } from '../agent-accounts/codex-launch-preparation'
+import { resolveDevDesktopWsPort } from '../dev-app/orca-dev-app'
 import { prepareCodexSessionResumeForLaunch } from '../agent-accounts/codex-session-resume-launch'
 import { startWindowsDesktopBeforeShellPathReady } from '../shell-environment/windows-desktop-shell-path-startup'
 import { repairKnownPoisonedInstallDirBeforeWindow } from '../windows-install-permissions/windows-install-dir-acl-recovery'
@@ -78,7 +79,7 @@ function installRuntimeRpc(
     throw new Error(`Invalid ORCA_E2E_RUNTIME_WS_PORT value: ${requestedE2EWsPort}`)
   }
   // STA-1511: separate dev port from packaged Orca so pairing/repro URLs do not fall back unpredictably.
-  const devWsPort = !app.isPackaged && !isE2E ? 6769 : undefined
+  const wsPort = isE2E ? e2eWsPort : resolveDevDesktopWsPort({ isPackaged: app.isPackaged })
   const pinnedBindHost = resolveServePinnedBindHost({
     orcadSidecar: isOrcadSidecarLaunch(),
     serveOptions
@@ -100,8 +101,7 @@ function installRuntimeRpc(
           }
         }
       : {}),
-    ...(isE2E ? { wsPort: e2eWsPort } : {}),
-    ...(devWsPort !== undefined ? { wsPort: devWsPort } : {}),
+    ...(wsPort !== undefined ? { wsPort } : {}),
     ...(serveOptions?.wsPort !== undefined
       ? {
           wsPort: serveOptions.wsPort,

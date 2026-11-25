@@ -9,6 +9,7 @@ export type WorkerThreadRole =
   | 'orca-codex-project-trust'
   | 'orca-codex-rollout-references'
   | 'orca-command-path-directory'
+  | 'orca-dev-profile-sync'
   | 'orca-environment-store'
   | 'orca-foreign-sqlite-reader'
   | 'orca-google-pdf-text'

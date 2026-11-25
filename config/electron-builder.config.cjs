@@ -99,6 +99,7 @@ const {
 const {
   buildMacNativeAddon
 } = require('./scripts/desktop-distribution/macos/build-macos-native-addon.cjs')
+const { resolveBuilderAppIdentity } = require('./scripts/fork/orca-dev-app-builder-identity.cjs')
 
 // Dev channels need release bundle ID/signature/notarization so Squirrel.Mac accepts updates and macOS retains app identity.
 const isMacHourly = process.env.ORCA_MAC_HOURLY === '1'
@@ -131,7 +132,9 @@ const devChannelRepo = isHourlyChannel
     : isAdhocChannel
       ? 'orca-adhoc'
       : null
-const appId = 'com.stablyai.orca'
+// ORCA_FORK_DEV_APP=1 packages Orca Dev, which installs beside prod instead of replacing it.
+const builderAppIdentity = resolveBuilderAppIdentity()
+const appId = builderAppIdentity.appId
 const featureWallResources = {
   from: 'resources/onboarding/feature-wall',
   to: 'onboarding/feature-wall'
@@ -269,8 +272,8 @@ const ORCA_MAC_TEAM_ID = '6CX3WHS9HZ'
 /** @type {import('electron-builder').Configuration} */
 module.exports = {
   appId,
-  productName: 'Orca',
-  protocols: [{ name: 'Orca', schemes: ['orca'] }],
+  productName: builderAppIdentity.productName,
+  protocols: [{ name: builderAppIdentity.productName, schemes: [builderAppIdentity.urlScheme] }],
   toolsets: { appimage: '1.0.3' },
   ...(devChannelBuildVersion
     ? { extraMetadata: { version: devChannelBuildVersion } }
@@ -690,7 +693,7 @@ module.exports = {
     // Set for ONNX Runtime (#22690, #39135), now gone; transcribe-cpp needs 11.0, Electron 12.0. Kept until
     // Kelvin decides. The update-manifest gate reads this from Info.plist.
     minimumSystemVersion: '13.4',
-    icon: 'resources/build/icon.icns',
+    icon: builderAppIdentity.macIcon,
     entitlements: 'resources/build/entitlements.mac.plist',
     entitlementsInherit: 'resources/build/entitlements.mac.plist',
     ...(isMacRelease
@@ -928,7 +931,7 @@ async function packageMacTerminalHost(appPath, context) {
   await buildMacTerminalHost({
     appPath,
     arch,
-    iconPath: resolve(__dirname, '../resources/build/icon.icns'),
+    iconPath: resolve(__dirname, '..', builderAppIdentity.macIcon),
     entitlementsPath: resolve(__dirname, '../resources/build/entitlements.mac.plist'),
     usageDescriptions: macUsageDescriptions,
     signCode: (path, { entitlements }) =>

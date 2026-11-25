@@ -13,6 +13,8 @@ const NODE_RUNTIME_INCLUDE = [
   'src/main/persistence*.test.ts',
   'src/main/sqlite/**/*.test.ts',
   'src/main/orca-profiles/**/*.test.ts',
+  // Copies real profile-state databases between a prod and an Orca Dev userData.
+  'src/main/startup/dev-app/orca-dev-profile-sync.test.ts',
   'src/main/managed-data-accounts/**/*.test.ts',
   'src/**/*.node-pty.test.ts',
   'src/**/node-pty-*.test.ts',

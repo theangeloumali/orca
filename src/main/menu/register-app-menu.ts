@@ -9,6 +9,7 @@ import { createAppMenuQuitItems, type AppMenuQuitHandlers } from './app-menu-qui
 import { createAppMenuReloadAndDevToolsItems } from './app-menu-reload-devtools-items'
 import { labeledAppMenuRole } from './labeled-app-menu-role'
 import { createAppWindowMenu } from './app-menu-window'
+import { resolveUpdateMenuItem } from './app-menu-refresh-from-orca-item'
 
 export type AppearanceMenuState = {
   showTasksButton: boolean
@@ -93,10 +94,10 @@ function buildAndApplyMenu(options: RegisterAppMenuOptions): void {
     })
   }
 
-  const checkForUpdatesItem: Electron.MenuItemConstructorOptions = {
+  const checkForUpdatesItem = resolveUpdateMenuItem({
     label: translateMain('menu.checkForUpdates', 'Check for Updates...'),
     click: checkForUpdatesClick
-  }
+  })
 
   const settingsBindings = getEffectiveKeybindingsForAction(
     'app.settings',

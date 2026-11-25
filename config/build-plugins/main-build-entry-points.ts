@@ -80,6 +80,9 @@ export const MAIN_BUILD_ENTRY_POINTS: Record<string, string> = {
   'claude-profile-setup-worker-entry': resolve(
     'src/main/claude-accounts/profiles/setup/claude-profile-setup-worker-entry.ts'
   ),
+  'orca-dev-profile-sync-worker-entry': resolve(
+    'src/main/startup/dev-app/orca-dev-profile-sync-worker-entry.ts'
+  ),
   'profile-state-backup-worker-entry': resolve(
     'src/main/persistence/profile-state/backup/profile-state-backup-worker-entry.ts'
   ),

@@ -5,6 +5,7 @@ import { deferAppKitSceneMutation } from '../window/desktop-integration/appkit-s
 import { createAppIconImage } from '../window/desktop-integration/app-icon'
 import { translateMain } from '../i18n/main-i18n'
 import { quitAndStopAllSessionsMenuText } from '../menu/app-menu-quit-item'
+import { resolveUpdateMenuItem } from '../menu/app-menu-refresh-from-orca-item'
 import { composeTrayAttentionIcon, tintTrayTemplateForAttention } from './tray-attention-icon'
 import { stampTrayDevBadge } from './tray-dev-badge'
 
@@ -261,10 +262,10 @@ function buildTrayMenu(opts: SystemTrayOptions): Menu {
             label: translateMain('menu.settings', 'Settings'),
             click: safeMenuAction(() => opts.onOpenSettings())
           },
-          {
+          resolveUpdateMenuItem({
             label: translateMain('menu.checkForUpdates', 'Check for Updates...'),
             click: safeMenuAction(() => opts.onCheckForUpdates())
-          },
+          }),
           { type: 'separator' }
         ] satisfies Electron.MenuItemConstructorOptions[])
       : []),

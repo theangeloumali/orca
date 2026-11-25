@@ -8,6 +8,7 @@ import { join, resolve } from 'node:path'
 import { getVersionManagerBinPaths } from '../codex-cli/command'
 import { isWindowsFnmDefaultAliasDir } from '../../shared/shell/command-resolution/fnm-default-alias-dirs'
 import { getMainE2EConfig } from './testing/e2e-config'
+import { getOrcaDevAppUserDataPath, IS_ORCA_DEV_APP } from './dev-app/orca-dev-app'
 import { DISABLED_CHROMIUM_FEATURES } from './chromium-policy/disabled-chromium-features'
 import { readHttp1CompatibilityMarker } from './network-compatibility/http1-compatibility-marker'
 import { checkServeUserDataPath } from './serve-launch/serve-user-data-path-guard'
@@ -217,6 +218,11 @@ export function configureDevUserDataPath(isDev: boolean): void {
     return
   }
 
+  if (IS_ORCA_DEV_APP) {
+    // Packaged Electron would otherwise default to `appData/orca`, which is prod's live profile.
+    app.setPath('userData', getOrcaDevAppUserDataPath(app.getPath('appData')))
+    return
+  }
   if (!isDev) {
     return
   }

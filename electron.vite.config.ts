@@ -233,6 +233,8 @@ export const electronViteConfig: UserConfig = {
       ORCA_FORK_BUILD: JSON.stringify(process.env.ORCA_FORK_BUILD === '1'),
       // The fork release this build is, so it can tell when a newer one is out.
       ORCA_FORK_RELEASE_TAG: JSON.stringify(process.env.ORCA_FORK_RELEASE_TAG?.trim() || null),
+      // Fork-only: the installed Orca Dev build (own appId, userData, no updates).
+      ORCA_FORK_DEV_APP: JSON.stringify(process.env.ORCA_FORK_DEV_APP === '1'),
       ...DARK_BUILD_DEFINES
     },
     // @xterm/headless declares exports:null; point Vite directly at its published CJS main to permit inlining.
