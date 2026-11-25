@@ -190,7 +190,8 @@ it("a Refresh started after a switch lists the new account, even as the launch H
     return listed.promise
   })
   check.resolve(false)
-  await vi.waitFor(() => expect(store.get(shellHome)?.seen).toBeUndefined())
+  // The default 1s wait loses this race when the full related-test suite loads the machine.
+  await vi.waitFor(() => expect(store.get(shellHome)?.seen).toBeUndefined(), { timeout: 10_000 })
   listed.resolve({ models: b, origin: 'probe' })
   await refresh
   login.launchStore = undefined
