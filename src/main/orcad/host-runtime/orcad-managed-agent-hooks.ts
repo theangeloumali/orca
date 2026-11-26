@@ -15,6 +15,7 @@ import type { AgentHookServer } from '../../agent-hooks/server/agent-hook-server
 import { installLocalHookRootEvidence } from '../../agent-hooks/observations/local-hook-root-evidence'
 import { botToolRelay } from '../../bots/tool-relay/bot-tool-relay'
 import { IS_ORCA_DEV_APP } from '../../../shared/fork/orca-dev-app-flag'
+import { startMcpAgentFileSync } from '../../mcp-servers/agent-files/mcp-agent-file-sync'
 
 /** SSH and WSL-host panes run beside this host, so it proves which agent owns each pane, from the
  *  first record its startup replay reads. */
@@ -75,6 +76,8 @@ export function startOrcadManagedAgentHooks(
       shouldHydrateShellPath
     })
   )
+  // Grok's, Cursor's and Droid's own MCP files follow this host's list; off with its switch.
+  void published.promise.then(() => registerCleanup(startMcpAgentFileSync()))
   try {
     refreshInstalledOpenCodeStatusPlugins(getSettings())
   } catch (error) {

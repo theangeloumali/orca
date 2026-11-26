@@ -246,7 +246,8 @@ const SLEEPING = {
   launchConfig: resumeRecord('launchConfig'),
   origin: resumeRecord('origin'),
   restoreOnTabOpenOnly: resumeRecord('restoreOnTabOpenOnly'),
-  importedFromProd: resumeRecord('importedFromProd')
+  importedFromProd: resumeRecord('importedFromProd'),
+  terminalHandle: resumeRecord('terminalHandle')
 } as const satisfies Record<keyof SleepingAgentSessionRecord, DiskFieldWritten>
 
 const INCARNATION = {

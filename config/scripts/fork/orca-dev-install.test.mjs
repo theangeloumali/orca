@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -378,6 +378,19 @@ describe('createBuildSteps', () => {
     ])
     expect(labels.indexOf('install mobile')).toBe(1)
     expect(labels.indexOf('install mobile')).toBeLessThan(labels.indexOf('build:desktop'))
+  })
+
+  it("runs build:mac's own scripts in order, so a new native helper isn't left out of the app", () => {
+    const packageJson = JSON.parse(
+      readFileSync(join(import.meta.dirname, '..', '..', '..', 'package.json'), 'utf8')
+    )
+    const buildMacScripts = [...packageJson.scripts['build:mac'].matchAll(/pnpm run (\S+)/g)].map(
+      (match) => match[1]
+    )
+    const labels = steps.map((step) => step.label)
+    const firstBuild = labels.indexOf('build:desktop')
+    expect(firstBuild).toBeGreaterThan(-1)
+    expect(labels.slice(firstBuild, labels.indexOf('package'))).toEqual(buildMacScripts)
   })
 
   it('reads the pinned pnpm version without its integrity hash', () => {

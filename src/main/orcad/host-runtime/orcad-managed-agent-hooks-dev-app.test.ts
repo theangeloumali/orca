@@ -28,6 +28,10 @@ vi.mock('../../agent-hooks/installation/local-agent-cli-presence', () => ({
 vi.mock('../../../shared/app-lifecycle/app-environment', () => ({
   getAppEnvironment: () => ({ isPackaged: () => false })
 }))
+// Its own dev-app test covers it; here it would read the real host list.
+vi.mock('../../mcp-servers/agent-files/mcp-agent-file-sync', () => ({
+  startMcpAgentFileSync: () => () => {}
+}))
 
 async function startHooks(devApp: boolean): Promise<void> {
   vi.stubGlobal('ORCA_FORK_DEV_APP', devApp)

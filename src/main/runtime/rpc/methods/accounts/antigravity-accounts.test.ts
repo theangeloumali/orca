@@ -1,4 +1,7 @@
-import { expect, it, vi } from 'vitest'
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { afterAll, expect, it, vi } from 'vitest'
 import { eraseRpcMethods, type RpcContext } from '../../core'
 import { credential, harness } from '../../../../antigravity/native-account-test-fixtures'
 import {
@@ -28,9 +31,21 @@ vi.mock('../../../../antigravity/native-file-credentials', async (original) => (
   antigravityUsesFileStoreAsync: async (env: NodeJS.ProcessEnv) =>
     env === process.env ? !login.shared : (login.launchStore ?? Boolean(env.SSH_TTY))
 }))
+// A switch's chat-route check would find the machine's own agy, read its keychain and start it.
+vi.mock('../../../../acp/launch/acp-launch-command', async (original) => ({
+  ...(await original<object>()),
+  acpHostBackendInput: async () => null
+}))
 vi.mock('../../../../antigravity/native-account-host', () => ({
   getAntigravityAccountService: async (target: { runtime: string }) => agy.get(target.runtime)
 }))
+// homedir() and HOME name Orca's own agy home, so none is the developer's.
+const emptyHome = mkdtempSync(join(tmpdir(), 'orca-agy-accounts-home-'))
+vi.stubEnv('HOME', emptyHome)
+afterAll(() => {
+  vi.unstubAllEnvs()
+  rmSync(emptyHome, { recursive: true, force: true })
+})
 const { ANTIGRAVITY_ACCOUNT_METHODS } = await import('./antigravity-accounts')
 
 // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: select reaches the runtime only to show the chat backend, which catches a failed read.
@@ -190,8 +205,7 @@ it("a Refresh started after a switch lists the new account, even as the launch H
     return listed.promise
   })
   check.resolve(false)
-  // The default 1s wait loses this race when the full related-test suite loads the machine.
-  await vi.waitFor(() => expect(store.get(shellHome)?.seen).toBeUndefined(), { timeout: 10_000 })
+  await vi.waitFor(() => expect(store.get(shellHome)?.seen).toBeUndefined())
   listed.resolve({ models: b, origin: 'probe' })
   await refresh
   login.launchStore = undefined

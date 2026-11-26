@@ -1,3 +1,4 @@
+import type { SleepingAgentLaunchConfig } from './resume/sleeping-agent-launch-config'
 import { readAgentEffortLevel } from '../../agent-launch/choices/agent-effort-level'
 import { readClaudePermissionMode } from './resume/provider-session-live-settings'
 import type { AgentHookSource } from '../../agent-hook-listener/transport/agent-hook-relay'
@@ -16,7 +17,6 @@ export const RESUMABLE_TUI_AGENTS = [
   'qoder',
   'qoder-cn',
   'qwen-code',
-  'gemini',
   'antigravity',
   'opencode',
   'opencode2',
@@ -55,12 +55,7 @@ export type AgentProviderSessionMetadata = {
   permissionMode?: string
 }
 
-export type SleepingAgentLaunchConfig = {
-  agentCommand?: string
-  agentArgs: string
-  agentEnv: Record<string, string>
-  ompResumeFilePath?: string
-}
+export type { SleepingAgentLaunchConfig } from './resume/sleeping-agent-launch-config'
 
 export type SleepingAgentSessionRecord = {
   paneKey: string
@@ -86,6 +81,8 @@ export type SleepingAgentSessionRecord = {
   restoreOnTabOpenOnly?: boolean
   /** Copied by Orca Dev's prod sync: prod owns the conversation, so Dev resumes it only as a fork. */
   importedFromProd?: boolean
+  /** The handle main named this pane by when Agent Sleep stopped it; the pane answers to it again after a restart. */
+  terminalHandle?: string
 }
 
 /** A record of a slept pane (worktree sleep, or a legacy record); 'quit'/'live' resume a running agent. */
@@ -215,7 +212,6 @@ export function extractAgentProviderSession(
       const id = readSessionId(payload, ['session_id'])
       return id ? withTranscriptPath({ key: 'session_id', id }, payload) : null
     }
-    case 'gemini':
     case 'droid':
     // Why: Kimi Code posts a Claude-shaped `session_id` (e.g. session_<uuid>).
     // falls through

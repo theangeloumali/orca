@@ -165,6 +165,7 @@ export function createBuildSteps({ checkoutPath, pnpmSpec }) {
       'build:computer-macos',
       'build:keyboard-layout-macos',
       'build:process-footprint-macos',
+      'build:socket-owner-macos',
       'build:notification-status-macos',
       'ensure:electron-runtime'
     ].map((script) => pnpm(script, 'run', script)),

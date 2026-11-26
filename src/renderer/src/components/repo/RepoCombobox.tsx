@@ -194,7 +194,7 @@ export default function RepoCombobox({
                 <RepoBadgeLabel
                   name={selectedRepo.displayName}
                   color={selectedRepo.badgeColor}
-                  badgeClassName="size-1.5"
+                  repo={selectedRepo}
                 />
                 <RepoDeviceBadge repo={selectedRepo} />
               </span>
@@ -248,6 +248,7 @@ export default function RepoCombobox({
                       <RepoBadgeLabel
                         name={repo.displayName}
                         color={repo.badgeColor}
+                        repo={repo}
                         className="max-w-full"
                       />
                       <RepoDeviceBadge repo={repo} />
