@@ -1,0 +1,55 @@
+name: Fork release retry
+
+# Fork-only (theangeloumali/orca): GitHub sometimes never assigns the macOS runner, and the
+# release run fails with that job cancelled before any step. Rerun just the failed jobs, at most
+# twice. A build that ran and failed is never retried. The deciding job reads repository code
+# with a read-only token; the rerun job runs no repository code.
+
+on:
+  workflow_run:
+    workflows: ['Fork sync and release']
+    types: [completed]
+
+permissions: {}
+
+jobs:
+  decide:
+    if: github.repository == 'theangeloumali/orca' && github.event.workflow_run.conclusion != 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      retry: ${{ steps.decide.outputs.retry }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+      - id: decide
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+          RUN_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/attempts/$RUN_ATTEMPT/jobs?per_page=100" --jq .jobs > jobs.json
+          jq -n --arg c "$RUN_CONCLUSION" --argjson a "$RUN_ATTEMPT" --slurpfile jobs jobs.json \
+            '{run: {conclusion: $c, run_attempt: $a}, jobs: $jobs[0]}' > input.json
+          decision=$(node .github/scripts/fork-release-retry.mjs < input.json)
+          echo "$decision"
+          echo "retry=$(jq -r .retry <<<"$decision")" >> "$GITHUB_OUTPUT"
+
+  rerun:
+    needs: decide
+    if: needs.decide.outputs.retry == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        run: gh run rerun "$RUN_ID" --failed --repo "$GITHUB_REPOSITORY"
