@@ -23,6 +23,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           sparse-checkout: config/scripts/fork
+          persist-credentials: false
       - id: decide
         env:
           GH_TOKEN: ${{ github.token }}
@@ -35,7 +36,7 @@ jobs:
           gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/attempts/$RUN_ATTEMPT/jobs?per_page=100" --jq .jobs > jobs.json
           # A release published after this run started would be replaced as "latest" by an older build.
           newer=$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=10" \
-            --jq "[.[] | select(.published_at > \"$RUN_CREATED\")] | length > 0")
+            | jq --arg t "$RUN_CREATED" '[.[] | select(.published_at > $t)] | length > 0')
           jq -n --arg c "$RUN_CONCLUSION" --argjson a "$RUN_ATTEMPT" --argjson n "$newer" --slurpfile jobs jobs.json \
             '{run: {conclusion: $c, run_attempt: $a, newerSuccess: $n}, jobs: $jobs[0]}' > input.json
           decision=$(node config/scripts/fork/fork-release-retry.mjs < input.json)
