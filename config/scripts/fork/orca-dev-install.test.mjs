@@ -388,7 +388,9 @@ describe('createBuildSteps', () => {
       (match) => match[1]
     )
     const labels = steps.map((step) => step.label)
-    expect(labels.slice(labels.indexOf('build:desktop'), -1)).toEqual(buildMacScripts)
+    const firstBuild = labels.indexOf('build:desktop')
+    expect(firstBuild).toBeGreaterThan(-1)
+    expect(labels.slice(firstBuild, labels.indexOf('package'))).toEqual(buildMacScripts)
   })
 
   it('reads the pinned pnpm version without its integrity hash', () => {
