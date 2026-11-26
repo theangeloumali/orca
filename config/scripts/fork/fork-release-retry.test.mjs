@@ -1,5 +1,4 @@
-import { test } from 'node:test'
-import assert from 'node:assert/strict'
+import { expect, test } from 'vitest'
 import { shouldRetryRelease } from './fork-release-retry.mjs'
 
 const mac = (conclusion, steps) => ({ name: 'build (macos-15, pnpm install)', conclusion, steps })
@@ -16,40 +15,37 @@ const failed = (extra = {}) => ({
 })
 
 test('retries a macOS build cancelled before any step ran', () => {
-  assert.equal(shouldRetryRelease(failed(), [mac('cancelled', []), win('success')]).retry, true)
+  expect(shouldRetryRelease(failed(), [mac('cancelled', []), win('success')]).retry).toBe(true)
 })
 
 test('never retries a macOS build that ran and was cancelled mid-build', () => {
-  assert.equal(shouldRetryRelease(failed(), [mac('cancelled', [{}]), win('success')]).retry, false)
+  expect(shouldRetryRelease(failed(), [mac('cancelled', [{}]), win('success')]).retry).toBe(false)
 })
 
 test('never retries when any job ran and failed', () => {
-  assert.equal(shouldRetryRelease(failed(), [mac('cancelled', []), win('failure')]).retry, false)
+  expect(shouldRetryRelease(failed(), [mac('cancelled', []), win('failure')]).retry).toBe(false)
 })
 
 test('retries once: a rerun started by the workflow token starts no further run', () => {
-  assert.equal(shouldRetryRelease(failed({ run_attempt: 2 }), [mac('cancelled', [])]).retry, false)
+  expect(shouldRetryRelease(failed({ run_attempt: 2 }), [mac('cancelled', [])]).retry).toBe(false)
 })
 
 test('leaves a run someone cancelled alone', () => {
-  assert.equal(
-    shouldRetryRelease(failed({ conclusion: 'cancelled' }), [mac('cancelled', [])]).retry,
-    false
-  )
+  expect(
+    shouldRetryRelease(failed({ conclusion: 'cancelled' }), [mac('cancelled', [])]).retry
+  ).toBe(false)
 })
 
 test('never republishes an older build once a newer release exists', () => {
-  assert.equal(
-    shouldRetryRelease(failed({ newerSuccess: true }), [mac('cancelled', [])]).retry,
+  expect(shouldRetryRelease(failed({ newerSuccess: true }), [mac('cancelled', [])]).retry).toBe(
     false
   )
 })
 
 test('leaves a successful run alone', () => {
-  assert.equal(
+  expect(
     shouldRetryRelease({ conclusion: 'success', run_attempt: 1, newerSuccess: false }, [
       mac('success', [{}])
-    ]).retry,
-    false
-  )
+    ]).retry
+  ).toBe(false)
 })

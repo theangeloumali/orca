@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          sparse-checkout: .github/scripts
+          sparse-checkout: config/scripts/fork
       - id: decide
         env:
           GH_TOKEN: ${{ github.token }}
@@ -38,7 +38,7 @@ jobs:
             --jq "[.[] | select(.published_at > \"$RUN_CREATED\")] | length > 0")
           jq -n --arg c "$RUN_CONCLUSION" --argjson a "$RUN_ATTEMPT" --argjson n "$newer" --slurpfile jobs jobs.json \
             '{run: {conclusion: $c, run_attempt: $a, newerSuccess: $n}, jobs: $jobs[0]}' > input.json
-          decision=$(node .github/scripts/fork-release-retry.mjs < input.json)
+          decision=$(node config/scripts/fork/fork-release-retry.mjs < input.json)
           echo "$decision"
           echo "retry=$(jq -r .retry <<<"$decision")" >> "$GITHUB_OUTPUT"
 
