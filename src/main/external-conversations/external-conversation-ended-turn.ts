@@ -4,7 +4,7 @@ import type {
   AgentJournalSnapshot
 } from '../../shared/agent-session/journal/agent-session-journal-types'
 import {
-  connectorReplyTurnStamps,
+  connectorReplyStampsOf,
   type ConnectorReplyStamp
 } from '../../shared/agent-session/journal/journal-connector-reply-turn'
 import type { AgentSessionFailureFact } from '../../shared/agent-session/failures/agent-session-failure'
@@ -19,6 +19,8 @@ import {
   latestTurnOpener,
   readEndedChatTurnOpener
 } from './external-conversation-turn-opener'
+import { journalTurnAnsweredMessages } from '../../shared/agent-session/journal/journal-turn-answered-messages'
+import { typedOnAnotherDevice } from '../bots/bot-typed-in-orca'
 
 // A chat's ended turn, read from its journal as of the turn's end.
 
@@ -34,7 +36,14 @@ export type EndedChatTurn = {
   turnItemId?: string
   stamps?: ConnectorReplyStamp[]
   turnProse?: string
+  /** A bot's answer in it: its prose after its last tool call (structuredAgentSessionTurnReply). */
+  turnBotProse?: string
   turnToolsRan?: boolean
+  /** The turn answered a message besides its opener (a steer, a joined bot request): no one asker. */
+  turnAnsweredOthers?: boolean
+  /** A paired device Orca can't place as the owner typed a message the turn answered (its opener,
+   *  or a steer the provider took into it): the turn is never the owner's. */
+  typedByAnother?: true
 }
 
 export async function endedTurn(
@@ -87,7 +96,7 @@ export async function endedTurnAttribution(
   sessionId: string,
   turnId: string,
   cursor?: AgentJournalCursor
-): Promise<Pick<EndedChatTurn, 'opener' | 'stamps'>> {
+): Promise<Pick<EndedChatTurn, 'opener' | 'stamps' | 'typedByAnother'>> {
   const read = cursor
     ? await chat
         .journalReads(sessionId)
@@ -102,7 +111,11 @@ export async function endedTurnAttribution(
   ) {
     return {}
   }
-  return { opener: read.opener, stamps: read.stamps }
+  return {
+    opener: read.opener,
+    stamps: read.stamps,
+    ...(read.messages?.some(typedOnAnotherDevice) ? { typedByAnother: true as const } : {})
+  }
 }
 
 /** What the reply outbox reads of the turn: its row's journal key, the deliveries it answered, and
@@ -112,17 +125,30 @@ function outboxTurn(
   submissions: AgentJournalSnapshot['submissions'],
   opener: AgentJournalRenderItem | null | undefined,
   turnId: string
-): Pick<EndedChatTurn, 'turnItemId' | 'stamps' | 'turnProse' | 'turnToolsRan'> {
+): Pick<
+  EndedChatTurn,
+  | 'turnItemId'
+  | 'stamps'
+  | 'turnProse'
+  | 'turnBotProse'
+  | 'turnToolsRan'
+  | 'turnAnsweredOthers'
+  | 'typedByAnother'
+> {
   const turnItemId = endedChatTurnRow(items, turnId)?.itemId
   if (!turnItemId) {
     return {}
   }
-  const { prose, toolsRan } = structuredAgentSessionTurnReply(items, turnItemId)
+  const { prose, botProse, toolsRan } = structuredAgentSessionTurnReply(items, turnItemId)
+  const answered = journalTurnAnsweredMessages({ items, submissions }, opener, turnItemId)
   return {
     turnItemId,
-    stamps: connectorReplyTurnStamps({ items, submissions }, opener, turnItemId),
+    stamps: connectorReplyStampsOf(opener, answered),
     turnProse: prose,
-    turnToolsRan: toolsRan
+    turnBotProse: botProse,
+    turnToolsRan: toolsRan,
+    turnAnsweredOthers: answered.length > 1,
+    ...(answered.some(typedOnAnotherDevice) ? { typedByAnother: true as const } : {})
   }
 }
 

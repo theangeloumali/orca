@@ -20,6 +20,7 @@ import { TerminalPaneHeaderDropSurface } from '../input/file-drop/TerminalPaneHe
 import { TerminalPaneResumeInChatButton } from '../chat/TerminalPaneResumeInChatButton'
 import { makePaneKey } from '../../../../../shared/workspace-layout/stable-pane-id'
 import { NativeChatSettingsButton } from '../../native-chat/appearance/NativeChatSettingsButton'
+import { usePaneTitleTopRowHover } from './use-pane-title-top-row-hover'
 
 type TerminalPaneHeaderOverlayProps = {
   tabId: string
@@ -104,6 +105,8 @@ export default function TerminalPaneHeaderOverlay({
 }: TerminalPaneHeaderOverlayProps): React.JSX.Element {
   const t = useTranslate()
   const titlePressRef = useRef<{ x: number; y: number; dragged: boolean } | null>(null)
+  const layerRef = useRef<HTMLDivElement>(null)
+  usePaneTitleTopRowHover(layerRef)
   const recentImagesEnabled = useAppStore(
     (state) => state.settings?.terminalDroppedImagesPreview !== false
   )
@@ -136,6 +139,7 @@ export default function TerminalPaneHeaderOverlay({
         destination={{ pane, tabId, worktreeId, cwd, managerRef, paneTransportsRef }}
         className="pane-title-bar"
         data-terminal-tab-id={tabId}
+        data-pane-title-leaf-id={pane.leafId}
         data-pane-prevent-terminal-focus=""
         {...(isActivePane ? { 'data-active-pane': '' } : {})}
         {...(isChromeless ? { 'data-chromeless': '' } : {})}
@@ -367,6 +371,7 @@ export default function TerminalPaneHeaderOverlay({
 
   return (
     <div
+      ref={layerRef}
       className="pane-title-overlay-layer"
       data-pane-title-surface={titleUsesLightSurface ? 'light' : 'dark'}
       style={{

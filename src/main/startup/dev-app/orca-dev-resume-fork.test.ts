@@ -228,7 +228,7 @@ describe('forkProdOriginResume', () => {
   })
 
   it('opens a plain shell for an imported agent that has no fork command', async () => {
-    const { admission, args, options } = savedResume(resumeCommandFor('gemini'), 'gemini')
+    const { admission, args, options } = savedResume(resumeCommandFor('droid'), 'droid')
 
     const next = await forkProdOriginResume(args, options, admission, imported)
 

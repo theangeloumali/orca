@@ -35,5 +35,7 @@ export const CLI_MAIN_ENTRY_NAMES = [
   // The CLI's own app environment, so main-process hook removers can resolve profile paths.
   'backend/node-service-environment',
   // Vite defines ORCA_FORK_DEV_APP here; tsc-emitted CLI code never sees build defines.
-  'startup/dev-app/orca-dev-app'
+  'startup/dev-app/orca-dev-app',
+  // `orca mcp connect` gets the MCP SDK (a devDependency) bundled in; the packaged CLI can't resolve it.
+  'mcp-servers/agent-files/mcp-connect-bridge'
 ] as const
