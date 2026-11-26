@@ -1,6 +1,7 @@
 // Pi's terminal: an extension Orca loads with it registers the host list's servers for that run.
 import { mkdir, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import { IS_ORCA_DEV_APP } from '../../../shared/fork/orca-dev-app-flag'
 import { piMcpServersConfig, piMcpServersExtensionSource } from '../../bots/bot-tools-pi'
 import {
   getDefaultPiAgentDir,
@@ -79,7 +80,8 @@ export const pi: TerminalMcpAdapter = {
     if (refused && !refused.delivered && refused.agentWide) {
       return refused
     }
-    if (launch.wsl) {
+    // Orca Dev leaves Pi's agent folder to prod; its launch file sits in Dev's own userData.
+    if (launch.wsl || IS_ORCA_DEV_APP) {
       const path = await launchTextFilePath(
         launch,
         'pi',
