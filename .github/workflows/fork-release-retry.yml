@@ -1,9 +1,6 @@
 name: Fork release retry
 
-# Fork-only (theangeloumali/orca): GitHub sometimes never assigns the macOS runner, and the
-# release run fails with that job cancelled before any step. Rerun just the failed jobs, at most
-# twice. A build that ran and failed is never retried. The deciding job reads repository code
-# with a read-only token; the rerun job runs no repository code.
+# Fork-only: rerun a release once when GitHub never assigned the macOS runner.
 
 on:
   workflow_run:
@@ -14,7 +11,7 @@ permissions: {}
 
 jobs:
   decide:
-    if: github.repository == 'theangeloumali/orca' && github.event.workflow_run.conclusion != 'success'
+    if: github.repository == 'theangeloumali/orca' && github.event.workflow_run.conclusion == 'failure'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -23,7 +20,7 @@ jobs:
     outputs:
       retry: ${{ steps.decide.outputs.retry }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           sparse-checkout: .github/scripts
       - id: decide
@@ -32,11 +29,15 @@ jobs:
           RUN_ID: ${{ github.event.workflow_run.id }}
           RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
           RUN_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          RUN_CREATED: ${{ github.event.workflow_run.created_at }}
         run: |
           set -euo pipefail
           gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/attempts/$RUN_ATTEMPT/jobs?per_page=100" --jq .jobs > jobs.json
-          jq -n --arg c "$RUN_CONCLUSION" --argjson a "$RUN_ATTEMPT" --slurpfile jobs jobs.json \
-            '{run: {conclusion: $c, run_attempt: $a}, jobs: $jobs[0]}' > input.json
+          # A release published after this run started would be replaced as "latest" by an older build.
+          newer=$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=10" \
+            --jq "[.[] | select(.published_at > \"$RUN_CREATED\")] | length > 0")
+          jq -n --arg c "$RUN_CONCLUSION" --argjson a "$RUN_ATTEMPT" --argjson n "$newer" --slurpfile jobs jobs.json \
+            '{run: {conclusion: $c, run_attempt: $a, newerSuccess: $n}, jobs: $jobs[0]}' > input.json
           decision=$(node .github/scripts/fork-release-retry.mjs < input.json)
           echo "$decision"
           echo "retry=$(jq -r .retry <<<"$decision")" >> "$GITHUB_OUTPUT"
